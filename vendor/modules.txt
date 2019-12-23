@@ -1,0 +1,42 @@
+# github.com/chewxy/hm v1.0.0
+github.com/chewxy/hm
+# github.com/chewxy/math32 v1.0.4
+github.com/chewxy/math32
+# github.com/gogo/protobuf v1.3.0
+github.com/gogo/protobuf/gogoproto
+github.com/gogo/protobuf/proto
+github.com/gogo/protobuf/protoc-gen-gogo/descriptor
+# github.com/golang/protobuf v1.3.2
+github.com/golang/protobuf/proto
+# github.com/google/flatbuffers v1.11.0
+github.com/google/flatbuffers/go
+# github.com/pkg/errors v0.8.1
+github.com/pkg/errors
+# github.com/xtgo/set v1.0.0
+github.com/xtgo/set
+# gonum.org/v1/gonum v0.0.0-20190902003836-43865b531bee
+gonum.org/v1/gonum/blas
+gonum.org/v1/gonum/blas/blas64
+gonum.org/v1/gonum/blas/cblas128
+gonum.org/v1/gonum/blas/gonum
+gonum.org/v1/gonum/floats
+gonum.org/v1/gonum/internal/asm/c128
+gonum.org/v1/gonum/internal/asm/c64
+gonum.org/v1/gonum/internal/asm/f32
+gonum.org/v1/gonum/internal/asm/f64
+gonum.org/v1/gonum/internal/cmplx64
+gonum.org/v1/gonum/internal/math32
+gonum.org/v1/gonum/lapack
+gonum.org/v1/gonum/lapack/gonum
+gonum.org/v1/gonum/lapack/lapack64
+gonum.org/v1/gonum/mat
+# gorgonia.org/tensor v0.9.3
+gorgonia.org/tensor
+gorgonia.org/tensor/internal/execution
+gorgonia.org/tensor/internal/serialization/fb
+gorgonia.org/tensor/internal/serialization/pb
+gorgonia.org/tensor/internal/storage
+# gorgonia.org/vecf32 v0.9.0
+gorgonia.org/vecf32
+# gorgonia.org/vecf64 v0.9.0
+gorgonia.org/vecf64
