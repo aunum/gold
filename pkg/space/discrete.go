@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/pbarker/go-rl/pkg/common"
+	"gorgonia.org/tensor"
 )
 
 // Discrete space is an unsigned vector of whole numbers.
@@ -52,4 +53,9 @@ func (d *Discrete) Contains(v interface{}) bool {
 // Values returns the values of the discrete space.
 func (d *Discrete) Values() []int {
 	return d.values
+}
+
+// Dense returns the values of the discrete space as a tensor.
+func (d *Discrete) Dense() *tensor.Dense {
+	return tensor.New(tensor.WithShape(1, d.n), tensor.WithBacking(tensor.Range(tensor.Int, 0, d.n)))
 }

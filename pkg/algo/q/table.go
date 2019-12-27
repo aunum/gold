@@ -2,62 +2,85 @@ package q
 
 import (
 	"fmt"
-	"github.com/pbarker/go-rl/pkg/space"
-	"github.com/schwarmco/go-cartesian-product"
-	"gorgonia.org/tensor"
 	"hash/fnv"
+
+	"github.com/pbarker/go-rl/pkg/common"
+	"gorgonia.org/tensor"
 )
 
 // Table is the qualtiy table which stores the quality of an action by state.
 type Table interface {
+	// GetMax returns the action with the max Q value for a given state hash.
+	GetMax(state uint32) (action int, qValue float64, err error)
+
+	// Get the Q value for the given state and action.
+	Get(state uint32, action int) (float64, error)
+
+	// Set the q value of the action taken for a given state.
+	Set(state uint32, action int, value float64) error
+
+	// Clear the table.
+	Clear() error
 }
 
 // MemTable is an in memory Table with a row for every state, and a column for every action. State is
 // held as a hash of observations.
 type MemTable struct {
-	table map[uint32]*tensor.Dense
+	actionSpaceSize int
+	table           map[uint32][]float64
 }
 
 // NewMemTable returns a new MemTable with the dimensions defined by the observation and
 // action space sizes.
-func NewMemTable(actionSpace space.Space, stateTable StateTable) Table {
+func NewMemTable(actionSpaceSize int) Table {
 	return &MemTable{
-		table:      tensor.New(tensor.WithShape(), tensor.Of(tensor.Int)),
-		stateTable: stateTable,
+		actionSpaceSize: actionSpaceSize,
+		table:           map[uint32][]float64{},
 	}
 }
 
-// StateTable holds the Cartesian Product of all possible states.
-type StateTable interface {
-	// N returns the total number of possible states.
-	N() int
-}
-
-// MemStateTable is an in memory implementation of a StateTable. It is a map of hash
-// to observation values.
-type MemStateTable struct {
-}
-
-// NewMemStateTable creates a new StateTable. Each array given assumes the possible values
-// for that observation are discrete. Returns a Cartesian Product of all possible states.
-func NewMemStateTable(observations ...[]interface{}) StateTable {
-	ch := cartesian.Iter(observations...)
-	stateTable := map[uint32][]interface{}{}
-	for observations := range ch {
-		h := Hash(observations)
-		stateTable[h] = observations
+// GetMax returns the action with the max Q value for a given state hash.
+func (m *MemTable) GetMax(state uint32) (action int, qValue float64, err error) {
+	qv, ok := m.table[state]
+	if !ok {
+		return 0, 0.0, nil
 	}
-	return &MemStateTable{table: stateTable}
+	action, qValue = common.MaxFloat64(qv)
+	return
 }
 
-// N returns the total number of possible states.
-func (m *MemStateTable) N() int {
-	return len(m.table)
+// Get the Q value for the given state and action.
+func (m *MemTable) Get(state uint32, action int) (float64, error) {
+	qv, ok := m.table[state]
+	if !ok {
+		return 0.0, nil
+	}
+	if len(qv) < action+1 {
+		return 0.0, fmt.Errorf("action %d outside of action space size %d", action, m.actionSpaceSize)
+	}
+	return qv[action], nil
 }
 
-// Hash observations into an integer value. Note: this requires observations to always
-// occur in a specific order.
-func Hash(observations interface{}) uint32 {
+// Set the quality of the action taken for a given state.
+func (m *MemTable) Set(state uint32, action int, qValue float64) error {
+	qv, ok := m.table[state]
+	if !ok {
+		qv = make([]float64, m.actionSpaceSize)
+	}
+	qv[action] = qValue
+	m.table[state] = qv
+	return nil
+}
+
+// Clear the table.
+func (m *MemTable) Clear() error {
+	m.table = map[uint32][]float64{}
+	return nil
+}
+
+// HashState observations into an integer value. Note: this requires observations to always
+// occur in the same order.
+func HashState(observations *tensor.Dense) uint32 {
 	h := fnv.New32a()
 	s := fmt.Sprintf("%v", observations)
 	h.Write([]byte(s))
