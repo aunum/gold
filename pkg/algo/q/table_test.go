@@ -13,7 +13,7 @@ func TestMemTable(t *testing.T) {
 	table := NewMemTable(actionSpaceSize)
 
 	observation1 := tensor.New(tensor.WithShape(2, 4), tensor.WithBacking(tensor.Range(tensor.Float32, 0, 8)))
-	qVal1 := 0.5
+	qVal1 := float32(0.5)
 	action1 := 0
 	state1 := HashState(observation1)
 	err := table.Set(state1, action1, qVal1)
@@ -23,7 +23,7 @@ func TestMemTable(t *testing.T) {
 	require.Equal(t, qVal1, qRes1)
 
 	observation2 := tensor.New(tensor.WithShape(2, 4), tensor.WithBacking(tensor.Range(tensor.Float32, 8, 16)))
-	qVal2 := 0.2
+	qVal2 := float32(0.2)
 	action2 := 1
 	state2 := HashState(observation2)
 	err = table.Set(state2, action2, qVal2)
@@ -37,5 +37,5 @@ func TestMemTable(t *testing.T) {
 	action, qval, err := table.GetMax(state1)
 	require.Nil(t, err)
 	require.Equal(t, action, 0)
-	require.Equal(t, qval, 0.5)
+	require.Equal(t, qval, float32(0.5))
 }

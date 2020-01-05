@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"hash/fnv"
 
+	"github.com/k0kubun/pp"
 	"github.com/pbarker/go-rl/pkg/common"
 	"gorgonia.org/tensor"
 )
@@ -11,23 +12,26 @@ import (
 // Table is the qualtiy table which stores the quality of an action by state.
 type Table interface {
 	// GetMax returns the action with the max Q value for a given state hash.
-	GetMax(state uint32) (action int, qValue float64, err error)
+	GetMax(state uint32) (action int, qValue float32, err error)
 
 	// Get the Q value for the given state and action.
-	Get(state uint32, action int) (float64, error)
+	Get(state uint32, action int) (float32, error)
 
 	// Set the q value of the action taken for a given state.
-	Set(state uint32, action int, value float64) error
+	Set(state uint32, action int, value float32) error
 
 	// Clear the table.
 	Clear() error
+
+	// Pretty print the table.
+	Print()
 }
 
 // MemTable is an in memory Table with a row for every state, and a column for every action. State is
 // held as a hash of observations.
 type MemTable struct {
 	actionSpaceSize int
-	table           map[uint32][]float64
+	table           map[uint32][]float32
 }
 
 // NewMemTable returns a new MemTable with the dimensions defined by the observation and
@@ -35,22 +39,24 @@ type MemTable struct {
 func NewMemTable(actionSpaceSize int) Table {
 	return &MemTable{
 		actionSpaceSize: actionSpaceSize,
-		table:           map[uint32][]float64{},
+		table:           map[uint32][]float32{},
 	}
 }
 
 // GetMax returns the action with the max Q value for a given state hash.
-func (m *MemTable) GetMax(state uint32) (action int, qValue float64, err error) {
+func (m *MemTable) GetMax(state uint32) (action int, qValue float32, err error) {
 	qv, ok := m.table[state]
 	if !ok {
+		fmt.Println("state does not exist yet: ", state)
 		return 0, 0.0, nil
 	}
-	action, qValue = common.MaxFloat64(qv)
+	fmt.Println("state exists! ", state)
+	action, qValue = common.MaxFloat32(qv)
 	return
 }
 
 // Get the Q value for the given state and action.
-func (m *MemTable) Get(state uint32, action int) (float64, error) {
+func (m *MemTable) Get(state uint32, action int) (float32, error) {
 	qv, ok := m.table[state]
 	if !ok {
 		return 0.0, nil
@@ -62,10 +68,10 @@ func (m *MemTable) Get(state uint32, action int) (float64, error) {
 }
 
 // Set the quality of the action taken for a given state.
-func (m *MemTable) Set(state uint32, action int, qValue float64) error {
+func (m *MemTable) Set(state uint32, action int, qValue float32) error {
 	qv, ok := m.table[state]
 	if !ok {
-		qv = make([]float64, m.actionSpaceSize)
+		qv = make([]float32, m.actionSpaceSize)
 	}
 	qv[action] = qValue
 	m.table[state] = qv
@@ -74,8 +80,15 @@ func (m *MemTable) Set(state uint32, action int, qValue float64) error {
 
 // Clear the table.
 func (m *MemTable) Clear() error {
-	m.table = map[uint32][]float64{}
+	m.table = map[uint32][]float32{}
 	return nil
+}
+
+// Print the table with a pretty printer.
+func (m *MemTable) Print() {
+	for state, values := range m.table {
+		fmt.Printf("---\nstate: %d\nqvalues: %s\n", state, pp.Sprint(values))
+	}
 }
 
 // HashState observations into an integer value. Note: this requires observations to always

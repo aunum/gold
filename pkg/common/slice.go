@@ -11,14 +11,14 @@ func MakeIntRange(min, max int) []int {
 	return a
 }
 
-// RandFloat64 returns a random float in the given range.
-func RandFloat64(min, max float64) float64 {
-	return min + rand.Float64()*(max-min)
+// RandFloat32 returns a random float in the given range.
+func RandFloat32(min, max float32) float32 {
+	return min + rand.Float32()*(max-min)
 }
 
-// MaxFloat64 returns the max index and max value for a float32 slice.
-func MaxFloat64(vals []float64) (int, float64) {
-	var max float64
+// MaxFloat32 returns the max index and max value for a float32 slice.
+func MaxFloat32(vals []float32) (int, float32) {
+	var max float32
 	var maxI int
 	for i, v := range vals {
 		if i == 0 || v > max {
