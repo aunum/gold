@@ -1,8 +1,7 @@
 package model
 
 import (
-	"gorgonia.org/tensor"
-	g "gorgonia.org/gornonia"
+	g "gorgonia.org/gorgonia"
 )
 
 // Chain of layers.
@@ -19,21 +18,21 @@ func NewChain(layers ...Layer) *Chain {
 }
 
 // Fwd is a forward pass thorugh all layers of the chain.
-func (c *Chain) Fwd(inputs *g.Node) (pred *g.Node) {
-	pred := inputs
+func (c *Chain) Fwd(inputs *g.Node) (prediction *g.Node, err error) {
+	prediction = inputs
 	for _, layer := range c.Layers {
-		if pred, err = layer.fwd(pred); err != nil {
+		if prediction, err = layer.Fwd(prediction); err != nil {
 			return nil, err
 		}
 	}
-	return pred
+	return prediction, nil
 }
 
 // Learnables are all of the learnable parameters in the chain.
 func (c *Chain) Learnables() g.Nodes {
 	retVal := make(g.Nodes, 0, len(c.Layers))
-	for _, l := range p.layers {
-		retVal = append(retVal, l.Learnables()...)
+	for _, layer := range c.Layers {
+		retVal = append(retVal, layer.Learnables()...)
 	}
 	return retVal
 }

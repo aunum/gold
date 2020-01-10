@@ -79,7 +79,6 @@ func NewDenseEqWidthBinner(intervals, low, high *tensor.Dense) (*DenseEqWidthBin
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("low: %#v \nhigh: %#v \nintervals: %#v\n", low, high, intervals)
 
 	// width = (max - min)/n
 	spread, err := high.Sub(low)
@@ -90,7 +89,6 @@ func NewDenseEqWidthBinner(intervals, low, high *tensor.Dense) (*DenseEqWidthBin
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("spread: %#v\n widths: %#v\n", spread, widths)
 	var bounds []*tensor.Dense
 	iterator := widths.Iterator()
 	for i, err := iterator.Next(); err == nil; i, err = iterator.Next() {

@@ -13,7 +13,7 @@ func ToFloat32(t *tensor.Dense) (*tensor.Dense, error) {
 	for i, err := iterator.Next(); err == nil; i, err = iterator.Next() {
 		v := t.Get(i)
 
-		// TODO: must be a more effiecient way.
+		// TODO: make more efficient.
 		switch a := v.(type) {
 		case float32:
 			return t, nil

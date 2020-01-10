@@ -1,8 +1,7 @@
 package model
 
 import (
-	"gorgonia.org/tensor"
-	g "gorgonia.org/gornonia"
+	g "gorgonia.org/gorgonia"
 )
 
 // Layer in a network.

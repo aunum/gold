@@ -1,29 +1,31 @@
-package deepq_test
+package main
 
 import (
-	"testing"
 
 	"github.com/pbarker/sphere/pkg/common/logger"
+	"github.com/pbarker/sphere/pkg/common/errors"
 	sphere "github.com/pbarker/sphere/pkg/env"
-	"github.com/stretchr/testify/require"
+	"github.com/pbarker/go-rl/pkg/agent/deepq"
 )
 
-func TestAgent(t *testing.T) {
+func main() {
 	s, err := sphere.NewLocalServer(sphere.GymServerConfig)
-	require.Nil(t, err)
+	errors.Require(err)
 	defer s.Resource.Close()
 
 	env, err := s.Make("CartPole-v0")
-	require.Nil(t, err)
+	errors.Require(err)
 
 	// Get the size of the action space.
 	actionSpaceSize := env.GetActionSpace().GetDiscrete().GetN()
+
+	agent := deepq.NewAgent(deepq.DefaultAgentConfig)
 
 	numEpisodes := 30
 	logger.Infof("running for %d episodes", numEpisodes)
 	for i := 0; i <= numEpisodes; i++ {
 		state, err := env.Reset()
-		require.Nil(t, err)
+		errors.Require(err)
 		// fmt.Printf("state: %v\n", state)
 		// fmt.Printf("discreteState: %v\n", discreteState)
 
@@ -31,23 +33,17 @@ func TestAgent(t *testing.T) {
 
 			// Get an action from the agent.
 			action, err := agent.Action(discreteState)
-			if err != nil {
-				return nil, err
-			}
+			errors.Require(err)
 
 			outcome, err := env.Step(action)
-			if err != nil {
-				return nil, err
-			}
+			errors.Require(err)
 			discreteObv, err := obvBinner.Bin(outcome.Observation)
 			// fmt.Printf("observation: %v\n", outcome.Observation)
 			// fmt.Printf("dobservation: %v\n", discreteObv)
 
 			// Learn!
 			err = agent.Learn(action, outcome.Reward, discreteState, discreteObv)
-			if err != nil {
-				return nil, err
-			}
+			errors.Require(err)
 
 			if outcome.Done {
 				logger.Successf("Episode %d finished after %d timesteps", i, ts+1)
@@ -64,3 +60,4 @@ func TestAgent(t *testing.T) {
 	}
 	env.End()
 }
+

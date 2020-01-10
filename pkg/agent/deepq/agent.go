@@ -1,13 +1,16 @@
 package deepq
 
 import (
-	"github.com/gammazero/deque"
 	"gorgonia.org/tensor"
 )
 
 // Agent is a dqn agent.
 type Agent struct {
+	// Hyperparameters for the dqn agent.
 	*Hyperparameters
+
+	policy *Policy
+
 	epsilon float32
 	memory  *Memory
 }
@@ -29,7 +32,7 @@ type Hyperparameters struct {
 	// EpsilonMax is the maximum rate at which an agent can explore.
 	EpsilonMax float32
 
-	// EpsilonDecay
+	// EpsilonDecay is the rate at which the agent should exploit over explore.
 	EpsilonDecay float32
 
 	// ReplayBatchSize determines how large a batch is replayed from memory.
@@ -39,6 +42,7 @@ type Hyperparameters struct {
 // AgentConfig is the config for a dqn agent.
 type AgentConfig struct {
 	*Hyperparameters
+	PolicyConfig *PolicyConfig
 }
 
 // DefaultAgentConfig is the default config for a dqn agent.
@@ -50,15 +54,21 @@ var DefaultAgentConfig = &AgentConfig{
 		EpsilonMax:   1.0,
 		EpsilonDecay: 0.995,
 	},
+	PolicyConfig: DefaultPolicyConfig,
 }
 
 // NewAgent returns a new dqn agent.
-func NewAgent(c *AgentConfig) *Agent {
+func NewAgent(c *AgentConfig, actionSpaceSize int) (*Agent, error) {
+	policy, err := NewPolicy(c.PolicyConfig, actionSpaceSize)
+	if err != nil {
+		return nil, err
+	}
 	return &Agent{
 		Hyperparameters: c.Hyperparameters,
 		epsilon:         c.EpsilonMax,
-		memory:          deque.Deque{},
-	}
+		memory:          NewMemory(),
+		policy:          policy,
+	}, nil
 }
 
 // Learn the agent.
@@ -70,5 +80,3 @@ func (a *Agent) Learn() {
 func (a *Agent) Action(state *tensor.Dense) (int, error) {
 	return 0, nil
 }
-
-func (a *Agent) remember() {}

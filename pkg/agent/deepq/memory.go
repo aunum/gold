@@ -20,3 +20,8 @@ func NewMemory() *Memory {
 func (m *Memory) Sample(batchsize int) {
 
 }
+
+// Len is the number of events in memory.
+func (m *Memory) Len() int {
+
+}
