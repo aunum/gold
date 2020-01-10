@@ -1,6 +1,9 @@
 package common
 
-import "math/rand"
+import (
+	"fmt"
+	"math/rand"
+)
 
 // MakeIntRange creates an int slice.
 func MakeIntRange(min, max int) []int {
@@ -18,6 +21,7 @@ func RandFloat32(min, max float32) float32 {
 
 // MaxFloat32 returns the max index and max value for a float32 slice.
 func MaxFloat32(vals []float32) (int, float32) {
+	fmt.Println("getting max of vals: ", vals)
 	var max float32
 	var maxI int
 	for i, v := range vals {
@@ -26,5 +30,6 @@ func MaxFloat32(vals []float32) (int, float32) {
 			maxI = i
 		}
 	}
+	fmt.Println("returning maxs: ", maxI, max)
 	return maxI, max
 }

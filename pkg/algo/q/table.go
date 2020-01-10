@@ -50,7 +50,7 @@ func (m *MemTable) GetMax(state uint32) (action int, qValue float32, err error) 
 		fmt.Println("state does not exist yet: ", state)
 		return 0, 0.0, nil
 	}
-	fmt.Println("state exists! ", state)
+	// fmt.Println("state exists! ", state)
 	action, qValue = common.MaxFloat32(qv)
 	return
 }
@@ -87,7 +87,9 @@ func (m *MemTable) Clear() error {
 // Print the table with a pretty printer.
 func (m *MemTable) Print() {
 	for state, values := range m.table {
+		fmt.Println("-----")
 		fmt.Printf("---\nstate: %d\nqvalues: %s\n", state, pp.Sprint(values))
+		fmt.Println("-----")
 	}
 }
 

@@ -2,6 +2,7 @@ package q
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"reflect"
 	"time"
@@ -18,6 +19,8 @@ type Agent struct {
 	r           *rand.Rand
 	actionSpace *space.Discrete
 	table       Table
+	minAlpha    float32
+	minEpsilon  float32
 }
 
 // Hyperparameters for a Q-learning agent.
@@ -34,13 +37,17 @@ type Hyperparameters struct {
 	// Alpha is the learning rate (0<α≤1). Just like in supervised learning settings, alpha is the extent
 	// to which our Q-values are being updated in every iteration.
 	Alpha float32
+
+	// AdaDivisor is used in adaptive learning to tune the hyperparameters.
+	AdaDivisor float32
 }
 
 // DefaultHyperparameters is the default agent configuration.
 var DefaultHyperparameters = &Hyperparameters{
-	Epsilon: 0.1,
-	Gamma:   0.6,
-	Alpha:   0.1,
+	Epsilon:    0.1,
+	Gamma:      0.3,
+	Alpha:      0.1,
+	AdaDivisor: 5.0,
 }
 
 // NewAgent returns a new Q-learning agent. If table is nil, it will default to a basic in-memory table.
@@ -54,7 +61,29 @@ func NewAgent(h *Hyperparameters, actionSpaceSize int, table Table) *Agent {
 		r:               rand.New(s),
 		actionSpace:     space.NewDiscrete(actionSpaceSize),
 		table:           table,
+		minAlpha:        h.Alpha,
+		minEpsilon:      h.Epsilon,
 	}
+}
+
+// Adapt will adjust the hyperparameters based on th timestep.
+func (a *Agent) Adapt(timestep int) {
+	//max(self.min_alpha, min(1.0, 1.0 - math.log10((t + 1) / self.ada_divisor)))
+	a.Epsilon = adapt(timestep, a.minEpsilon, a.AdaDivisor)
+	fmt.Println("set epsilon to: ", a.Epsilon)
+	a.Alpha = adapt(timestep, a.minAlpha, a.AdaDivisor)
+	fmt.Println("set alpha to: ", a.Alpha)
+}
+
+func adapt(timestep int, min float32, ada float32) float32 {
+	a := float32((timestep + 1)) / ada
+	b := math.Log10(float64(a))
+	c := 1.0 - b
+	// fmt.Printf("a: %v b: %v c: %v\n", a, b, c)
+	adapted := math.Min(1.0, c)
+	max := math.Max(float64(min), adapted)
+	// fmt.Printf("adapted: %v max: %v\n", adapted, max)
+	return float32(max)
 }
 
 // Action returns the action that should be taken given the state hash.
@@ -89,15 +118,15 @@ func (a *Agent) Learn(action int, reward float32, state, nextState *tensor.Dense
 		return err
 	}
 
+	// fmt.Printf("eq: oldVal %v + alpha %v * (reward %v + gamma %v * nextMax %v - oldVal %v)\n", oldVal, a.Alpha, reward, a.Gamma, nextMax, oldVal)
 	// Q learning algorithm.
-	newValue := (1-a.Alpha)*oldVal + a.Alpha*(reward+a.Gamma*nextMax)
+	newValue := (oldVal + a.Alpha) * (reward + a.Gamma*nextMax - oldVal)
 
-	fmt.Println("saving state to table: ", stateHash)
+	fmt.Printf("learning reward: %v on state: %v with new value: %v\n", reward, stateHash, newValue)
 	err = a.table.Set(stateHash, action, newValue)
 	if err != nil {
 		return err
 	}
-	a.table.Print()
 	return nil
 }
 
