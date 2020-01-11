@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/pbarker/sphere/pkg/common/logger"
+	"github.com/pbarker/logger"
 
 	"github.com/pbarker/sphere/pkg/common/errors"
 	"github.com/pbarker/sphere/pkg/env"

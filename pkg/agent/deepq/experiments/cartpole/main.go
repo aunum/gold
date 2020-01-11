@@ -2,7 +2,7 @@ package main
 
 import (
 
-	"github.com/pbarker/sphere/pkg/common/logger"
+	"github.com/pbarker/logger"
 	"github.com/pbarker/sphere/pkg/common/errors"
 	sphere "github.com/pbarker/sphere/pkg/env"
 	"github.com/pbarker/go-rl/pkg/agent/deepq"

@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/pbarker/go-rl/pkg/algo/q"
+	. "github.com/pbarker/go-rl/pkg/agent/q"
 	"github.com/pbarker/go-rl/pkg/common"
-	"github.com/pbarker/sphere/pkg/common/logger"
+	"github.com/pbarker/logger"
 	sphere "github.com/pbarker/sphere/pkg/env"
 	"github.com/schwarmco/go-cartesian-product"
 	"github.com/stretchr/testify/require"

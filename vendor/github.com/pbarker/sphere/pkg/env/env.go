@@ -117,7 +117,7 @@ type Outcome struct {
 	Observation *tensor.Dense
 
 	// Reward from action.
-	Reward float64
+	Reward float32
 
 	// Whether the environment is done.
 	Done bool
@@ -131,7 +131,7 @@ func (e *Env) Step(value int) (*Outcome, error) {
 		return nil, err
 	}
 	t := observationToTensor(resp.Observation)
-	return &Outcome{t, float64(resp.Reward), resp.Done}, nil
+	return &Outcome{t, resp.Reward, resp.Done}, nil
 }
 
 // SampleAction returns a sample action for the environment.
@@ -166,14 +166,34 @@ func (e *Env) Close() error {
 	return nil
 }
 
+// Results from an environment run.
+type Results struct {
+	// Episodes is a map of episode id to result.
+	Episodes map[int32]*sphere.EpisodeResult
+	// Videos is a map of episode id to result.
+	Videos map[int32]*sphere.Video
+	// AverageReward is the average reward of the episodes.
+	AverageReward float32
+}
+
 // Results results for the environment.
-func (e *Env) Results() (*sphere.ResultsResponse, error) {
+func (e *Env) Results() (*Results, error) {
 	ctx := context.Background()
 	resp, err := e.Client.Results(ctx, &sphere.ResultsRequest{Id: e.Id})
 	if err != nil {
 		return nil, err
 	}
-	return resp, nil
+	var cumulative float32
+	for _, res := range resp.EpisodeResults {
+		cumulative += res.Reward
+	}
+	avg := cumulative / float32(len(resp.EpisodeResults))
+	res := &Results{
+		Episodes:      resp.EpisodeResults,
+		Videos:        resp.Videos,
+		AverageReward: avg,
+	}
+	return res, nil
 }
 
 // PrintResults results for the environment.
@@ -280,6 +300,31 @@ func (e *Env) Clean() {
 		logger.Debugf("removed video: %s", videoPath)
 	}
 	logger.Success("removed all local videos")
+}
+
+// BoxSpace is the
+type BoxSpace struct {
+	High  *tensor.Dense
+	Low   *tensor.Dense
+	Shape []int
+}
+
+// BoxSpace returns the box space as dense tensors.
+func (e *Env) BoxSpace() (*BoxSpace, error) {
+	space := e.GetObservationSpace()
+
+	if sp := space.GetBox(); sp != nil {
+		shape := []int{}
+		for _, i := range sp.GetShape() {
+			shape = append(shape, int(i))
+		}
+		return &BoxSpace{
+			High:  tensor.New(tensor.WithShape(shape...), tensor.WithBacking(sp.GetHigh())),
+			Low:   tensor.New(tensor.WithShape(shape...), tensor.WithBacking(sp.GetLow())),
+			Shape: shape,
+		}, nil
+	}
+	return nil, fmt.Errorf("env is not a box space: %+v", space)
 }
 
 // Print a YAML representation of the environment.

@@ -10,8 +10,8 @@ type FC struct {
 	// Weights for this layer.
 	Weights *g.Node
 
-	// activationFn is the activation function for this layer.
-	activationFn model.ActivationFn
+	// activation is the activation function for this layer.
+	activation model.ActivationFn
 }
 
 // FCOpts are options for a fully connected layer.
@@ -28,20 +28,20 @@ func NewFC(weights *g.Node, opts ...FCOpts) *FC {
 	return fc
 }
 
-// WithActivationFn adds an activation function to the layer.
-func WithActivationFn(fn model.ActivationFn) func(*FC) {
+// WithActivation adds an activation function to the layer.
+func WithActivation(fn model.ActivationFn) func(*FC) {
 	return func(f *FC) {
-		f.activationFn = fn
+		f.activation = fn
 	}
 }
 
 // Fwd is a foward pass on a single fully connected layer.
 func (f *FC) Fwd(x *g.Node) (*g.Node, error) {
 	prod := g.Must(g.Mul(x, f.Weights))
-	if f.activationFn == nil {
+	if f.activation == nil {
 		return prod, nil
 	}
-	return f.activationFn(prod)
+	return f.activation(prod)
 }
 
 // Learnables are the learnable parameters of the fully connected layer.

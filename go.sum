@@ -43,6 +43,8 @@ github.com/envoyproxy/go-control-plane v0.9.0/go.mod h1:YTl/9mNaCwkRvm6d1a2C3ymF
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/fatih/color v1.7.0 h1:DkWD4oS2D8LGGgTQ6IvwJJXSL5Vp2ffcQg58nFV38Ys=
 github.com/fatih/color v1.7.0/go.mod h1:Zm6kSWBoL9eyXnKyktHP6abPY2pDugNf5KwzbycvMj4=
+github.com/fatih/color v1.9.0 h1:8xPHl4/q1VyqGIPif1F+1V3Y3lSmrq01EabUW3CoW5s=
+github.com/fatih/color v1.9.0/go.mod h1:eQcE1qtQxscV5RaZvpXrrb8Drkc3/DdQ+uUYCNjL+zU=
 github.com/fogleman/gg v1.2.1-0.20190220221249-0403632d5b90/go.mod h1:R/bRT+9gY/C5z7JzPU0zXsXHKM4/ayA+zqcVNZzPa1k=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
 github.com/gammazero/deque v0.0.0-20190521012701-46e4ffb7a622 h1:lxbhOGZ9pU3Kf8P6lFluUcE82yVZn2EqEf4+mWRNPV0=
@@ -106,6 +108,8 @@ github.com/opencontainers/runc v0.1.1 h1:GlxAyO6x8rfZYN9Tt0Kti5a/cP41iuiO2yYT0IJ
 github.com/opencontainers/runc v0.1.1/go.mod h1:qT5XzbpPznkRYVz/mWwUaVBUv2rmF59PVA73FjuZG0U=
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
+github.com/pbarker/logger v0.0.0-20200111154213-ae464237cb91 h1:F75vyfJOawNxTLKyt+d8qTbDAYFxc4V/nAYOSyjCgQY=
+github.com/pbarker/logger v0.0.0-20200111154213-ae464237cb91/go.mod h1:PPXUtXOMgaU2cfogPezyPyGyfBuVKkYbrDktEwQoydg=
 github.com/pbarker/sphere v0.0.0-20191223185849-a752de7c85e1 h1:aVcMQLcapCcliWPWP+d1Zlst8JGuPqYHrhBjy18LJbk=
 github.com/pbarker/sphere v0.0.0-20191223185849-a752de7c85e1/go.mod h1:gYIMHQXrCizbv0ojL1e9GQ88r3YLT9jWq3LGsFF8LD0=
 github.com/pbarker/sphere v0.0.0-20191227224658-7d7df16b3a70 h1:Z/HCLN/DtAmv197Hy8wLn/dYOulZeHhAk2ytQB9TBiQ=

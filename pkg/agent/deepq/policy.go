@@ -22,6 +22,8 @@ type Policy struct {
 
 	pred    *g.Node
 	predVal g.Value
+	vm      g.VM
+	solver  g.Solver
 }
 
 // PolicyConfig is the configuration for a FCPolicy.
@@ -53,9 +55,9 @@ type ChainBuilder func(graph *g.ExprGraph, actionSpaceSize int) *model.Chain
 // DefaultFCChainBuilder creates a default fully connected network for the given action space size.
 func DefaultFCChainBuilder(graph *g.ExprGraph, actionSpaceSize int) *model.Chain {
 	chain := model.NewChain(
-		layers.NewFC(g.NewMatrix(graph, g.Float32, g.WithShape(actionSpaceSize, 2), g.WithName("w0"), g.WithInit(g.GlorotU(1.0))), layers.WithActivationFn(g.Tanh)),
-		layers.NewFC(g.NewMatrix(graph, g.Float32, g.WithShape(2, 100), g.WithName("w1"), g.WithInit(g.GlorotU(1.0))), layers.WithActivationFn(g.Tanh)),
-		layers.NewFC(g.NewMatrix(graph, g.Float32, g.WithShape(100, 100), g.WithName("w2"), g.WithInit(g.GlorotU(1.0))), layers.WithActivationFn(g.Tanh)),
+		layers.NewFC(g.NewMatrix(graph, g.Float32, g.WithShape(actionSpaceSize, 2), g.WithName("w0"), g.WithInit(g.GlorotU(1.0))), layers.WithActivation(g.Tanh)),
+		layers.NewFC(g.NewMatrix(graph, g.Float32, g.WithShape(2, 100), g.WithName("w1"), g.WithInit(g.GlorotU(1.0))), layers.WithActivation(g.Tanh)),
+		layers.NewFC(g.NewMatrix(graph, g.Float32, g.WithShape(100, 100), g.WithName("w2"), g.WithInit(g.GlorotU(1.0))), layers.WithActivation(g.Tanh)),
 		layers.NewFC(g.NewMatrix(graph, g.Float32, g.WithShape(100, 1), g.WithName("w2"), g.WithInit(g.GlorotU(1.0)))),
 	)
 	return chain
@@ -78,15 +80,23 @@ func NewPolicy(c *PolicyConfig, actionSpaceSize int) (*Policy, error) {
 		return nil, err
 	}
 
+	vm := g.NewTapeMachine(graph)
+	solver := g.NewRMSPropSolver()
+
 	return &Policy{
 		graph:    graph,
 		inputs:   inputs,
 		expected: expected,
 		chain:    chain,
+		vm:       vm,
+		solver:   solver,
 	}, nil
 }
 
 // Step takes a step given the current observation.
 func (p *Policy) Step(observation *tensor.Dense) (actions, qValues, states *tensor.Dense, err error) {
+	err := g.Let(p.inputs)
+	if err != nil {
 
+	}
 }

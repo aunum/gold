@@ -36,3 +36,10 @@ func (c *Chain) Learnables() g.Nodes {
 	}
 	return retVal
 }
+
+// Add to the chain.
+func (c *Chain) Add(l ...Layer) {
+	for _, layer := range l {
+		c.Layers = append(c.Layers, layer)
+	}
+}
