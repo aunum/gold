@@ -11,9 +11,9 @@ import (
 // Policy is a dqn policy using a fully connected feed forward neural network.
 type Policy struct {
 	graph      *g.ExprGraph
-	inputs     *g.Node
+	x          *g.Node
+	y          *g.Node
 	prediction *g.Node
-	expected   *g.Node
 	chain      *model.Chain
 
 	pred    *g.Node
@@ -64,16 +64,17 @@ func DefaultFCChainBuilder(graph *g.ExprGraph, env *envv1.Env) *model.Chain {
 func NewPolicy(c *PolicyConfig, env *envv1.Env) (*Policy, error) {
 	graph := g.NewGraph()
 
-	inputs := g.NewMatrix(graph, g.Float32, g.WithShape(c.BatchSize, env.ObservationSpaceShape()[0]), g.WithName("inputs"), g.WithInit(g.Zeroes()))
-	expected := g.NewVector(graph, g.Float32, g.WithShape(c.BatchSize), g.WithName("expected"), g.WithInit(g.Zeroes()))
+	x := g.NewMatrix(graph, g.Float32, g.WithShape(c.BatchSize, env.ObservationSpaceShape()[0]), g.WithName("x"), g.WithInit(g.Zeroes()))
+	y := g.NewVector(graph, g.Float32, g.WithShape(c.BatchSize), g.WithName("y"), g.WithInit(g.Zeroes()))
 
 	chain := c.ChainBuilder(graph, env)
-	prediction, err := chain.Fwd(inputs)
+	prediction, err := chain.Fwd(x)
 	if err != nil {
 		return nil, err
 	}
-	cost := c.CostFn(prediction, expected)
-	if _, err = g.Grad(cost, chain.Learnables()...); err != nil {
+	cost := c.CostFn(prediction, y)
+	_, err = g.Grad(cost, chain.Learnables()...)
+	if err != nil {
 		return nil, err
 	}
 
@@ -82,18 +83,18 @@ func NewPolicy(c *PolicyConfig, env *envv1.Env) (*Policy, error) {
 
 	return &Policy{
 		graph:      graph,
-		inputs:     inputs,
+		x:          x,
+		y:          y,
 		prediction: prediction,
-		expected:   expected,
 		chain:      chain,
 		vm:         vm,
 		solver:     solver,
 	}, nil
 }
 
-// Predict the correct action given the observation.
-func (p *Policy) Predict(observation *tensor.Dense) (qValues *tensor.Dense, err error) {
-	err = g.Let(p.inputs, observation)
+// Predict the correct action given the input.
+func (p *Policy) Predict(x *tensor.Dense) (qValues *tensor.Dense, err error) {
+	err = g.Let(p.x, x)
 	if err != nil {
 		return qValues, err
 	}
@@ -101,17 +102,19 @@ func (p *Policy) Predict(observation *tensor.Dense) (qValues *tensor.Dense, err 
 	if err != nil {
 		return qValues, err
 	}
+	p.vm.Reset()
 	qValues = p.prediction.Value().(*tensor.Dense)
 	return
 }
 
-// Fit the outcomes.
-func (p *Policy) Fit(state, update *tensor.Dense) error {
-	g.Let(p.expected, update)
-	g.Let(p.inputs, state)
+// Fit x to y.
+func (p *Policy) Fit(x, y *tensor.Dense) error {
+	g.Let(p.y, y)
+	g.Let(p.x, x)
 	grads := g.NodesToValueGrads(p.chain.Learnables())
 
-	if err := p.vm.RunAll(); err != nil {
+	err := p.vm.RunAll()
+	if err != nil {
 		return err
 	}
 	p.solver.Step(grads)

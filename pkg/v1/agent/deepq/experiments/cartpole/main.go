@@ -3,18 +3,18 @@ package main
 import (
 
 	"github.com/pbarker/logger"
-	"github.com/pbarker/sphere/pkg/common/errors"
+	"github.com/pbarker/sphere/pkg/v1/common/require"
 	sphere "github.com/pbarker/sphere/pkg/env"
 	"github.com/pbarker/go-rl/pkg/v1/agent/deepq"
 )
 
 func main() {
 	s, err := sphere.NewLocalServer(sphere.GymServerConfig)
-	errors.Require(err)
+	require.NoError(err)
 	defer s.Resource.Close()
 
 	env, err := s.Make("CartPole-v0")
-	errors.Require(err)
+	require.NoError(err)
 
 	// Get the size of the action space.
 	actionSpaceSize := env.GetActionSpace().GetDiscrete().GetN()
@@ -25,7 +25,7 @@ func main() {
 	logger.Infof("running for %d episodes", numEpisodes)
 	for i := 0; i <= numEpisodes; i++ {
 		state, err := env.Reset()
-		errors.Require(err)
+		require.NoError(err)
 		// fmt.Printf("state: %v\n", state)
 		// fmt.Printf("discreteState: %v\n", discreteState)
 
@@ -33,17 +33,17 @@ func main() {
 
 			// Get an action from the agent.
 			action, err := agent.Action(discreteState)
-			errors.Require(err)
+			require.NoError(err)
 
 			outcome, err := env.Step(action)
-			errors.Require(err)
+			require.NoError(err)
+
 			discreteObv, err := obvBinner.Bin(outcome.Observation)
-			// fmt.Printf("observation: %v\n", outcome.Observation)
-			// fmt.Printf("dobservation: %v\n", discreteObv)
+			require.NoError(err)
 
 			// Learn!
 			err = agent.Learn(action, outcome.Reward, discreteState, discreteObv)
-			errors.Require(err)
+			require.NoError(err)
 
 			if outcome.Done {
 				logger.Successf("Episode %d finished after %d timesteps", i, ts+1)
