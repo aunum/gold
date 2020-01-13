@@ -1,6 +1,11 @@
 package deepq
 
 import (
+	"fmt"
+
+	"github.com/chewxy/math32"
+	"github.com/pbarker/go-rl/pkg/v1/common"
+	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
 	"gorgonia.org/tensor"
 )
 
@@ -10,6 +15,7 @@ type Agent struct {
 	*Hyperparameters
 
 	policy *Policy
+	env    *envv1.Env
 
 	epsilon float32
 	memory  *Memory
@@ -27,6 +33,7 @@ type Hyperparameters struct {
 	Alpha float32
 
 	// EpsilonMin is the minimum rate at which the agent can explore.
+	// TODO: these should be a schedule of some sort.
 	EpsilonMin float32
 
 	// EpsilonMax is the maximum rate at which an agent can explore.
@@ -58,8 +65,8 @@ var DefaultAgentConfig = &AgentConfig{
 }
 
 // NewAgent returns a new dqn agent.
-func NewAgent(c *AgentConfig, actionSpaceSize int) (*Agent, error) {
-	policy, err := NewPolicy(c.PolicyConfig, actionSpaceSize)
+func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
+	policy, err := NewPolicy(c.PolicyConfig, env)
 	if err != nil {
 		return nil, err
 	}
@@ -68,15 +75,72 @@ func NewAgent(c *AgentConfig, actionSpaceSize int) (*Agent, error) {
 		epsilon:         c.EpsilonMax,
 		memory:          NewMemory(),
 		policy:          policy,
+		env:             env,
 	}, nil
 }
 
 // Learn the agent.
-func (a *Agent) Learn() {
-
+func (a *Agent) Learn() error {
+	if a.memory.Len() < a.ReplayBatchSize {
+		return nil
+	}
+	batch, err := a.memory.Sample(a.ReplayBatchSize)
+	if err != nil {
+		return err
+	}
+	for _, event := range batch {
+		update := float32(event.Reward)
+		if !event.Done {
+			nextAction, err := a.action(event.NextState)
+			if err != nil {
+				return err
+			}
+			update = (float32(event.Reward) + a.Gamma*float32(nextAction))
+		}
+		qValues, err := a.policy.Predict(event.State)
+		if err != nil {
+			return err
+		}
+		qValues.Set(event.Action, update)
+		err = a.policy.Fit(event.State, qValues)
+		if err != nil {
+			return err
+		}
+	}
+	a.epsilon *= a.EpsilonDecay
+	a.epsilon = math32.Max(a.EpsilonMin, a.epsilon)
+	return nil
 }
 
-// Action has the agent pick an action for the given state.
-func (a *Agent) Action(state *tensor.Dense) (int, error) {
-	return 0, nil
+// Action selects the best known action for the given state.
+func (a *Agent) Action(state *tensor.Dense) (action int, err error) {
+	if common.RandFloat32(float32(0.0), float32(1.0)) < a.epsilon {
+		// explore
+		action, err = a.env.SampleAction()
+		if err != nil {
+			return
+		}
+	}
+	action, err = a.action(state)
+	return
+}
+
+func (a *Agent) action(state *tensor.Dense) (action int, err error) {
+	qValues, err := a.policy.Predict(state)
+	if err != nil {
+		return
+	}
+	fmt.Println("qvalues: ", qValues)
+	actionIndex, err := qValues.Argmax(0)
+	if err != nil {
+		return action, err
+	}
+	action = actionIndex.GetI(0)
+	fmt.Println("action: ", action)
+	return
+}
+
+// Remember an event.
+func (a *Agent) Remember(event *Event) {
+	a.memory.PushFront(event)
 }

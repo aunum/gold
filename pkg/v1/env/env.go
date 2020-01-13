@@ -10,9 +10,11 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/pbarker/go-rl/pkg/v1/common"
+
 	"github.com/ory/dockertest"
-	sphere "github.com/pbarker/sphere/api/gen/go/v1alpha"
 	"github.com/pbarker/logger"
+	sphere "github.com/pbarker/sphere/api/gen/go/v1alpha"
 	"github.com/skratchdot/open-golang/open"
 	"google.golang.org/grpc"
 	"gorgonia.org/tensor"
@@ -304,7 +306,61 @@ func (e *Env) Clean() {
 	logger.Success("removed all local videos")
 }
 
-// BoxSpace is the
+// ActionSpaceShape is the shape of the action space.
+// TODO: should this be in the API of off the generated code?
+func (e *Env) ActionSpaceShape() []int {
+	return SpaceShape(e.ActionSpace)
+}
+
+// ObservationSpaceShape is the shape of the observation space.
+func (e *Env) ObservationSpaceShape() []int {
+	return SpaceShape(e.ObservationSpace)
+}
+
+// SpaceShape return the shape of the given space.
+func SpaceShape(space *sphere.Space) []int {
+	shape := []int{}
+	switch s := space.GetInfo().(type) {
+	case *sphere.Space_Box:
+		shape = common.Int32SliceToInt(s.Box.GetShape())
+	case *sphere.Space_Discrete:
+		shape = []int{1}
+	case *sphere.Space_MultiDiscrete:
+		shape = []int{len(s.MultiDiscrete.DiscreteSpaces)}
+	case *sphere.Space_StructSpace:
+		logger.Fatalf("struct space not supported")
+	default:
+		logger.Fatalf("unknown action space type: %v", space)
+	}
+	if len(shape) == 0 {
+		logger.Fatalf("space had no shape: %v", space)
+	}
+	return shape
+}
+
+// PotentialsShape is an overloaded method that will return a dense tensor of potentials for a given space.
+func PotentialsShape(space *sphere.Space) []int {
+	shape := []int{}
+	switch s := space.GetInfo().(type) {
+	case *sphere.Space_Box:
+		shape = common.Int32SliceToInt(s.Box.GetShape())
+	case *sphere.Space_Discrete:
+		shape = []int{int(s.Discrete.N)}
+	case *sphere.Space_MultiDiscrete:
+		shape = common.Int32SliceToInt(s.MultiDiscrete.DiscreteSpaces)
+	case *sphere.Space_StructSpace:
+		logger.Fatalf("struct space not supported")
+	default:
+		logger.Fatalf("unknown action space type: %v", space)
+	}
+	if len(shape) == 0 {
+		logger.Fatalf("space had no shape: %v", space)
+	}
+	return shape
+}
+
+// BoxSpace is a helper for box spaces that converts the values to dense tensors.
+// TODO: make proto plugin to do this automagically (protoc-gen-tensor)
 type BoxSpace struct {
 	// High values for this space.
 	High *tensor.Dense
@@ -317,6 +373,7 @@ type BoxSpace struct {
 }
 
 // BoxSpace returns the box space as dense tensors.
+// TODO: make proto plugin to do this automagically (protoc-gen-tensor)
 func (e *Env) BoxSpace() (*BoxSpace, error) {
 	space := e.GetObservationSpace()
 

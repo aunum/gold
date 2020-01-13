@@ -33,3 +33,12 @@ func MaxFloat32(vals []float32) (int, float32) {
 	fmt.Println("returning maxs: ", maxI, max)
 	return maxI, max
 }
+
+// Int32SliceToInt converts an int32 slice to an int.
+func Int32SliceToInt(s []int32) []int {
+	ret := []int{}
+	for _, i := range s {
+		ret = append(ret, int(i))
+	}
+	return ret
+}

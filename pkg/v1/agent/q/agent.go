@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/pbarker/go-rl/pkg/common"
-	"github.com/pbarker/go-rl/pkg/space"
+	"github.com/pbarker/go-rl/pkg/v1/common"
+	"github.com/pbarker/go-rl/pkg/v1/env/space"
 	"gorgonia.org/tensor"
 )
 
@@ -68,7 +68,7 @@ func NewAgent(h *Hyperparameters, actionSpaceSize int, table Table) *Agent {
 
 // Adapt will adjust the hyperparameters based on th timestep.
 func (a *Agent) Adapt(timestep int) {
-	//max(self.min_alpha, min(1.0, 1.0 - math.log10((t + 1) / self.ada_divisor)))
+	// max(self.min_alpha, min(1.0, 1.0 - math.log10((t + 1) / self.ada_divisor)))
 	a.Epsilon = adapt(timestep, a.minEpsilon, a.AdaDivisor)
 	fmt.Println("set epsilon to: ", a.Epsilon)
 	a.Alpha = adapt(timestep, a.minAlpha, a.AdaDivisor)

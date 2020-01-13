@@ -3,7 +3,7 @@ package common
 import (
 	"fmt"
 
-	tens "github.com/pbarker/go-rl/pkg/tensor"
+	tens "github.com/pbarker/go-rl/pkg/v1/tensor"
 	"gorgonia.org/tensor"
 )
 

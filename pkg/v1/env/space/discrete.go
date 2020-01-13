@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/pbarker/go-rl/pkg/common"
+	"github.com/pbarker/go-rl/pkg/v1/common"
 	"gorgonia.org/tensor"
 )
 

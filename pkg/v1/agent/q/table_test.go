@@ -1,7 +1,7 @@
 package q_test
 
 import (
-	. "github.com/pbarker/go-rl/pkg/agent/q"
+	. "github.com/pbarker/go-rl/pkg/v1/agent/q"
 	"github.com/stretchr/testify/require"
 	"gorgonia.org/tensor"
 	"testing"

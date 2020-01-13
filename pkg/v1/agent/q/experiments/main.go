@@ -6,22 +6,31 @@ import (
 	"sync"
 	"time"
 
-	. "github.com/pbarker/go-rl/pkg/agent/q"
-	"github.com/pbarker/go-rl/pkg/common"
-	. "github.com/pbarker/go-rl/pkg/agent/q/experiments/envs"
+	. "github.com/pbarker/go-rl/pkg/v1/agent/q"
+	. "github.com/pbarker/go-rl/pkg/v1/agent/q/experiments/envs"
+	"github.com/pbarker/go-rl/pkg/v1/common"
 	"github.com/pbarker/logger"
 	sphere "github.com/pbarker/sphere/pkg/env"
-	"gorgonia.org/tensor"
+	"github.com/schwarmco/go-cartesian-product"
 )
 
 func main() {
+	s, err := sphere.NewLocalServer(sphere.GymServerConfig)
+	common.RequireNoError(err)
+	defer s.Resource.Close()
+
+	_, err = TestCartPole(s, CartPoleTestConfig{
+		Hyperparameters: DefaultHyperparameters,
+		Buckets:         []int{1, 1, 6, 12},
+		NumEpisodes:     30,
+	})
+	common.RequireNoError(err)
 
 }
 
-
 func gridSearch() {
 	s, err := sphere.NewLocalServer(sphere.GymServerConfig)
-	require.Nil(t, err)
+	common.RequireNoError(err)
 	defer s.Resource.Close()
 
 	alpha := []interface{}{0.1, 0.2, 0.3, 0.5}
@@ -55,7 +64,7 @@ func gridSearch() {
 	var wg sync.WaitGroup
 	for i, conf := range configs {
 		wg.Add(1)
-		go func(s *sphere.Server, c cartPoleConfig, res chan *result) {
+		go func(s *sphere.Server, c CartPoleTestConfig, res chan *result) {
 			defer wg.Done()
 			r, err := TestCartPole(s, c)
 			if err != nil {
@@ -73,7 +82,7 @@ func gridSearch() {
 	}
 	wg.Wait()
 	close(ch)
-	results := map[float32]cartPoleConfig{}
+	results := map[float32]CartPoleTestConfig{}
 	for res := range ch {
 		results[res.results.AverageReward] = res.config
 	}

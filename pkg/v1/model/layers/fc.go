@@ -1,7 +1,7 @@
 package layers
 
 import (
-	"github.com/pbarker/go-rl/pkg/model"
+	"github.com/pbarker/go-rl/pkg/v1/model"
 	g "gorgonia.org/gorgonia"
 )
 

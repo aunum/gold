@@ -5,7 +5,7 @@ import (
 	"hash/fnv"
 
 	"github.com/k0kubun/pp"
-	"github.com/pbarker/go-rl/pkg/common"
+	"github.com/pbarker/go-rl/pkg/v1/common"
 	"gorgonia.org/tensor"
 )
 
