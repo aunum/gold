@@ -30,7 +30,7 @@ func (c *Chain) Fwd(inputs *g.Node) (prediction *g.Node, err error) {
 
 // Learnables are all of the learnable parameters in the chain.
 func (c *Chain) Learnables() g.Nodes {
-	retVal := make(g.Nodes, 0, len(c.Layers))
+	retVal := []*g.Node{}
 	for _, layer := range c.Layers {
 		retVal = append(retVal, layer.Learnables()...)
 	}
@@ -41,5 +41,12 @@ func (c *Chain) Learnables() g.Nodes {
 func (c *Chain) Add(l ...Layer) {
 	for _, layer := range l {
 		c.Layers = append(c.Layers, layer)
+	}
+}
+
+// Compile the chain of layers into the model.
+func (c *Chain) Compile(model Model) {
+	for _, layer := range c.Layers {
+		layer.Compile(model)
 	}
 }

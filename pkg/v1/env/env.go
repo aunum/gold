@@ -115,8 +115,11 @@ func (s *Server) Make(model string) (*Env, error) {
 
 // Outcome of taking an action.
 type Outcome struct {
-	// Observation after taking action.
+	// Observation of the current state.
 	Observation *tensor.Dense
+
+	// Action that was taken
+	Action int
 
 	// Reward from action.
 	Reward float32
@@ -128,12 +131,12 @@ type Outcome struct {
 // Step through the environment.
 func (e *Env) Step(value int) (*Outcome, error) {
 	ctx := context.Background()
-	resp, err := e.Client.StepEnv(ctx, &sphere.StepEnvRequest{Id: e.Id, Value: int32(value)})
+	resp, err := e.Client.StepEnv(ctx, &sphere.StepEnvRequest{Id: e.Id, Action: int32(value)})
 	if err != nil {
 		return nil, err
 	}
-	t := observationToTensor(resp.Observation)
-	return &Outcome{t, resp.Reward, resp.Done}, nil
+	observation := LocalizeTensor(resp.Observation)
+	return &Outcome{observation, value, resp.Reward, resp.Done}, nil
 }
 
 // SampleAction returns a sample action for the environment.
@@ -153,7 +156,7 @@ func (e *Env) Reset() (observation *tensor.Dense, err error) {
 	if err != nil {
 		return nil, err
 	}
-	t := observationToTensor(resp.Observation)
+	t := LocalizeTensor(resp.Observation)
 	return t, nil
 }
 
@@ -396,11 +399,12 @@ func (e *Env) Print() {
 	logger.Infoy("environment", e.Environment)
 }
 
-func observationToTensor(o *sphere.Observation) *tensor.Dense {
+// LocalizeTensor takes a sphere tensor and turns it into a dense gorgonia tensor.
+func LocalizeTensor(t *sphere.Tensor) *tensor.Dense {
 	shape := []int{}
-	for _, i := range o.GetShape() {
+	for _, i := range t.GetShape() {
 		shape = append(shape, int(i))
 	}
-	t := tensor.New(tensor.WithShape(shape...), tensor.WithBacking(o.Data))
-	return t
+	tens := tensor.New(tensor.WithShape(shape...), tensor.WithBacking(t.Data))
+	return tens
 }

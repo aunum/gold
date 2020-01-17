@@ -6,6 +6,7 @@ import (
 	"github.com/chewxy/math32"
 	"github.com/pbarker/go-rl/pkg/v1/common"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
+	"github.com/pbarker/logger"
 	"gorgonia.org/tensor"
 )
 
@@ -33,7 +34,7 @@ type Hyperparameters struct {
 	Alpha float32
 
 	// EpsilonMin is the minimum rate at which the agent can explore.
-	// TODO: these should be a schedule of some sort.
+	// TODO: these should be a schedule.
 	EpsilonMin float32
 
 	// EpsilonMax is the maximum rate at which an agent can explore.
@@ -55,17 +56,24 @@ type AgentConfig struct {
 // DefaultAgentConfig is the default config for a dqn agent.
 var DefaultAgentConfig = &AgentConfig{
 	Hyperparameters: &Hyperparameters{
-		Gamma:        0.95,
-		Alpha:        0.001,
-		EpsilonMin:   0.01,
-		EpsilonMax:   1.0,
-		EpsilonDecay: 0.995,
+		Gamma:           0.95,
+		Alpha:           0.001,
+		EpsilonMin:      0.01,
+		EpsilonMax:      1.0,
+		EpsilonDecay:    0.995,
+		ReplayBatchSize: 30,
 	},
 	PolicyConfig: DefaultPolicyConfig,
 }
 
 // NewAgent returns a new dqn agent.
 func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
+	if c == nil {
+		c = DefaultAgentConfig
+	}
+	if env == nil {
+		return nil, fmt.Errorf("environment cannot be nil")
+	}
 	policy, err := NewPolicy(c.PolicyConfig, env)
 	if err != nil {
 		return nil, err
@@ -81,9 +89,11 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 
 // Learn the agent.
 func (a *Agent) Learn() error {
+	logger.Infof("batch size: %v", a.memory.Len())
 	if a.memory.Len() < a.ReplayBatchSize {
 		return nil
 	}
+	logger.Info("learning")
 	batch, err := a.memory.Sample(a.ReplayBatchSize)
 	if err != nil {
 		return err
@@ -91,12 +101,15 @@ func (a *Agent) Learn() error {
 	for _, event := range batch {
 		update := float32(event.Reward)
 		if !event.Done {
-			nextAction, err := a.action(event.NextState)
+			nextAction, err := a.action(event.Observation)
 			if err != nil {
 				return err
 			}
 			update = (float32(event.Reward) + a.Gamma*float32(nextAction))
+		} else {
+			update = -update
 		}
+		logger.Info("update: ", update)
 		qValues, err := a.policy.Predict(event.State)
 		if err != nil {
 			return err
@@ -114,13 +127,17 @@ func (a *Agent) Learn() error {
 
 // Action selects the best known action for the given state.
 func (a *Agent) Action(state *tensor.Dense) (action int, err error) {
+	logger.Infof("epsilon: %v", a.epsilon)
 	if common.RandFloat32(float32(0.0), float32(1.0)) < a.epsilon {
 		// explore
+		logger.Info("exploring")
 		action, err = a.env.SampleAction()
 		if err != nil {
 			return
 		}
+		return
 	}
+	logger.Info("exploiting")
 	action, err = a.action(state)
 	return
 }
@@ -130,13 +147,13 @@ func (a *Agent) action(state *tensor.Dense) (action int, err error) {
 	if err != nil {
 		return
 	}
-	fmt.Println("qvalues: ", qValues)
+	logger.Info("qvalues: ", qValues)
 	actionIndex, err := qValues.Argmax(0)
 	if err != nil {
 		return action, err
 	}
 	action = actionIndex.GetI(0)
-	fmt.Println("action: ", action)
+	logger.Info("action: ", action)
 	return
 }
 

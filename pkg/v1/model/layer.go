@@ -11,6 +11,9 @@ type Layer interface {
 
 	// Learnables returns all learnable nodes within this layer.
 	Learnables() g.Nodes
+
+	// Compile the layer.
+	Compile(model Model)
 }
 
 // ActivationFn is an activation funciton for a layer.

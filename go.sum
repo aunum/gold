@@ -110,6 +110,12 @@ github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
 github.com/pbarker/logger v0.0.0-20200111154213-ae464237cb91 h1:F75vyfJOawNxTLKyt+d8qTbDAYFxc4V/nAYOSyjCgQY=
 github.com/pbarker/logger v0.0.0-20200111154213-ae464237cb91/go.mod h1:PPXUtXOMgaU2cfogPezyPyGyfBuVKkYbrDktEwQoydg=
+github.com/pbarker/logger v0.0.0-20200117155232-f84d96cdd4dd h1:Siff0vQ3v2tHWkqGvy3K5BMxjQE9OkUS7DSwf93qOJw=
+github.com/pbarker/logger v0.0.0-20200117155232-f84d96cdd4dd/go.mod h1:PPXUtXOMgaU2cfogPezyPyGyfBuVKkYbrDktEwQoydg=
+github.com/pbarker/logger v0.0.0-20200117155834-818d13f36c67 h1:iI7oOCRc+BU7ZV+lTeLebZB8Xu8JJ8RX7/2HZx3OaEM=
+github.com/pbarker/logger v0.0.0-20200117155834-818d13f36c67/go.mod h1:PPXUtXOMgaU2cfogPezyPyGyfBuVKkYbrDktEwQoydg=
+github.com/pbarker/logger v0.0.0-20200117160310-c61946f4c707 h1:KUWaZ5jS8bs5QV9sLyoiptzWMdmW0H+iAk5QFGw83Zo=
+github.com/pbarker/logger v0.0.0-20200117160310-c61946f4c707/go.mod h1:PPXUtXOMgaU2cfogPezyPyGyfBuVKkYbrDktEwQoydg=
 github.com/pbarker/sphere v0.0.0-20191223185849-a752de7c85e1 h1:aVcMQLcapCcliWPWP+d1Zlst8JGuPqYHrhBjy18LJbk=
 github.com/pbarker/sphere v0.0.0-20191223185849-a752de7c85e1/go.mod h1:gYIMHQXrCizbv0ojL1e9GQ88r3YLT9jWq3LGsFF8LD0=
 github.com/pbarker/sphere v0.0.0-20191227224658-7d7df16b3a70 h1:Z/HCLN/DtAmv197Hy8wLn/dYOulZeHhAk2ytQB9TBiQ=
@@ -128,6 +134,12 @@ github.com/pbarker/sphere v0.0.0-20200105211831-a93528cdf2e1 h1:qP5FoBpbxnc+oOAB
 github.com/pbarker/sphere v0.0.0-20200105211831-a93528cdf2e1/go.mod h1:CJARWU7+MAp0dVWBbATBJynIb++o+Q3+hrfn8j4LAsk=
 github.com/pbarker/sphere v0.0.0-20200105212508-f8e411c14645 h1:EJSdXkXj4eICzC9gp7cxTVkiW5g0i0wowodHYpOdSfI=
 github.com/pbarker/sphere v0.0.0-20200105212508-f8e411c14645/go.mod h1:CJARWU7+MAp0dVWBbATBJynIb++o+Q3+hrfn8j4LAsk=
+github.com/pbarker/sphere v0.0.0-20200110025417-624b1ab1f138 h1:vLqnl+iiagoiSCOFkD8JXBH3DYPpZy4wP/RKC3YFnoY=
+github.com/pbarker/sphere v0.0.0-20200110025417-624b1ab1f138/go.mod h1:CJARWU7+MAp0dVWBbATBJynIb++o+Q3+hrfn8j4LAsk=
+github.com/pbarker/sphere v0.0.0-20200114222902-a3a6f3d0b1d5 h1:T1tmJOw79rCmVib/cGBy+OH7Jur5/o3rpPjvH7ZuVCA=
+github.com/pbarker/sphere v0.0.0-20200114222902-a3a6f3d0b1d5/go.mod h1:CJARWU7+MAp0dVWBbATBJynIb++o+Q3+hrfn8j4LAsk=
+github.com/pbarker/sphere v0.0.0-20200114235216-8cf4f40b189e h1:bTUp7KbfOS0BG1Q2CVUWebZS4idUzfFQKyVza+brlCs=
+github.com/pbarker/sphere v0.0.0-20200114235216-8cf4f40b189e/go.mod h1:CJARWU7+MAp0dVWBbATBJynIb++o+Q3+hrfn8j4LAsk=
 github.com/pkg/errors v0.8.1-0.20171018195549-f15c970de5b7/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
@@ -147,6 +159,7 @@ github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e/go.mod h1:s
 github.com/spf13/cobra v0.0.2-0.20171109065643-2da4a54c5cee/go.mod h1:1l0Ry5zgKvJasoi3XT1TypsSe7PqH0Sj9dhYf7v3XqQ=
 github.com/spf13/pflag v1.0.1-0.20171106142849-4c012f6dcd95/go.mod h1:DYY7MBk1bdzusC3SYhjObp+wFpr4gzcvqqNjLnInEg4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/objx v0.1.1 h1:2vfRuCMp5sSVIDSqO8oNnWJq7mPa6KVP3iPIwFBuy8A=
 github.com/stretchr/objx v0.1.1/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.1.4/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
 github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
@@ -193,6 +206,8 @@ golang.org/x/sys v0.0.0-20191220220014-0732a990476f h1:72l8qCJ1nGxMGH26QVBVIxKd/
 golang.org/x/sys v0.0.0-20191220220014-0732a990476f/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20191224085550-c709ea063b76 h1:Dho5nD6R3PcW2SH1or8vS0dszDaXRxIw55lBX7XiE5g=
 golang.org/x/sys v0.0.0-20191224085550-c709ea063b76/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20200117145432-59e60aa80a0c h1:gUYreENmqtjZb2brVfUas1sC6UivSY8XwKwPo8tloLs=
+golang.org/x/sys v0.0.0-20200117145432-59e60aa80a0c/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0 h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/tools v0.0.0-20180221164845-07fd8470d635/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
