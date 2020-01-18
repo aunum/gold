@@ -116,6 +116,8 @@ github.com/pbarker/logger v0.0.0-20200117155834-818d13f36c67 h1:iI7oOCRc+BU7ZV+l
 github.com/pbarker/logger v0.0.0-20200117155834-818d13f36c67/go.mod h1:PPXUtXOMgaU2cfogPezyPyGyfBuVKkYbrDktEwQoydg=
 github.com/pbarker/logger v0.0.0-20200117160310-c61946f4c707 h1:KUWaZ5jS8bs5QV9sLyoiptzWMdmW0H+iAk5QFGw83Zo=
 github.com/pbarker/logger v0.0.0-20200117160310-c61946f4c707/go.mod h1:PPXUtXOMgaU2cfogPezyPyGyfBuVKkYbrDktEwQoydg=
+github.com/pbarker/logger v0.0.0-20200117161702-2b0ddcdefd60 h1:cLpY4cHJjEIy551eKZQWw1vXPqrIZ84t/MQgtWakniY=
+github.com/pbarker/logger v0.0.0-20200117161702-2b0ddcdefd60/go.mod h1:PPXUtXOMgaU2cfogPezyPyGyfBuVKkYbrDktEwQoydg=
 github.com/pbarker/sphere v0.0.0-20191223185849-a752de7c85e1 h1:aVcMQLcapCcliWPWP+d1Zlst8JGuPqYHrhBjy18LJbk=
 github.com/pbarker/sphere v0.0.0-20191223185849-a752de7c85e1/go.mod h1:gYIMHQXrCizbv0ojL1e9GQ88r3YLT9jWq3LGsFF8LD0=
 github.com/pbarker/sphere v0.0.0-20191227224658-7d7df16b3a70 h1:Z/HCLN/DtAmv197Hy8wLn/dYOulZeHhAk2ytQB9TBiQ=
@@ -140,6 +142,10 @@ github.com/pbarker/sphere v0.0.0-20200114222902-a3a6f3d0b1d5 h1:T1tmJOw79rCmVib/
 github.com/pbarker/sphere v0.0.0-20200114222902-a3a6f3d0b1d5/go.mod h1:CJARWU7+MAp0dVWBbATBJynIb++o+Q3+hrfn8j4LAsk=
 github.com/pbarker/sphere v0.0.0-20200114235216-8cf4f40b189e h1:bTUp7KbfOS0BG1Q2CVUWebZS4idUzfFQKyVza+brlCs=
 github.com/pbarker/sphere v0.0.0-20200114235216-8cf4f40b189e/go.mod h1:CJARWU7+MAp0dVWBbATBJynIb++o+Q3+hrfn8j4LAsk=
+github.com/pbarker/sphere v0.0.0-20200117203610-8fa0179f4ecf h1:B2cemLEWKNHTGJJ88zZf9aB83wUCz1VdcPAMujorxFo=
+github.com/pbarker/sphere v0.0.0-20200117203610-8fa0179f4ecf/go.mod h1:CJARWU7+MAp0dVWBbATBJynIb++o+Q3+hrfn8j4LAsk=
+github.com/pbarker/sphere v0.0.0-20200117211912-c3407250edb1 h1:HVjfhq5AOIDMbTCV6p98nOGcfBoYQX1Phd1CYjsTytM=
+github.com/pbarker/sphere v0.0.0-20200117211912-c3407250edb1/go.mod h1:CJARWU7+MAp0dVWBbATBJynIb++o+Q3+hrfn8j4LAsk=
 github.com/pkg/errors v0.8.1-0.20171018195549-f15c970de5b7/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=

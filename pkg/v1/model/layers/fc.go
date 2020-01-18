@@ -1,8 +1,6 @@
 package layers
 
 import (
-	"fmt"
-
 	"gorgonia.org/tensor"
 
 	"github.com/pbarker/go-rl/pkg/v1/model"
@@ -85,7 +83,6 @@ func (f *FC) Fwd(x *g.Node) (*g.Node, error) {
 		return prod, nil
 	}
 	a := g.Must(f.activation(prod))
-	fmt.Println("a shape: ", a.Shape())
 	return a, nil
 }
 

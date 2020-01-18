@@ -91,10 +91,16 @@ type Env struct {
 
 	// VideoPaths of result videos downloadloaded from the server.
 	VideoPaths []string
+
+	// Normalizer normalizes observation data.
+	Normalizer Normalizer
 }
 
+// Opt is an environment option.
+type Opt func(*Env)
+
 // Make an environment.
-func (s *Server) Make(model string) (*Env, error) {
+func (s *Server) Make(model string, opts ...Opt) (*Env, error) {
 	ctx := context.Background()
 	resp, err := s.Client.CreateEnv(ctx, &sphere.CreateEnvRequest{ModelName: model})
 	if err != nil {
@@ -107,10 +113,22 @@ func (s *Server) Make(model string) (*Env, error) {
 		return nil, err
 	}
 	logger.Success(rresp.Message)
-	return &Env{
+	e := &Env{
 		Environment: env,
 		Client:      s.Client,
-	}, nil
+	}
+	for _, opt := range opts {
+		opt(e)
+	}
+	return e, nil
+}
+
+// WithNormalizer adds a normalizer for observation data.
+func WithNormalizer(normalizer Normalizer) func(*Env) {
+	return func(e *Env) {
+		normalizer.Init(e)
+		e.Normalizer = normalizer
+	}
 }
 
 // Outcome of taking an action.
@@ -135,7 +153,10 @@ func (e *Env) Step(value int) (*Outcome, error) {
 	if err != nil {
 		return nil, err
 	}
-	observation := LocalizeTensor(resp.Observation)
+	observation := resp.Observation.Dense()
+	if e.Normalizer != nil {
+		observation = e.Normalizer.Norm(observation)
+	}
 	return &Outcome{observation, value, resp.Reward, resp.Done}, nil
 }
 
@@ -156,7 +177,10 @@ func (e *Env) Reset() (observation *tensor.Dense, err error) {
 	if err != nil {
 		return nil, err
 	}
-	t := LocalizeTensor(resp.Observation)
+	t := resp.Observation.Dense()
+	if e.Normalizer != nil {
+		observation = e.Normalizer.Norm(t)
+	}
 	return t, nil
 }
 
@@ -397,14 +421,4 @@ func (e *Env) BoxSpace() (*BoxSpace, error) {
 // Print a YAML representation of the environment.
 func (e *Env) Print() {
 	logger.Infoy("environment", e.Environment)
-}
-
-// LocalizeTensor takes a sphere tensor and turns it into a dense gorgonia tensor.
-func LocalizeTensor(t *sphere.Tensor) *tensor.Dense {
-	shape := []int{}
-	for _, i := range t.GetShape() {
-		shape = append(shape, int(i))
-	}
-	tens := tensor.New(tensor.WithShape(shape...), tensor.WithBacking(t.Data))
-	return tens
 }

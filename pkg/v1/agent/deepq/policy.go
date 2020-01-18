@@ -55,9 +55,9 @@ type ChainBuilder func(graph *g.ExprGraph, env *envv1.Env) *model.Chain
 // DefaultFCChainBuilder creates a default fully connected network for the given action space size.
 func DefaultFCChainBuilder(graph *g.ExprGraph, env *envv1.Env) *model.Chain {
 	chain := model.NewChain(
-		layers.NewFC(g.NewTensor(graph, g.Float32, 2, g.WithShape(env.ObservationSpaceShape()[0], 24), g.WithName("w0"), g.WithInit(g.GlorotU(1.0))), layers.WithActivation(g.Rectify)),
-		layers.NewFC(g.NewTensor(graph, g.Float32, 2, g.WithShape(24, 24), g.WithName("w1"), g.WithInit(g.GlorotU(1.0))), layers.WithActivation(g.Rectify)),
-		layers.NewFC(g.NewTensor(graph, g.Float32, 2, g.WithShape(24, envv1.PotentialsShape(env.ActionSpace)[0]), g.WithName("w2"), g.WithInit(g.GlorotU(1.0)))),
+		layers.NewFC(env.ObservationSpaceShape()[0], 24, layers.WithName("w0"), layers.WithActivation(g.Sigmoid)),
+		layers.NewFC(24, 24, layers.WithName("w1"), layers.WithActivation(g.Sigmoid)),
+		layers.NewFC(24, envv1.PotentialsShape(env.ActionSpace)[0], layers.WithName("w2"), layers.WithActivation(g.Sigmoid)),
 	)
 	return chain
 }
@@ -80,7 +80,10 @@ func NewPolicy(c *PolicyConfig, env *envv1.Env) (*Policy, error) {
 	// 	return nil, err
 	// }
 
-	cost := c.CostFn(prediction, y)
+	cost, err := c.CostFn(prediction, y)
+	if err != nil {
+		return nil, err
+	}
 
 	_, err = g.Grad(cost, chain.Learnables()...)
 	if err != nil {

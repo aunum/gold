@@ -1,4 +1,4 @@
-package common
+package dense
 
 import (
 	"fmt"
@@ -12,7 +12,7 @@ func TestDenseEqWidthBinner(t *testing.T) {
 	low := New(WithShape(1, 4), WithBacking([]float32{-12.0, -0.5, -5.0, 0}))
 	high := New(WithShape(1, 4), WithBacking([]float32{12, 0.5, 5.0, 10.0}))
 	intervals := New(WithShape(1, 4), WithBacking(Range(Int, 4, 8)))
-	binner, err := NewDenseEqWidthBinner(intervals, low, high)
+	binner, err := NewEqWidthBinner(intervals, low, high)
 	require.Nil(t, err)
 
 	observation := New(WithShape(1, 4), WithBacking([]float32{-8.0, -0.2, 2.0, 5.0}))

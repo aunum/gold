@@ -12,7 +12,7 @@ func main() {
 	require.NoError(err)
 	defer s.Resource.Close()
 
-	env, err := s.Make("CartPole-v0")
+	env, err := s.Make("CartPole-v0", sphere.WithNormalizer(sphere.NewMinMaxNormalizer()))
 	require.NoError(err)
 
 	agent, err := deepq.NewAgent(deepq.DefaultAgentConfig, env)

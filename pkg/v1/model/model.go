@@ -29,10 +29,12 @@ type Sequential struct {
 	// Layers in the model.
 	Layers *Chain
 
+	// Tracker of values.
+	Tracker *Tracker
+
 	graph   *g.ExprGraph
 	x       *g.Node
 	y       *g.Node
-	costVal g.Value
 	predVal g.Value
 
 	costFn     CostFn
@@ -42,17 +44,22 @@ type Sequential struct {
 }
 
 // NewSequential returns a new sequential model.
-func NewSequential(x, y g.Value) *Sequential {
+func NewSequential(x, y g.Value) (*Sequential, error) {
 	graph := g.NewGraph()
+	tracker, err := NewTracker(graph)
+	if err != nil {
+		return nil, err
+	}
 
 	xn := g.NewTensor(graph, x.Dtype(), len(x.Shape()), g.WithValue(x), g.WithName("x"))
 	yn := g.NewTensor(graph, y.Dtype(), len(y.Shape()), g.WithValue(y), g.WithName("y"))
 	return &Sequential{
-		Layers: NewChain(),
-		graph:  graph,
-		x:      xn,
-		y:      yn,
-	}
+		Layers:  NewChain(),
+		Tracker: tracker,
+		graph:   graph,
+		x:       xn,
+		y:       yn,
+	}, nil
 }
 
 // Opt is a model option.
@@ -120,7 +127,7 @@ func (s *Sequential) Compile(opts ...Opt) error {
 	if err != nil {
 		return err
 	}
-	g.Read(cost, &s.costVal)
+	s.Tracker.TrackValue("cost", cost)
 
 	_, err = g.Grad(cost, s.Layers.Learnables()...)
 	if err != nil {
@@ -157,7 +164,7 @@ func (s *Sequential) Fit(x, y g.Value) error {
 	if err != nil {
 		return err
 	}
-	logger.Info("cost: ", s.costVal)
+	s.Tracker.Flush()
 	grads := g.NodesToValueGrads(s.Layers.Learnables())
 	s.optimizer.Step(grads)
 	s.vm.Reset()

@@ -9,8 +9,8 @@ require (
 	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/leesper/go_rng v0.0.0-20190531154944-a612b043e353 // indirect
 	github.com/ory/dockertest v3.3.5+incompatible
-	github.com/pbarker/logger v0.0.0-20200117160310-c61946f4c707
-	github.com/pbarker/sphere v0.0.0-20200114235216-8cf4f40b189e
+	github.com/pbarker/logger v0.0.0-20200117161702-2b0ddcdefd60
+	github.com/pbarker/sphere v0.0.0-20200117211912-c3407250edb1
 	github.com/schwarmco/go-cartesian-product v0.0.0-20180515110546-d5ee747a6dc9
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/stretchr/testify v1.4.0

@@ -13,21 +13,24 @@ import (
 )
 
 func TestSequential(t *testing.T) {
-	xB := []float32{0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1}
+	xB := []float32{-20, 0, 10, 0, 1, 10000, 1, 0, 20, 1, 5000, -20000}
 	x := tensor.New(tensor.WithBacking(xB), tensor.WithShape(1, 12))
 
-	yB := []float32{0.34, 0, 5.3, 1}
+	yB := []float32{1, 0, 0, 1}
 	y := tensor.New(tensor.WithBacking(yB), tensor.WithShape(1, 4))
 
-	logger.Info("x: ", x)
-	logger.Info("y: ", y)
+	logger.Infov("x", x)
+	logger.Infov("y", y)
 
-	model := NewSequential(x, y)
+	model, err := NewSequential(x, y)
+	require.NoError(t, err)
 	model.AddLayers(
 		layers.NewFC(12, 24, layers.WithActivation(g.Sigmoid)),
 		layers.NewFC(24, 4, layers.WithActivation(g.Sigmoid)),
 	)
-	err := model.Compile(WithOptimizer(g.NewVanillaSolver(g.WithLearnRate(1.0))), WithLoss(MeanSquaredError))
+
+	optimizer := g.NewVanillaSolver(g.WithLearnRate(1.0))
+	err = model.Compile(WithOptimizer(optimizer), WithLoss(MeanSquaredError))
 	require.NoError(t, err)
 
 	prediction, err := model.Predict(x)
