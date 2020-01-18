@@ -7,7 +7,7 @@ import (
 // CostFn is a cost function.
 type CostFn func(prediction, y *g.Node) (cost *g.Node, err error)
 
-// MeanSquaredError gives the mean squared error of the expected and prediction nodes.
+// MeanSquaredError loss function.
 // https://en.wikipedia.org/wiki/Mean_squared_error
 func MeanSquaredError(prediction, y *g.Node) (cost *g.Node, err error) {
 	losses := g.Must(g.Sub(y, prediction))

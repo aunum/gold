@@ -1,9 +1,11 @@
 package model
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 
 	"github.com/pbarker/logger"
 	g "gorgonia.org/gorgonia"
@@ -11,10 +13,12 @@ import (
 
 // Tracker is a means of tracking values on a graph.
 type Tracker struct {
-	Values []*TrackedValue `json:"values"`
+	Values TrackedValues `json:"values"`
 
 	graph   *g.ExprGraph
 	encoder *json.Encoder
+	f       *os.File
+	scanner *bufio.Scanner
 }
 
 // TrackerOpt is a tracker option.
@@ -28,10 +32,13 @@ func NewTracker(graph *g.ExprGraph, opts ...TrackerOpt) (*Tracker, error) {
 	}
 	logger.Infof("tracking data in %s", f.Name())
 	encoder := json.NewEncoder(f)
+	scanner := bufio.NewScanner(f)
 	t := &Tracker{
 		Values:  []*TrackedValue{},
 		graph:   graph,
 		encoder: encoder,
+		f:       f,
+		scanner: scanner,
 	}
 	return t, nil
 }
@@ -78,6 +85,27 @@ func (t *Tracker) Get(name string) (*TrackedValue, error) {
 	return nil, fmt.Errorf("%q value does not exist", name)
 }
 
+// GetHistory gets all the history for a value.
+func (t *Tracker) GetHistory(name string) ([]*TrackedValue, error) {
+	values := []*TrackedValue{}
+	for t.scanner.Scan() {
+		var t *Tracker
+		err := json.Unmarshal(t.scanner.Bytes(), t)
+		if err != nil {
+			return nil, err
+		}
+		tv, err := t.Get(name)
+		if err != nil {
+			return nil, err
+		}
+		values = append(values, tv)
+	}
+	if err := t.scanner.Err(); err != nil {
+		return nil, err
+	}
+	return values, nil
+}
+
 // RenderValue renders a value.
 func (t *Tracker) RenderValue(name string) {
 	v, err := t.Get(name)
@@ -97,4 +125,74 @@ func (t *Tracker) Render() {
 // Flush tracked values to store.
 func (t *Tracker) Flush() error {
 	return t.encoder.Encode(t)
+}
+
+// TrackedValues is a slice of tracked value.
+type TrackedValues []*TrackedValue
+
+// Float32 converts the tracked values to a float32 slice.
+func (t TrackedValues) Float32() []float32 {
+	ret := []float32{}
+	for _, value := range t {
+		ret = append(ret, value.Value.Data().(float32))
+	}
+	return ret
+}
+
+// Float64 converts the tracked values to a float64 slice.
+func (t TrackedValues) Float64() []float64 {
+	ret := []float64{}
+	for _, value := range t {
+		ret = append(ret, value.Value.Data().(float64))
+	}
+	return ret
+}
+
+// Int converts the tracked values to a int slice.
+func (t TrackedValues) Int() []int {
+	ret := []int{}
+	for _, value := range t {
+		ret = append(ret, value.Value.Data().(int))
+	}
+	return ret
+}
+
+// Int32 converts the tracked values to a int slice.
+func (t TrackedValues) Int32() []int32 {
+	ret := []int32{}
+	for _, value := range t {
+		ret = append(ret, value.Value.Data().(int32))
+	}
+	return ret
+}
+
+// Int64 converts the tracked values to a int slice.
+func (t TrackedValues) Int64() []int64 {
+	ret := []int64{}
+	for _, value := range t {
+		ret = append(ret, value.Value.Data().(int64))
+	}
+	return ret
+}
+
+// Data converts returns an interface of the values.
+func (t TrackedValues) Data() []interface{} {
+	ret := []interface{}{}
+	for _, value := range t {
+		ret = append(ret, value.Value.Data())
+	}
+	return ret
+}
+
+// Name of the tracked value.
+func (t TrackedValues) Name() string {
+	if len(t) == 0 {
+		logger.Fatal("tracked values is empty")
+	}
+	return t[0].Name
+}
+
+// Render the tracked values.
+func (t TrackedValues) Render() {
+	logger.Infov(t.Name(), t.Data())
 }
