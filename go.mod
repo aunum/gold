@@ -6,6 +6,7 @@ require (
 	github.com/awalterschulze/gographviz v0.0.0-20190522210029-fa59802746ab // indirect
 	github.com/chewxy/math32 v1.0.4
 	github.com/gammazero/deque v0.0.0-20190521012701-46e4ffb7a622
+	github.com/guptarohit/asciigraph v0.4.1
 	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/leesper/go_rng v0.0.0-20190531154944-a612b043e353 // indirect
 	github.com/ory/dockertest v3.3.5+incompatible
