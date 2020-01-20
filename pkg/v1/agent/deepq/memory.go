@@ -13,7 +13,11 @@ import (
 // Event is an event that occurred.
 type Event struct {
 	*envv1.Outcome
-	State  *tensor.Dense
+
+	// State by which the action was taken.
+	State *tensor.Dense
+
+	// Action that was taken.
 	Action int
 }
 

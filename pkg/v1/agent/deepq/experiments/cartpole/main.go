@@ -3,22 +3,24 @@ package main
 import (
 	"github.com/pbarker/go-rl/pkg/v1/agent/deepq"
 	"github.com/pbarker/go-rl/pkg/v1/common/require"
-	sphere "github.com/pbarker/go-rl/pkg/v1/env"
+	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
 	"github.com/pbarker/logger"
 )
 
 func main() {
-	s, err := sphere.NewLocalServer(sphere.GymServerConfig)
+	s, err := envv1.NewLocalServer(envv1.GymServerConfig)
 	require.NoError(err)
 	defer s.Resource.Close()
 
-	env, err := s.Make("CartPole-v0", sphere.WithNormalizer(sphere.NewMinMaxNormalizer()))
+	// envv1.WithNormalizer(envv1.NewMinMaxNormalizer())
+	env, err := s.Make("CartPole-v0")
 	require.NoError(err)
 
+	// agentConfig := deepq.AgentConfig{}
 	agent, err := deepq.NewAgent(deepq.DefaultAgentConfig, env)
 	require.NoError(err)
 
-	numEpisodes := 200
+	numEpisodes := 3000
 	logger.Infof("running for %d episodes", numEpisodes)
 	for i := 0; i <= numEpisodes; i++ {
 		state, err := env.Reset()

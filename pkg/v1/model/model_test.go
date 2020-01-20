@@ -47,4 +47,6 @@ func TestSequential(t *testing.T) {
 	logger.Infov("prediction", prediction)
 
 	model.Visualize()
+	err = model.Tracker.PrintHistoryAll()
+	require.NoError(t, err)
 }

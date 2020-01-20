@@ -16,6 +16,7 @@ require (
 	github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/sys v0.0.0-20200117145432-59e60aa80a0c // indirect
+	gonum.org/v1/plot v0.0.0-20200111075622-4abb28f724d5
 	google.golang.org/grpc v1.25.1
 	gorgonia.org/gorgonia v0.9.6
 	gorgonia.org/tensor v0.9.4

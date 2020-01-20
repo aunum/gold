@@ -3,6 +3,8 @@ package deepq
 import (
 	"fmt"
 
+	"github.com/pbarker/go-rl/pkg/v1/model"
+
 	"github.com/chewxy/math32"
 	"github.com/pbarker/go-rl/pkg/v1/common"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
@@ -15,7 +17,7 @@ type Agent struct {
 	// Hyperparameters for the dqn agent.
 	*Hyperparameters
 
-	policy *Policy
+	Policy model.Model
 	env    *envv1.Env
 
 	epsilon float32
@@ -47,6 +49,16 @@ type Hyperparameters struct {
 	ReplayBatchSize int
 }
 
+// DefaultHyperparameters are the default hyperparameters.
+var DefaultHyperparameters = &Hyperparameters{
+	Gamma:           0.95,
+	Alpha:           0.001,
+	EpsilonMin:      0.01,
+	EpsilonMax:      1.0,
+	EpsilonDecay:    0.995,
+	ReplayBatchSize: 30,
+}
+
 // AgentConfig is the config for a dqn agent.
 type AgentConfig struct {
 	*Hyperparameters
@@ -55,15 +67,8 @@ type AgentConfig struct {
 
 // DefaultAgentConfig is the default config for a dqn agent.
 var DefaultAgentConfig = &AgentConfig{
-	Hyperparameters: &Hyperparameters{
-		Gamma:           0.95,
-		Alpha:           0.001,
-		EpsilonMin:      0.01,
-		EpsilonMax:      1.0,
-		EpsilonDecay:    0.995,
-		ReplayBatchSize: 30,
-	},
-	PolicyConfig: DefaultPolicyConfig,
+	Hyperparameters: DefaultHyperparameters,
+	PolicyConfig:    DefaultPolicyConfig,
 }
 
 // NewAgent returns a new dqn agent.
@@ -74,7 +79,7 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 	if env == nil {
 		return nil, fmt.Errorf("environment cannot be nil")
 	}
-	policy, err := NewPolicy(c.PolicyConfig, env)
+	policy, err := MakePolicy(c.PolicyConfig, env)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +87,7 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 		Hyperparameters: c.Hyperparameters,
 		epsilon:         c.EpsilonMax,
 		memory:          NewMemory(),
-		policy:          policy,
+		Policy:          policy,
 		env:             env,
 	}, nil
 }
@@ -101,21 +106,26 @@ func (a *Agent) Learn() error {
 	for _, event := range batch {
 		update := float32(event.Reward)
 		if !event.Done {
-			nextAction, err := a.action(event.Observation)
+			prediction, err := a.Policy.Predict(event.Observation)
 			if err != nil {
 				return err
 			}
-			update = (float32(event.Reward) + a.Gamma*float32(nextAction))
+			qValues := prediction.(*tensor.Dense)
+			logger.Info("qvalues: ", qValues)
+			maxIndex, err := qValues.Argmax(0)
+			nextMax := qValues.GetF32(maxIndex.GetI(0))
+			update = (float32(event.Reward) + a.Gamma*nextMax)
 		} else {
 			update = -update
 		}
-		logger.Info("update: ", update)
-		qValues, err := a.policy.Predict(event.State)
+		prediction, err := a.Policy.Predict(event.State)
 		if err != nil {
 			return err
 		}
+		qValues := prediction.(*tensor.Dense)
 		qValues.Set(event.Action, update)
-		err = a.policy.Fit(event.State, qValues)
+		logger.Info("y: ", qValues)
+		err = a.Policy.Fit(event.State, qValues)
 		if err != nil {
 			return err
 		}
@@ -143,17 +153,18 @@ func (a *Agent) Action(state *tensor.Dense) (action int, err error) {
 }
 
 func (a *Agent) action(state *tensor.Dense) (action int, err error) {
-	qValues, err := a.policy.Predict(state)
+	prediction, err := a.Policy.Predict(state)
 	if err != nil {
 		return
 	}
+	qValues := prediction.(*tensor.Dense)
 	logger.Info("qvalues: ", qValues)
 	actionIndex, err := qValues.Argmax(0)
 	if err != nil {
 		return action, err
 	}
 	action = actionIndex.GetI(0)
-	logger.Info("action: ", action)
+	logger.Info("best action: ", action)
 	return
 }
 

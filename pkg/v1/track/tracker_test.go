@@ -1,4 +1,4 @@
-package model_test
+package track_test
 
 import (
 	"fmt"
@@ -44,7 +44,7 @@ func TestTracker(t *testing.T) {
 		err := vm.RunAll()
 		require.NoError(t, err)
 
-		tracker.RenderAll()
+		tracker.PrintAll()
 		vm.Reset()
 
 		err = tracker.Flush()

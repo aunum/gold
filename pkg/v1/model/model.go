@@ -2,6 +2,7 @@ package model
 
 import (
 	"github.com/pbarker/go-rl/pkg/v1/common"
+	"github.com/pbarker/go-rl/pkg/v1/track"
 	"github.com/pbarker/logger"
 	g "gorgonia.org/gorgonia"
 )
@@ -30,14 +31,14 @@ type Sequential struct {
 	Layers *Chain
 
 	// Tracker of values.
-	Tracker *Tracker
+	Tracker *track.Tracker
 
 	graph   *g.ExprGraph
 	x       *g.Node
 	y       *g.Node
 	predVal g.Value
 
-	costFn     CostFn
+	lossFn     LossFn
 	optimizer  g.Solver
 	prediction *g.Node
 	vm         g.VM
@@ -46,7 +47,7 @@ type Sequential struct {
 // NewSequential returns a new sequential model.
 func NewSequential(x, y g.Value) (*Sequential, error) {
 	graph := g.NewGraph()
-	tracker, err := NewTracker(graph)
+	tracker, err := track.NewTracker()
 	if err != nil {
 		return nil, err
 	}
@@ -65,13 +66,13 @@ func NewSequential(x, y g.Value) (*Sequential, error) {
 // Opt is a model option.
 type Opt func(Model)
 
-// WithLoss uses a specific cost function with the model.
+// WithLoss uses a specific loss function with the model.
 // Defaults to MSE.
-func WithLoss(costFn CostFn) func(Model) {
+func WithLoss(lossFn LossFn) func(Model) {
 	return func(m Model) {
 		switch t := m.(type) {
 		case *Sequential:
-			t.costFn = costFn
+			t.lossFn = lossFn
 		default:
 			logger.Fatal("unknown model type")
 		}
@@ -108,8 +109,8 @@ func (s *Sequential) Compile(opts ...Opt) error {
 	for _, opt := range opts {
 		opt(s)
 	}
-	if s.costFn == nil {
-		s.costFn = MeanSquaredError
+	if s.lossFn == nil {
+		s.lossFn = MeanSquaredError
 	}
 	if s.optimizer == nil {
 		s.optimizer = g.NewAdamSolver()
@@ -123,13 +124,13 @@ func (s *Sequential) Compile(opts ...Opt) error {
 	s.prediction = prediction
 	g.Read(prediction, &s.predVal)
 
-	cost, err := s.costFn(prediction, s.y)
+	loss, err := s.lossFn(prediction, s.y)
 	if err != nil {
 		return err
 	}
-	s.Tracker.TrackValue("cost", cost)
+	s.Tracker.TrackValue("loss", loss)
 
-	_, err = g.Grad(cost, s.Layers.Learnables()...)
+	_, err = g.Grad(loss, s.Layers.Learnables()...)
 	if err != nil {
 		return err
 	}

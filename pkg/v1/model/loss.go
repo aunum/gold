@@ -4,8 +4,8 @@ import (
 	g "gorgonia.org/gorgonia"
 )
 
-// CostFn is a cost function.
-type CostFn func(prediction, y *g.Node) (cost *g.Node, err error)
+// LossFn is a loss function.
+type LossFn func(prediction, y *g.Node) (cost *g.Node, err error)
 
 // MeanSquaredError loss function.
 // https://en.wikipedia.org/wiki/Mean_squared_error
@@ -27,3 +27,14 @@ func CrossEntropy(prediction, y *g.Node) (cost *g.Node, err error) {
 	cost = g.Must(g.Neg(cost))
 	return
 }
+
+// Huber loss function.
+// https://en.wikipedia.org/wiki/Huber_loss
+// TODO: is this possible without conditional graphs?
+// func Huber(prediction, y *g.Node) (cost *g.Node, err error) {
+// 	losses := g.Must(g.Sub(y, prediction))
+// 	abs := g.Must(g.Abs(losses))
+// 	var absVal g.Value
+// 	g.Read(abs, absVal)
+// 	square := g.Must(g.Square(losses))
+// }

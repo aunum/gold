@@ -21,33 +21,28 @@ func TestPolicy(t *testing.T) {
 	env, err := s.Make("CartPole-v0")
 	require.NoError(t, err)
 
-	p, err := NewPolicy(DefaultPolicyConfig, env)
+	m, err := MakePolicy(DefaultPolicyConfig, env)
 	require.NoError(t, err)
 
 	xShape := env.ObservationSpaceShape()[0]
 	x := tensor.New(tensor.WithShape(xShape), tensor.WithBacking([]float32{0.051960364, 0.14512223, 0.12799974, 0.63951147}))
 
 	yShape := envv1.PotentialsShape(env.ActionSpace)[0]
-	y := tensor.New(tensor.WithShape(yShape), tensor.WithBacking([]float32{0.4484117, -0.09160687}))
+	y := tensor.New(tensor.WithShape(yShape), tensor.WithBacking([]float32{0.4484117, 0.09160687}))
 
-	qv1, err := p.Predict(x)
+	qv1, err := m.Predict(x)
+	require.NoError(t, err)
+	logger.Infov("initial prediction", qv1)
+
+	err = m.Fit(x, y)
 	require.NoError(t, err)
 
-	cost1 := p.CostNode.Value()
-
-	err = p.Fit(x, y)
-	require.NoError(t, err)
-
-	for i := 0; i < 10000; i++ {
-		// qv, err := p.Predict(x)
-		// require.NoError(t, err)
-
-		// logger.Info("yhat: ", qv)
-		logger.Info("y: ", y)
-		err = p.Fit(x, y)
+	for i := 0; i < 1000; i++ {
+		err = m.Fit(x, y)
 		require.NoError(t, err)
 	}
-
-	logger.Info("qv1: ", qv1)
-	logger.Info("cost1: ", cost1)
+	qvf, err := m.Predict(x)
+	require.NoError(t, err)
+	logger.Infov("expected", y)
+	logger.Infov("final prediction", qvf)
 }
