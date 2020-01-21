@@ -2,12 +2,14 @@ package deepq
 
 import (
 	"fmt"
+	"net/http"
 
 	"github.com/pbarker/go-rl/pkg/v1/model"
 
 	"github.com/chewxy/math32"
 	"github.com/pbarker/go-rl/pkg/v1/common"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
+	"github.com/pbarker/go-rl/pkg/v1/track"
 	"github.com/pbarker/logger"
 	"gorgonia.org/tensor"
 )
@@ -17,8 +19,9 @@ type Agent struct {
 	// Hyperparameters for the dqn agent.
 	*Hyperparameters
 
-	Policy model.Model
-	env    *envv1.Env
+	Policy  model.Model
+	Tracker *track.Tracker
+	env     *envv1.Env
 
 	epsilon float32
 	memory  *Memory
@@ -63,6 +66,7 @@ var DefaultHyperparameters = &Hyperparameters{
 type AgentConfig struct {
 	*Hyperparameters
 	PolicyConfig *PolicyConfig
+	Tracker      *track.Tracker
 }
 
 // DefaultAgentConfig is the default config for a dqn agent.
@@ -76,6 +80,13 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 	if c == nil {
 		c = DefaultAgentConfig
 	}
+	if c.Tracker == nil {
+		tracker, err := track.NewTracker()
+		if err != nil {
+			return nil, err
+		}
+		c.Tracker = tracker
+	}
 	if env == nil {
 		return nil, fmt.Errorf("environment cannot be nil")
 	}
@@ -88,6 +99,7 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 		epsilon:         c.EpsilonMax,
 		memory:          NewMemory(),
 		Policy:          policy,
+		Tracker:         c.Tracker,
 		env:             env,
 	}, nil
 }
@@ -171,4 +183,11 @@ func (a *Agent) action(state *tensor.Dense) (action int, err error) {
 // Remember an event.
 func (a *Agent) Remember(event *Event) {
 	a.memory.PushFront(event)
+}
+
+// Serve the agent.
+func (a *Agent) Serve() {
+	http.HandleFunc("/metrics", a.Tracker.AggregateHandler)
+
+	http.ListenAndServe(":8080", nil)
 }

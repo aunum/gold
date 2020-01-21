@@ -4,17 +4,19 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	"gonum.org/v1/plot"
+	"gonum.org/v1/plot/plotter"
+	"gonum.org/v1/plot/vg"
 	"gorgonia.org/tensor"
 
-	"github.com/stretchr/testify/require"
-
-	. "github.com/pbarker/go-rl/pkg/v1/model"
+	. "github.com/pbarker/go-rl/pkg/v1/track"
 	g "gorgonia.org/gorgonia"
 )
 
 func TestTracker(t *testing.T) {
 	graph := g.NewGraph()
-	tracker, err := NewTracker(graph)
+	tracker, err := NewTracker()
 	require.NoError(t, err)
 
 	xB := tensor.New(tensor.WithShape(1, 5), tensor.WithBacking(tensor.Random(tensor.Float32, 5)))
@@ -29,31 +31,48 @@ func TestTracker(t *testing.T) {
 
 	prod := g.Must(g.Mul(x, y))
 	tracker.TrackValue("prod", prod)
+	fmt.Println("prod: ", prod)
 
 	z := g.NewMatrix(graph, g.Float32, g.WithShape(prod.Shape()...), g.WithInit(g.RangedFrom(5)))
 
 	sub := g.Must(g.Sub(z, prod))
 	tracker.TrackValue("sub", sub)
+	fmt.Println("sub: ", sub)
 
 	vm := g.NewTapeMachine(graph)
 
-	for i := 0; i < 100; i++ {
-		xB0 := tensor.New(tensor.WithShape(1, 5), tensor.WithBacking(tensor.Range(tensor.Float32, i, i+5)))
-		g.Let(x, xB0)
+	for ep := 0; ep < 100; ep++ {
+		for ts := 0; ts < 10; ts++ {
+			xB0 := tensor.New(tensor.WithShape(1, 5), tensor.WithBacking(tensor.Range(tensor.Float32, ep+ts, ep+ts+5)))
+			g.Let(x, xB0)
 
-		err := vm.RunAll()
-		require.NoError(t, err)
+			err := vm.RunAll()
+			require.NoError(t, err)
 
-		tracker.PrintAll()
-		vm.Reset()
+			tracker.PrintAll()
+			vm.Reset()
 
-		err = tracker.Flush()
-		require.NoError(t, err)
+			err = tracker.Log(ep, ts)
+			require.NoError(t, err)
+		}
 	}
-	tvs, err := tracker.GetHistoryAll()
+	eph, err := tracker.GetEpisodeHistories()
 	require.NoError(t, err)
-	for _, tv := range tvs {
-		err = tv.Chart()
+
+	aggs := eph.Aggregate(MeanAggregator)
+	fmt.Println("aggs: ", aggs)
+
+	xys := aggs.XYs()
+	fmt.Println("xys: ", xys)
+
+	for name, xy := range xys {
+		plt, err := plot.New()
+		require.NoError(t, err)
+		line, err := plotter.NewLine(xy)
+		require.NoError(t, err)
+		plt.Add(line)
+		fileName := fmt.Sprintf("%s_test.png", name)
+		err = plt.Save(3*vg.Inch, 4*vg.Inch, fileName)
 		require.NoError(t, err)
 	}
 }

@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/awalterschulze/gographviz v0.0.0-20190522210029-fa59802746ab // indirect
+	github.com/brentp/go-chartjs v0.0.0-20170901194241-a37b166b7875
 	github.com/chewxy/math32 v1.0.4
 	github.com/gammazero/deque v0.0.0-20190521012701-46e4ffb7a622
 	github.com/guptarohit/asciigraph v0.4.1

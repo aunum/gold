@@ -22,7 +22,7 @@ func TestSequential(t *testing.T) {
 	logger.Infov("x", x)
 	logger.Infov("y", y)
 
-	model, err := NewSequential(x, y)
+	model, err := NewSequential("test", x, y)
 	require.NoError(t, err)
 	model.AddLayers(
 		layers.NewFC(12, 24, layers.WithActivation(g.Sigmoid)),

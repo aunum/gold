@@ -1,6 +1,8 @@
 package model
 
 import (
+	"fmt"
+
 	"github.com/pbarker/go-rl/pkg/v1/common"
 	"github.com/pbarker/go-rl/pkg/v1/track"
 	"github.com/pbarker/logger"
@@ -33,6 +35,7 @@ type Sequential struct {
 	// Tracker of values.
 	Tracker *track.Tracker
 
+	name    string
 	graph   *g.ExprGraph
 	x       *g.Node
 	y       *g.Node
@@ -45,21 +48,17 @@ type Sequential struct {
 }
 
 // NewSequential returns a new sequential model.
-func NewSequential(x, y g.Value) (*Sequential, error) {
+func NewSequential(name string, x, y g.Value) (*Sequential, error) {
 	graph := g.NewGraph()
-	tracker, err := track.NewTracker()
-	if err != nil {
-		return nil, err
-	}
 
 	xn := g.NewTensor(graph, x.Dtype(), len(x.Shape()), g.WithValue(x), g.WithName("x"))
 	yn := g.NewTensor(graph, y.Dtype(), len(y.Shape()), g.WithValue(y), g.WithName("y"))
 	return &Sequential{
-		Layers:  NewChain(),
-		Tracker: tracker,
-		graph:   graph,
-		x:       xn,
-		y:       yn,
+		Layers: NewChain(),
+		name:   name,
+		graph:  graph,
+		x:      xn,
+		y:      yn,
 	}, nil
 }
 
@@ -92,6 +91,18 @@ func WithOptimizer(optimizer g.Solver) func(Model) {
 	}
 }
 
+// WithTracker adds a tracker to the model, if not provided one will be created.
+func WithTracker(tracker *track.Tracker) func(Model) {
+	return func(m Model) {
+		switch t := m.(type) {
+		case *Sequential:
+			t.Tracker = tracker
+		default:
+			logger.Fatal("unknown model type")
+		}
+	}
+}
+
 // AddLayer adds a layer.
 func (s *Sequential) AddLayer(layer Layer) {
 	s.Layers.Add(layer)
@@ -115,6 +126,14 @@ func (s *Sequential) Compile(opts ...Opt) error {
 	if s.optimizer == nil {
 		s.optimizer = g.NewAdamSolver()
 	}
+	if s.Tracker == nil {
+		tracker, err := track.NewTracker()
+		if err != nil {
+			return err
+		}
+		s.Tracker = tracker
+	}
+
 	s.Layers.Compile(s)
 
 	prediction, err := s.Layers.Fwd(s.x)
@@ -128,7 +147,7 @@ func (s *Sequential) Compile(opts ...Opt) error {
 	if err != nil {
 		return err
 	}
-	s.Tracker.TrackValue("loss", loss)
+	s.Tracker.TrackNodeValue(fmt.Sprintf("%s/loss", s.name), loss)
 
 	_, err = g.Grad(loss, s.Layers.Learnables()...)
 	if err != nil {
