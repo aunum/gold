@@ -1,6 +1,7 @@
 package deepq
 
 import (
+	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
 	modelv1 "github.com/pbarker/go-rl/pkg/v1/model"
 	"github.com/pbarker/go-rl/pkg/v1/model/layers"
@@ -44,17 +45,21 @@ var DefaultFCLayerBuilder = func(env *envv1.Env) []modelv1.Layer {
 }
 
 // MakePolicy makes a model.
-func MakePolicy(config *PolicyConfig, env *envv1.Env) (modelv1.Model, error) {
+func MakePolicy(name string, config *PolicyConfig, base *agentv1.Base, env *envv1.Env) (modelv1.Model, error) {
 	x := tensor.Ones(tensor.Float32, env.ObservationSpaceShape()[0])
 	y := tensor.Ones(tensor.Float32, envv1.PotentialsShape(env.ActionSpace)[0])
 
-	model, err := modelv1.NewSequential(x, y)
+	model, err := modelv1.NewSequential(name, x, y)
 	if err != nil {
 		return nil, err
 	}
 	model.AddLayers(config.LayerBuilder(env)...)
 
-	err = model.Compile(modelv1.WithOptimizer(config.Optimizer), modelv1.WithLoss(config.LossFn))
+	err = model.Compile(
+		modelv1.WithOptimizer(config.Optimizer),
+		modelv1.WithLoss(config.LossFn),
+		modelv1.WithTracker(base.Tracker),
+	)
 	if err != nil {
 		return nil, err
 	}

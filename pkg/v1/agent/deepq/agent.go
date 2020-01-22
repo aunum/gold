@@ -2,11 +2,11 @@ package deepq
 
 import (
 	"fmt"
-	"net/http"
 
 	"github.com/pbarker/go-rl/pkg/v1/model"
 
 	"github.com/chewxy/math32"
+	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
 	"github.com/pbarker/go-rl/pkg/v1/common"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
 	"github.com/pbarker/go-rl/pkg/v1/track"
@@ -16,12 +16,17 @@ import (
 
 // Agent is a dqn agent.
 type Agent struct {
+	// Base for the agent.
+	*agentv1.Base
+
 	// Hyperparameters for the dqn agent.
 	*Hyperparameters
 
-	Policy  model.Model
-	Tracker *track.Tracker
-	env     *envv1.Env
+	// Tracker for the agent.
+	*track.Tracker
+
+	Policy model.Model
+	env    *envv1.Env
 
 	epsilon float32
 	memory  *Memory
@@ -64,15 +69,21 @@ var DefaultHyperparameters = &Hyperparameters{
 
 // AgentConfig is the config for a dqn agent.
 type AgentConfig struct {
+	// Base for the agent.
+	Base *agentv1.Base
+
+	// Hyperparameters for the agent.
 	*Hyperparameters
+
+	// PolicyConfig for the agent.
 	PolicyConfig *PolicyConfig
-	Tracker      *track.Tracker
 }
 
 // DefaultAgentConfig is the default config for a dqn agent.
 var DefaultAgentConfig = &AgentConfig{
 	Hyperparameters: DefaultHyperparameters,
 	PolicyConfig:    DefaultPolicyConfig,
+	Base:            agentv1.NewBase(),
 }
 
 // NewAgent returns a new dqn agent.
@@ -80,26 +91,23 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 	if c == nil {
 		c = DefaultAgentConfig
 	}
-	if c.Tracker == nil {
-		tracker, err := track.NewTracker()
-		if err != nil {
-			return nil, err
-		}
-		c.Tracker = tracker
+	if c.Base == nil {
+		c.Base = agentv1.NewBase()
 	}
 	if env == nil {
 		return nil, fmt.Errorf("environment cannot be nil")
 	}
-	policy, err := MakePolicy(c.PolicyConfig, env)
+	policy, err := MakePolicy("train", c.PolicyConfig, c.Base, env)
 	if err != nil {
 		return nil, err
 	}
 	return &Agent{
+		Base:            c.Base,
 		Hyperparameters: c.Hyperparameters,
 		epsilon:         c.EpsilonMax,
 		memory:          NewMemory(),
 		Policy:          policy,
-		Tracker:         c.Tracker,
+		Tracker:         c.Base.Tracker,
 		env:             env,
 	}, nil
 }
@@ -123,7 +131,7 @@ func (a *Agent) Learn() error {
 				return err
 			}
 			qValues := prediction.(*tensor.Dense)
-			logger.Info("qvalues: ", qValues)
+			// logger.Info("qvalues: ", qValues)
 			maxIndex, err := qValues.Argmax(0)
 			nextMax := qValues.GetF32(maxIndex.GetI(0))
 			update = (float32(event.Reward) + a.Gamma*nextMax)
@@ -136,7 +144,7 @@ func (a *Agent) Learn() error {
 		}
 		qValues := prediction.(*tensor.Dense)
 		qValues.Set(event.Action, update)
-		logger.Info("y: ", qValues)
+		// logger.Info("y: ", qValues)
 		err = a.Policy.Fit(event.State, qValues)
 		if err != nil {
 			return err
@@ -152,14 +160,14 @@ func (a *Agent) Action(state *tensor.Dense) (action int, err error) {
 	logger.Infof("epsilon: %v", a.epsilon)
 	if common.RandFloat32(float32(0.0), float32(1.0)) < a.epsilon {
 		// explore
-		logger.Info("exploring")
+		// logger.Info("exploring")
 		action, err = a.env.SampleAction()
 		if err != nil {
 			return
 		}
 		return
 	}
-	logger.Info("exploiting")
+	// logger.Info("exploiting")
 	action, err = a.action(state)
 	return
 }
@@ -183,11 +191,4 @@ func (a *Agent) action(state *tensor.Dense) (action int, err error) {
 // Remember an event.
 func (a *Agent) Remember(event *Event) {
 	a.memory.PushFront(event)
-}
-
-// Serve the agent.
-func (a *Agent) Serve() {
-	http.HandleFunc("/metrics", a.Tracker.AggregateHandler)
-
-	http.ListenAndServe(":8080", nil)
 }

@@ -1,8 +1,6 @@
 package model
 
 import (
-	"fmt"
-
 	"github.com/pbarker/go-rl/pkg/v1/common"
 	"github.com/pbarker/go-rl/pkg/v1/track"
 	"github.com/pbarker/logger"
@@ -147,7 +145,7 @@ func (s *Sequential) Compile(opts ...Opt) error {
 	if err != nil {
 		return err
 	}
-	s.Tracker.TrackNodeValue(fmt.Sprintf("%s/loss", s.name), loss)
+	s.Tracker.TrackValue("loss", loss, track.WithNamespace(s.name))
 
 	_, err = g.Grad(loss, s.Layers.Learnables()...)
 	if err != nil {
@@ -184,7 +182,6 @@ func (s *Sequential) Fit(x, y g.Value) error {
 	if err != nil {
 		return err
 	}
-	s.Tracker.Flush()
 	grads := g.NodesToValueGrads(s.Layers.Learnables())
 	s.optimizer.Step(grads)
 	s.vm.Reset()

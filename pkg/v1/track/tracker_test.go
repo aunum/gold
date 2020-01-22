@@ -52,27 +52,25 @@ func TestTracker(t *testing.T) {
 			tracker.PrintAll()
 			vm.Reset()
 
-			err = tracker.Log(ep, ts)
+			err = tracker.LogStep(ep, ts)
 			require.NoError(t, err)
 		}
 	}
 	eph, err := tracker.GetEpisodeHistories()
 	require.NoError(t, err)
 
-	aggs := eph.Aggregate(MeanAggregator)
+	aggs := eph.Aggregate("prod", MeanAggregator)
 	fmt.Println("aggs: ", aggs)
 
-	xys := aggs.XYs()
+	xys := aggs.GonumXYs()
 	fmt.Println("xys: ", xys)
 
-	for name, xy := range xys {
-		plt, err := plot.New()
-		require.NoError(t, err)
-		line, err := plotter.NewLine(xy)
-		require.NoError(t, err)
-		plt.Add(line)
-		fileName := fmt.Sprintf("%s_test.png", name)
-		err = plt.Save(3*vg.Inch, 4*vg.Inch, fileName)
-		require.NoError(t, err)
-	}
+	plt, err := plot.New()
+	require.NoError(t, err)
+	line, err := plotter.NewLine(xys)
+	require.NoError(t, err)
+	plt.Add(line)
+	fileName := "plot_test.png"
+	err = plt.Save(3*vg.Inch, 4*vg.Inch, fileName)
+	require.NoError(t, err)
 }

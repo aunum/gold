@@ -1,12 +1,14 @@
 package track
 
 import (
+	"fmt"
+
 	"github.com/pbarker/logger"
 	g "gorgonia.org/gorgonia"
 )
 
-// Value that has been tracked.
-type Value interface {
+// TrackedValue is a value being tracked.
+type TrackedValue interface {
 	// Name of the value.
 	Name() string
 
@@ -18,6 +20,54 @@ type Value interface {
 
 	// Data converts the value to a historical value.
 	Data(episode, timestep int) *HistoricalValue
+
+	// Aggregator is the aggregator for this value.
+	Aggregator() Aggregator
+}
+
+// TrackedValueOpt is an option for a tracked value.
+type TrackedValueOpt func(TrackedValue)
+
+// WithIndex sets an index to use if the given value is non scalar.
+// Defaults to 0.
+func WithIndex(index int) func(TrackedValue) {
+	return func(t TrackedValue) {
+		switch val := t.(type) {
+		case *TrackedNodeValue:
+			val.index = index
+		case *TrackedScalarValue:
+			val.index = index
+		}
+	}
+}
+
+// WithAggregator sets an aggregator to use with the value.
+// Default to MeanAggregator.
+func WithAggregator(aggregator Aggregator) func(TrackedValue) {
+	return func(t TrackedValue) {
+		switch val := t.(type) {
+		case *TrackedNodeValue:
+			val.aggregator = aggregator
+		case *TrackedScalarValue:
+			val.aggregator = aggregator
+		}
+	}
+}
+
+// WithNamespace adds a namespace to the tracked value.
+func WithNamespace(namespace string) func(TrackedValue) {
+	return func(t TrackedValue) {
+		switch val := t.(type) {
+		case *TrackedNodeValue:
+			val.name = namespaceValue(namespace, val.name)
+		case *TrackedScalarValue:
+			val.name = namespaceValue(namespace, val.name)
+		}
+	}
+}
+
+func namespaceValue(namespace, name string) string {
+	return fmt.Sprintf("%s_%s", namespace, name)
 }
 
 // TrackedNodeValue is a tracked node value.
@@ -30,16 +80,25 @@ type TrackedNodeValue struct {
 
 	// index of the value.
 	index int
+
+	// aggregator for the value.
+	aggregator Aggregator
 }
 
 // NewTrackedNodeValue returns a new tracked value.
-func NewTrackedNodeValue(name string, index int) *TrackedNodeValue {
+func NewTrackedNodeValue(name string, opts ...TrackedValueOpt) *TrackedNodeValue {
 	var val g.Value
-	return &TrackedNodeValue{
+	tv := &TrackedNodeValue{
 		name:  name,
 		value: val,
-		index: index,
 	}
+	for _, opt := range opts {
+		opt(tv)
+	}
+	if tv.aggregator == nil {
+		tv.aggregator = MeanAggregator
+	}
+	return tv
 }
 
 // Name of the value.
@@ -49,6 +108,9 @@ func (t *TrackedNodeValue) Name() string {
 
 // Scalar value.
 func (t *TrackedNodeValue) Scalar() float64 {
+	if t.value == nil {
+		return 0.0
+	}
 	data := t.value.Data()
 	return toF64(data, t.index)
 }
@@ -61,15 +123,20 @@ func (t *TrackedNodeValue) Print() {
 // Data converts the value to a historical value.
 func (t *TrackedNodeValue) Data(episode, timestep int) *HistoricalValue {
 	return &HistoricalValue{
-		Name:     t.name,
-		Value:    t.Scalar(),
-		Timestep: timestep,
-		Episode:  episode,
+		Name:         t.name,
+		TrackedValue: t.Scalar(),
+		Timestep:     timestep,
+		Episode:      episode,
 	}
 }
 
-// TrackedValue is a tracked value.
-type TrackedValue struct {
+// Aggregator returns the aggregator for this value.
+func (t *TrackedNodeValue) Aggregator() Aggregator {
+	return t.aggregator
+}
+
+// TrackedScalarValue is a tracked value that can be convertible to float64.
+type TrackedScalarValue struct {
 	// name of the tracked value.
 	name string
 
@@ -78,40 +145,54 @@ type TrackedValue struct {
 
 	// index of the scalar.
 	index int
+
+	// aggregator for the value.
+	aggregator Aggregator
 }
 
-// NewTrackedValue returns a new tracked value.
-func NewTrackedValue(name string, value interface{}, index int) *TrackedValue {
-	return &TrackedValue{
+// NewTrackedScalarValue returns a new tracked value.
+func NewTrackedScalarValue(name string, value interface{}, opts ...TrackedValueOpt) *TrackedScalarValue {
+	tv := &TrackedScalarValue{
 		name:  name,
 		value: value,
-		index: index,
 	}
+	for _, opt := range opts {
+		opt(tv)
+	}
+	if tv.aggregator == nil {
+		tv.aggregator = MeanAggregator
+	}
+	return tv
 }
 
 // Name of the value.
-func (t *TrackedValue) Name() string {
+func (t *TrackedScalarValue) Name() string {
 	return t.name
 }
 
 // Scalar value.
-func (t *TrackedValue) Scalar() float64 {
+func (t *TrackedScalarValue) Scalar() float64 {
 	return toF64(t.value, t.index)
 }
 
 // Print the value.
-func (t *TrackedValue) Print() {
+func (t *TrackedScalarValue) Print() {
 	logger.Infov(t.name, t.Scalar())
 }
 
 // Data takes the current tracked value and returns a historical value.
-func (t *TrackedValue) Data(episode, timestep int) *HistoricalValue {
+func (t *TrackedScalarValue) Data(episode, timestep int) *HistoricalValue {
 	return &HistoricalValue{
-		Name:     t.name,
-		Value:    t.Scalar(),
-		Timestep: timestep,
-		Episode:  episode,
+		Name:         t.name,
+		TrackedValue: t.Scalar(),
+		Timestep:     timestep,
+		Episode:      episode,
 	}
+}
+
+// Aggregator returns the aggregator for this value.
+func (t *TrackedScalarValue) Aggregator() Aggregator {
+	return t.aggregator
 }
 
 func toF64(data interface{}, index int) float64 {

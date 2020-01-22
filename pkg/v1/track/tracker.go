@@ -13,7 +13,7 @@ import (
 
 // Tracker is a means of tracking values on a graph.
 type Tracker struct {
-	Values []Value
+	Values map[string]TrackedValue
 
 	Timestep int
 	Episode  int
@@ -37,7 +37,7 @@ func NewTracker(opts ...TrackerOpt) (*Tracker, error) {
 	encoder := json.NewEncoder(f)
 	scanner := bufio.NewScanner(f)
 	t := &Tracker{
-		Values:   []Value{},
+		Values:   map[string]TrackedValue{},
 		encoder:  encoder,
 		f:        f,
 		scanner:  scanner,
@@ -90,8 +90,8 @@ type HistoricalValue struct {
 	// Name of the value.
 	Name string `json:"name"`
 
-	// Value of the value.
-	Value float64 `json:"value"`
+	// TrackedValue of the value.
+	TrackedValue float64 `json:"value"`
 
 	// Timestep at which the value occured.
 	Timestep int `json:"timestep"`
@@ -126,21 +126,44 @@ func (t *Tracker) IncEpisode() {
 	t.Episode++
 }
 
-// TrackValue tracks a value. A value can be a graph node or any other value.
-func (t *Tracker) TrackValue(name string, value interface{}, index ...int) {
-	i := 0
-	if len(index) != 0 {
-		i = index[0]
-	}
-	t.checkName(name)
+// TrackValue tracks a graph node or any other scalar value.
+func (t *Tracker) TrackValue(name string, value interface{}, opts ...TrackedValueOpt) {
 	if n, ok := value.(*g.Node); ok {
-		tv := NewTrackedNodeValue(name, i)
-		t.Values = append(t.Values, tv)
+		tv := NewTrackedNodeValue(name, opts...)
+		t.Values[tv.name] = tv
 		g.Read(n, &tv.value)
 	} else {
-		tv := NewTrackedValue(name, value, i)
-		t.Values = append(t.Values, tv)
+		tv := NewTrackedScalarValue(name, value, opts...)
+		t.Values[tv.name] = tv
 	}
+}
+
+// IncValue increments a value by a scalar.
+func (t *Tracker) IncValue(name string, scalar interface{}) error {
+	v, err := t.GetValue(name)
+	if err != nil {
+		return err
+	}
+	val, ok := v.(*TrackedScalarValue)
+	if !ok {
+		return fmt.Errorf("can only increment tracked values")
+	}
+	val.value = v.Scalar() + toF64(scalar, 0)
+	return nil
+}
+
+// ZeroValue zeros a scalar value
+func (t *Tracker) ZeroValue(name string) error {
+	v, err := t.GetValue(name)
+	if err != nil {
+		return err
+	}
+	val, ok := v.(*TrackedScalarValue)
+	if !ok {
+		return fmt.Errorf("can only increment tracked values")
+	}
+	val.value = 0.0
+	return nil
 }
 
 func (t *Tracker) checkName(name string) {
@@ -152,7 +175,7 @@ func (t *Tracker) checkName(name string) {
 }
 
 // GetValue a tracked value by name.
-func (t *Tracker) GetValue(name string) (Value, error) {
+func (t *Tracker) GetValue(name string) (TrackedValue, error) {
 	for _, value := range t.Values {
 		if value.Name() == name {
 			return value, nil
@@ -216,8 +239,9 @@ func (t *Tracker) PrintAll() {
 	}
 }
 
-// Log tracked values to store.
-func (t *Tracker) Log(episode, timestep int) error {
+// LogStep logs tracked values to store for the given timestep.
+// TODO: make time more pluggable so this can be used in other environments.
+func (t *Tracker) LogStep(episode, timestep int) error {
 	t.Episode = episode
 	t.Timestep = timestep
 	return t.encoder.Encode(t.Data())

@@ -3,6 +3,7 @@ package deepq_test
 import (
 	"testing"
 
+	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
 	. "github.com/pbarker/go-rl/pkg/v1/agent/deepq"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
 	sphere "github.com/pbarker/go-rl/pkg/v1/env"
@@ -21,7 +22,8 @@ func TestPolicy(t *testing.T) {
 	env, err := s.Make("CartPole-v0")
 	require.NoError(t, err)
 
-	m, err := MakePolicy(DefaultPolicyConfig, env)
+	base := agentv1.NewBase()
+	m, err := MakePolicy("test", DefaultPolicyConfig, base, env)
 	require.NoError(t, err)
 
 	xShape := env.ObservationSpaceShape()[0]
@@ -37,12 +39,15 @@ func TestPolicy(t *testing.T) {
 	err = m.Fit(x, y)
 	require.NoError(t, err)
 
+	base.Serve()
 	for i := 0; i < 1000; i++ {
 		err = m.Fit(x, y)
 		require.NoError(t, err)
+		base.Tracker.LogStep(i, 0)
 	}
 	qvf, err := m.Predict(x)
 	require.NoError(t, err)
 	logger.Infov("expected", y)
 	logger.Infov("final prediction", qvf)
+	// time.Sleep(60 * time.Second)
 }
