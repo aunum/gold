@@ -7,6 +7,7 @@ import (
 
 	"github.com/gammazero/deque"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
+	"github.com/pbarker/logger"
 	"gorgonia.org/tensor"
 )
 
@@ -19,6 +20,8 @@ type Event struct {
 
 	// Action that was taken.
 	Action int
+
+	i int
 }
 
 // NewEvent returns a new event
@@ -28,6 +31,11 @@ func NewEvent(state *tensor.Dense, action int, outcome *envv1.Outcome) *Event {
 		Action:  action,
 		Outcome: outcome,
 	}
+}
+
+// Print the event.
+func (e *Event) Print() {
+	logger.Infof("event --> \n state: %v \n action: %v \n reward: %v \n done: %v \n obv: %v\n\n", e.State, e.Action, e.Reward, e.Done, e.Observation)
 }
 
 // Memory for the dqn agent.
@@ -54,6 +62,7 @@ func (m *Memory) Sample(batchsize int) ([]*Event, error) {
 			break
 		}
 		event := m.At(value).(*Event)
+		event.i = value
 		events = append(events, event)
 	}
 	return events, nil

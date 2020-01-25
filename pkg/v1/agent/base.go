@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"text/template"
+
+	"github.com/phayes/freeport"
 
 	"github.com/pbarker/go-rl/pkg/v1/track"
 	"github.com/pbarker/logger"
@@ -42,11 +45,9 @@ func WithTracker(tracker *track.Tracker) func(*Base) {
 	}
 }
 
-// NewBase returns a new base agent. Any errors will fatal.
+// NewBase returns a new base agent. Any errors will be fatal.
 func NewBase(opts ...Opt) *Base {
-	b := &Base{
-		Port: "9090",
-	}
+	b := &Base{}
 	for _, opt := range opts {
 		opt(b)
 	}
@@ -57,7 +58,21 @@ func NewBase(opts ...Opt) *Base {
 		}
 		b.Tracker = tracker
 	}
+	if b.Port == "" {
+		port, err := freeport.GetFreePort()
+		if err != nil {
+			logger.Fatal(err)
+		}
+		b.Port = strconv.Itoa(port)
+	}
 	return b
+}
+
+// MakeEpisodes creates a set of episodes for training and stores the number for configuration.
+func (b *Base) MakeEpisodes(num int) track.Episodes {
+	logger.Infof("running for %d episodes", num)
+	eps := b.Tracker.MakeEpisodes(num)
+	return eps
 }
 
 // Serve the agent api/ui.
@@ -81,7 +96,7 @@ func (b *Base) View() {
 
 // Wait before exiting with a prompt.
 func (b *Base) Wait() {
-	fmt.Print("\npress any key to exit\n")
+	fmt.Print("\npress enter to exit\n")
 	input := bufio.NewScanner(os.Stdin)
 	input.Scan()
 }
@@ -108,10 +123,7 @@ func (b *Base) execTmpl() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	valueNames := []string{}
-	for _, value := range b.Tracker.Values {
-		valueNames = append(valueNames, value.Name())
-	}
+	valueNames := b.Tracker.ValueNames()
 	logger.Info("value names: ", valueNames)
 	templHelper := struct {
 		ValueNames []string
@@ -213,7 +225,8 @@ var visualizeTemplate = `
 			}
 		});
 	}
-	setInterval(get{{$name}}Data, 3000);
+	get{{$name}}Data()
+	setInterval(get{{$name}}Data, 1000);
 	</script>
 	{{end}}
 </html>

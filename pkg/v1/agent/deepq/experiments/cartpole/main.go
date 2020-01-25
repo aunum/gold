@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/pbarker/go-rl/pkg/v1/agent/deepq"
+	"github.com/pbarker/go-rl/pkg/v1/common"
 	"github.com/pbarker/go-rl/pkg/v1/common/require"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
 	"github.com/pbarker/go-rl/pkg/v1/track"
@@ -14,7 +15,7 @@ func main() {
 	defer s.Resource.Close()
 
 	// envv1.WithNormalizer(envv1.NewMinMaxNormalizer())
-	env, err := s.Make("CartPole-v0")
+	env, err := s.Make("CartPole-v1", envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
 	require.NoError(err)
 
 	// agentConfig := deepq.AgentConfig{}
@@ -23,23 +24,26 @@ func main() {
 
 	agent.View()
 
-	agent.TrackValue("score", 0, track.WithAggregator(track.MaxAggregator))
-
-	numEpisodes := 300
-	logger.Infof("running for %d episodes", numEpisodes)
-	for ep := 0; ep <= numEpisodes; ep++ {
+	numEpisodes := 400
+	agent.Epsilon = common.DefaultDecaySchedule(common.WithDecayRate(0.9995))
+	for _, episode := range agent.MakeEpisodes(numEpisodes) {
 		state, err := env.Reset()
 		require.NoError(err)
 
-		agent.ZeroValue("score")
-		for ts := 0; ts <= int(env.MaxEpisodeSteps); ts++ {
+		score := episode.TrackScalar("score", 0, track.WithAggregator(track.MaxAggregator))
+
+		for _, timestep := range episode.Steps(env.MaxSteps()) {
 			action, err := agent.Action(state)
 			require.NoError(err)
 
+			logger.Infov("action", action)
 			outcome, err := env.Step(action)
 			require.NoError(err)
 
-			agent.IncValue("score", outcome.Reward)
+			if outcome.Done {
+				outcome.Reward = -outcome.Reward
+			}
+			score.Inc(outcome.Reward)
 
 			event := deepq.NewEvent(state, action, outcome)
 			agent.Remember(event)
@@ -47,13 +51,14 @@ func main() {
 			err = agent.Learn()
 			require.NoError(err)
 
-			agent.LogStep(ep, ts)
+			timestep.Log()
 
 			if outcome.Done {
-				logger.Successf("Episode %d finished after %d timesteps", ep, ts+1)
+				logger.Successf("Episode %d finished after %d timesteps", episode.I, timestep.I+1)
 				break
 			}
 			state = outcome.Observation
+			logger.Infov("state", state)
 		}
 	}
 	agent.Wait()

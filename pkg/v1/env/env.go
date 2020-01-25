@@ -8,7 +8,9 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 
 	"github.com/pbarker/go-rl/pkg/v1/common"
 
@@ -75,6 +77,15 @@ func NewLocalServer(config *ServerConfig) (*Server, error) {
 	}); err != nil {
 		return nil, fmt.Errorf("Could not connect to docker: %s", err)
 	}
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		sig := <-sigs
+		logger.Warningf("closing env on sig %s", sig.String())
+		resource.Close()
+		os.Exit(1)
+	}()
 
 	return &Server{
 		Resource: resource,
@@ -155,7 +166,10 @@ func (e *Env) Step(value int) (*Outcome, error) {
 	}
 	observation := resp.Observation.Dense()
 	if e.Normalizer != nil {
-		observation = e.Normalizer.Norm(observation)
+		observation, err = e.Normalizer.Norm(observation)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return &Outcome{observation, value, resp.Reward, resp.Done}, nil
 }
@@ -177,11 +191,14 @@ func (e *Env) Reset() (observation *tensor.Dense, err error) {
 	if err != nil {
 		return nil, err
 	}
-	t := resp.Observation.Dense()
+	observation = resp.Observation.Dense()
 	if e.Normalizer != nil {
-		observation = e.Normalizer.Norm(t)
+		observation, err = e.Normalizer.Norm(observation)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return t, nil
+	return observation, nil
 }
 
 // Close the environment.
@@ -331,6 +348,11 @@ func (e *Env) Clean() {
 		logger.Debugf("removed video: %s", videoPath)
 	}
 	logger.Success("removed all local videos")
+}
+
+// MaxSteps that can be taken per episode.
+func (e *Env) MaxSteps() int {
+	return int(e.MaxEpisodeSteps)
 }
 
 // ActionSpaceShape is the shape of the action space.

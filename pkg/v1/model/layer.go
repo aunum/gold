@@ -15,6 +15,3 @@ type Layer interface {
 	// Compile the layer.
 	Compile(model Model)
 }
-
-// ActivationFn is an activation funciton for a layer.
-type ActivationFn func(x *g.Node) (*g.Node, error)

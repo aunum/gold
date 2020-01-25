@@ -13,10 +13,11 @@ import (
 
 // Tracker is a means of tracking values on a graph.
 type Tracker struct {
-	Values map[string]TrackedValue
+	values   map[string]TrackedValue
+	episodes Episodes
 
-	Timestep int
-	Episode  int
+	timestep int
+	episode  int
 
 	encoder  *json.Encoder
 	f        *os.File
@@ -37,7 +38,7 @@ func NewTracker(opts ...TrackerOpt) (*Tracker, error) {
 	encoder := json.NewEncoder(f)
 	scanner := bufio.NewScanner(f)
 	t := &Tracker{
-		Values:   map[string]TrackedValue{},
+		values:   map[string]TrackedValue{},
 		encoder:  encoder,
 		f:        f,
 		scanner:  scanner,
@@ -106,36 +107,44 @@ type HistoricalValues []*HistoricalValue
 // Data yeilds the current tracked values into a historical structure.
 func (t *Tracker) Data() *History {
 	vals := []*HistoricalValue{}
-	for _, v := range t.Values {
-		vals = append(vals, v.Data(t.Timestep, t.Episode))
+	for _, v := range t.values {
+		vals = append(vals, v.Data(t.timestep, t.episode))
 	}
 	return &History{
 		Values:   vals,
-		Timestep: t.Timestep,
-		Episode:  t.Episode,
+		Timestep: t.timestep,
+		Episode:  t.episode,
 	}
-}
-
-// IncTS increments the timestep of the tracker.
-func (t *Tracker) IncTS() {
-	t.Timestep++
-}
-
-// IncEpisode increments the epeisode of the tracker.
-func (t *Tracker) IncEpisode() {
-	t.Episode++
 }
 
 // TrackValue tracks a graph node or any other scalar value.
 func (t *Tracker) TrackValue(name string, value interface{}, opts ...TrackedValueOpt) {
 	if n, ok := value.(*g.Node); ok {
 		tv := NewTrackedNodeValue(name, opts...)
-		t.Values[tv.name] = tv
+		t.values[tv.name] = tv
 		g.Read(n, &tv.value)
 	} else {
 		tv := NewTrackedScalarValue(name, value, opts...)
-		t.Values[tv.name] = tv
+		t.values[tv.name] = tv
 	}
+}
+
+// ValueNames is the name for all values.
+func (t *Tracker) ValueNames() []string {
+	names := map[string]string{}
+	for name := range t.values {
+		names[name] = name
+	}
+	for _, ep := range t.episodes {
+		for name := range ep.Values {
+			names[name] = name
+		}
+	}
+	f := []string{}
+	for name := range names {
+		f = append(f, name)
+	}
+	return f
 }
 
 // IncValue increments a value by a scalar.
@@ -167,7 +176,7 @@ func (t *Tracker) ZeroValue(name string) error {
 }
 
 func (t *Tracker) checkName(name string) {
-	for _, val := range t.Values {
+	for _, val := range t.values {
 		if val.Name() == name {
 			logger.Fatal("cannot track duplicate name: ", name)
 		}
@@ -176,9 +185,16 @@ func (t *Tracker) checkName(name string) {
 
 // GetValue a tracked value by name.
 func (t *Tracker) GetValue(name string) (TrackedValue, error) {
-	for _, value := range t.Values {
+	for _, value := range t.values {
 		if value.Name() == name {
 			return value, nil
+		}
+	}
+	for _, ep := range t.episodes {
+		for _, value := range ep.Values {
+			if value.Name() == name {
+				return value, nil
+			}
 		}
 	}
 	return nil, fmt.Errorf("%q value does not exist", name)
@@ -213,7 +229,7 @@ func (t *Tracker) GetHistory(name string) (HistoricalValues, error) {
 // GetHistoryAll gets the history of all values.
 func (t *Tracker) GetHistoryAll() ([]HistoricalValues, error) {
 	all := []HistoricalValues{}
-	for _, v := range t.Values {
+	for _, v := range t.values {
 		vh, err := t.GetHistory(v.Name())
 		if err != nil {
 			return nil, err
@@ -234,7 +250,7 @@ func (t *Tracker) PrintValue(name string) {
 
 // PrintAll values.
 func (t *Tracker) PrintAll() {
-	for _, value := range t.Values {
+	for _, value := range t.values {
 		value.Print()
 	}
 }
@@ -242,8 +258,8 @@ func (t *Tracker) PrintAll() {
 // LogStep logs tracked values to store for the given timestep.
 // TODO: make time more pluggable so this can be used in other environments.
 func (t *Tracker) LogStep(episode, timestep int) error {
-	t.Episode = episode
-	t.Timestep = timestep
+	t.episode = episode
+	t.timestep = timestep
 	return t.encoder.Encode(t.Data())
 }
 

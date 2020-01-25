@@ -19,35 +19,65 @@ func TestPolicy(t *testing.T) {
 	require.NoError(t, err)
 	defer s.Resource.Close()
 
-	env, err := s.Make("CartPole-v0")
+	env, err := s.Make("CartPole-v1")
 	require.NoError(t, err)
 
 	base := agentv1.NewBase()
 	m, err := MakePolicy("test", DefaultPolicyConfig, base, env)
 	require.NoError(t, err)
 
-	xShape := env.ObservationSpaceShape()[0]
-	x := tensor.New(tensor.WithShape(xShape), tensor.WithBacking([]float32{0.051960364, 0.14512223, 0.12799974, 0.63951147}))
+	xShape1 := env.ObservationSpaceShape()[0]
+	x1 := tensor.New(tensor.WithShape(1, xShape1), tensor.WithBacking([]float32{0.051960364, 0.14512223, 0.12799974, -2.0140305}))
 
-	yShape := envv1.PotentialsShape(env.ActionSpace)[0]
-	y := tensor.New(tensor.WithShape(yShape), tensor.WithBacking([]float32{0.4484117, 0.09160687}))
+	xShape2 := env.ObservationSpaceShape()[0]
+	x2 := tensor.New(tensor.WithShape(1, xShape2), tensor.WithBacking([]float32{0.15163246, -0.94560495, 0.3904586, -8.20394809}))
 
-	qv1, err := m.Predict(x)
+	yShape1 := envv1.PotentialsShape(env.ActionSpace)[0]
+	y1 := tensor.New(tensor.WithShape(1, yShape1), tensor.WithBacking([]float32{0.4484117, 0.09160687}))
+
+	yShape2 := envv1.PotentialsShape(env.ActionSpace)[0]
+	y2 := tensor.New(tensor.WithShape(1, yShape2), tensor.WithBacking([]float32{3.23904234, 2.203948023}))
+
+	qv1, err := m.Predict(x1)
 	require.NoError(t, err)
-	logger.Infov("initial prediction", qv1)
+	logger.Infov("initial prediction x1", qv1)
 
-	err = m.Fit(x, y)
+	qv2, err := m.Predict(x2)
+	require.NoError(t, err)
+	logger.Infov("initial prediction x2", qv2)
+
+	err = m.Fit(x1, y1)
+	require.NoError(t, err)
+
+	err = m.Fit(x2, y2)
 	require.NoError(t, err)
 
 	base.Serve()
-	for i := 0; i < 1000; i++ {
-		err = m.Fit(x, y)
+	for i := 0; i < 10000; i++ {
+		j := float32(i)
+		state := tensor.New(tensor.WithShape(1, 4), tensor.WithBacking([]float32{j * .001, j * -.002, j * .003, j * -.004}))
+		logger.Info(state)
+		pred, err := m.Predict(state)
+		logger.Info(pred)
+		require.NoError(t, err)
+		err = m.Fit(x1, y1)
+		require.NoError(t, err)
+		err = m.Fit(x2, y2)
 		require.NoError(t, err)
 		base.Tracker.LogStep(i, 0)
 	}
-	qvf, err := m.Predict(x)
+	qvf1, err := m.Predict(x1)
 	require.NoError(t, err)
-	logger.Infov("expected", y)
-	logger.Infov("final prediction", qvf)
+
+	qvf2, err := m.Predict(x2)
+	require.NoError(t, err)
+	logger.Info("----")
+	logger.Infov("initial prediction x1", qv1)
+	logger.Infov("expected 1", y1)
+	logger.Infov("final prediction 1", qvf1)
+	logger.Info("----")
+	logger.Infov("initial prediction x2", qv2)
+	logger.Infov("expected 2", y2)
+	logger.Infov("final prediction 2", qvf2)
 	// time.Sleep(60 * time.Second)
 }

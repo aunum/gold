@@ -23,6 +23,15 @@ type Model interface {
 
 	// Graph returns the expression graph for the model.
 	Graph() *g.ExprGraph
+
+	// IsBatch tells whether the inputs are batched.
+	IsBatch() bool
+
+	// X is the input to the model.
+	X() *g.Node
+
+	// Y is the expected output of the model.
+	Y() *g.Node
 }
 
 // Sequential model.
@@ -38,6 +47,7 @@ type Sequential struct {
 	x       *g.Node
 	y       *g.Node
 	predVal g.Value
+	isBatch bool
 
 	lossFn     LossFn
 	optimizer  g.Solver
@@ -101,6 +111,18 @@ func WithTracker(tracker *track.Tracker) func(Model) {
 	}
 }
 
+// AsBatch tells the model the inputs are batched.
+func AsBatch() func(Model) {
+	return func(m Model) {
+		switch t := m.(type) {
+		case *Sequential:
+			t.isBatch = true
+		default:
+			logger.Fatal("unknown model type")
+		}
+	}
+}
+
 // AddLayer adds a layer.
 func (s *Sequential) AddLayer(layer Layer) {
 	s.Layers.Add(layer)
@@ -158,7 +180,6 @@ func (s *Sequential) Compile(opts ...Opt) error {
 
 // Predict x.
 func (s *Sequential) Predict(x g.Value) (prediction g.Value, err error) {
-	s.vm.Reset()
 	err = g.Let(s.x, x)
 	if err != nil {
 		return prediction, err
@@ -175,9 +196,9 @@ func (s *Sequential) Predict(x g.Value) (prediction g.Value, err error) {
 // Fit x to y.
 func (s *Sequential) Fit(x, y g.Value) error {
 	// TODO: need to create a separate training graph
-	s.vm.Reset()
 	g.Let(s.y, y)
 	g.Let(s.x, x)
+
 	err := s.vm.RunAll()
 	if err != nil {
 		return err
@@ -196,4 +217,19 @@ func (s *Sequential) Visualize() {
 // Graph returns the expression graph for the model.
 func (s *Sequential) Graph() *g.ExprGraph {
 	return s.graph
+}
+
+// IsBatch tells whether the inputs are batched.
+func (s *Sequential) IsBatch() bool {
+	return s.isBatch
+}
+
+// X is is the input to the model.
+func (s *Sequential) X() *g.Node {
+	return s.x
+}
+
+// Y is is the output of the model.
+func (s *Sequential) Y() *g.Node {
+	return s.y
 }

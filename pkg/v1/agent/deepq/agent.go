@@ -3,13 +3,12 @@ package deepq
 import (
 	"fmt"
 
+	"github.com/pbarker/go-rl/pkg/v1/dense"
 	"github.com/pbarker/go-rl/pkg/v1/model"
 
-	"github.com/chewxy/math32"
 	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
 	"github.com/pbarker/go-rl/pkg/v1/common"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
-	"github.com/pbarker/go-rl/pkg/v1/track"
 	"github.com/pbarker/logger"
 	"gorgonia.org/tensor"
 )
@@ -22,14 +21,12 @@ type Agent struct {
 	// Hyperparameters for the dqn agent.
 	*Hyperparameters
 
-	// Tracker for the agent.
-	*track.Tracker
-
-	Policy model.Model
-	env    *envv1.Env
-
+	Policy  model.Model
+	Epsilon common.Schedule
+	env     *envv1.Env
 	epsilon float32
-	memory  *Memory
+
+	memory *Memory
 }
 
 // Hyperparameters for the dqn agent.
@@ -39,19 +36,8 @@ type Hyperparameters struct {
 	// a discount factor of 0 makes our agent consider only immediate reward, hence making it greedy.
 	Gamma float32
 
-	// Alpha is the learning rate (0<α≤1). Just like in supervised learning settings, alpha is the extent
-	// to which our Q-values are being updated in every iteration.
-	Alpha float32
-
-	// EpsilonMin is the minimum rate at which the agent can explore.
-	// TODO: these should be a schedule.
-	EpsilonMin float32
-
-	// EpsilonMax is the maximum rate at which an agent can explore.
-	EpsilonMax float32
-
-	// EpsilonDecay is the rate at which the agent should exploit over explore.
-	EpsilonDecay float32
+	// Epsilon is the rate at which the agent should exploit vs explore.
+	Epsilon common.Schedule
 
 	// ReplayBatchSize determines how large a batch is replayed from memory.
 	ReplayBatchSize int
@@ -59,12 +45,9 @@ type Hyperparameters struct {
 
 // DefaultHyperparameters are the default hyperparameters.
 var DefaultHyperparameters = &Hyperparameters{
+	Epsilon:         common.DefaultDecaySchedule(),
 	Gamma:           0.95,
-	Alpha:           0.001,
-	EpsilonMin:      0.01,
-	EpsilonMax:      1.0,
-	EpsilonDecay:    0.995,
-	ReplayBatchSize: 30,
+	ReplayBatchSize: 20,
 }
 
 // AgentConfig is the config for a dqn agent.
@@ -92,29 +75,33 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 		c = DefaultAgentConfig
 	}
 	if c.Base == nil {
-		c.Base = agentv1.NewBase()
+		c.Base = agentv1.NewBase(nil)
 	}
 	if env == nil {
 		return nil, fmt.Errorf("environment cannot be nil")
+	}
+	if c.Epsilon == nil {
+		c.Epsilon = common.DefaultDecaySchedule()
 	}
 	policy, err := MakePolicy("train", c.PolicyConfig, c.Base, env)
 	if err != nil {
 		return nil, err
 	}
+	c.Base.Tracker.TrackValue("epsilon", c.Epsilon.Initial())
 	return &Agent{
 		Base:            c.Base,
 		Hyperparameters: c.Hyperparameters,
-		epsilon:         c.EpsilonMax,
 		memory:          NewMemory(),
 		Policy:          policy,
-		Tracker:         c.Base.Tracker,
+		Epsilon:         c.Epsilon,
+		epsilon:         c.Epsilon.Initial(),
 		env:             env,
 	}, nil
 }
 
 // Learn the agent.
 func (a *Agent) Learn() error {
-	logger.Infof("batch size: %v", a.memory.Len())
+	// logger.Infof("batch size: %v", a.memory.Len())
 	if a.memory.Len() < a.ReplayBatchSize {
 		return nil
 	}
@@ -123,68 +110,89 @@ func (a *Agent) Learn() error {
 	if err != nil {
 		return err
 	}
-	for _, event := range batch {
-		update := float32(event.Reward)
+	for i, event := range batch {
+		fmt.Printf("\n---------- %v \n", i)
+		event.Print()
+		logger.Infov("i", event.i)
+		qUpdate := float32(event.Reward)
 		if !event.Done {
 			prediction, err := a.Policy.Predict(event.Observation)
 			if err != nil {
 				return err
 			}
 			qValues := prediction.(*tensor.Dense)
-			// logger.Info("qvalues: ", qValues)
-			maxIndex, err := qValues.Argmax(0)
-			nextMax := qValues.GetF32(maxIndex.GetI(0))
-			update = (float32(event.Reward) + a.Gamma*nextMax)
-		} else {
-			update = -update
+			logger.Infov("next qvalues", qValues)
+			nextMax, err := dense.AMaxF32(qValues, 1)
+			if err != nil {
+				return err
+			}
+			logger.Infov("next max", nextMax)
+			qUpdate = event.Reward + a.Gamma*nextMax
 		}
+		logger.Infof("qUpdate %v for action %v", qUpdate, event.Action)
 		prediction, err := a.Policy.Predict(event.State)
 		if err != nil {
 			return err
 		}
 		qValues := prediction.(*tensor.Dense)
-		qValues.Set(event.Action, update)
-		// logger.Info("y: ", qValues)
+		logger.Infov("current qvalues", qValues)
+		qValues.Set(event.Action, qUpdate)
+		logger.Infov("x", event.State)
+		logger.Infov("y", qValues)
 		err = a.Policy.Fit(event.State, qValues)
 		if err != nil {
 			return err
 		}
+		// for i := 0; i < 10; i++ {
+		// 	err = a.Policy.Fit(event.State, qValues)
+		// 	if err != nil {
+		// 		return err
+		// 	}
+		// }
+		fpred, err := a.Policy.Predict(event.State)
+		if err != nil {
+			return err
+		}
+		fqValues := fpred.(*tensor.Dense)
+		logger.Infov("final qvalues", fqValues)
+		fmt.Printf("---------- %v \n\n", i)
 	}
-	a.epsilon *= a.EpsilonDecay
-	a.epsilon = math32.Max(a.EpsilonMin, a.epsilon)
+	a.epsilon = a.Epsilon.Value()
 	return nil
 }
 
 // Action selects the best known action for the given state.
 func (a *Agent) Action(state *tensor.Dense) (action int, err error) {
-	logger.Infof("epsilon: %v", a.epsilon)
+	logger.Infov("epsilon", a.epsilon)
+	a.Tracker.TrackValue("epsilon", a.epsilon)
 	if common.RandFloat32(float32(0.0), float32(1.0)) < a.epsilon {
 		// explore
-		// logger.Info("exploring")
 		action, err = a.env.SampleAction()
 		if err != nil {
 			return
 		}
 		return
 	}
-	// logger.Info("exploiting")
 	action, err = a.action(state)
 	return
 }
 
 func (a *Agent) action(state *tensor.Dense) (action int, err error) {
+	fmt.Println("************")
 	prediction, err := a.Policy.Predict(state)
 	if err != nil {
 		return
 	}
 	qValues := prediction.(*tensor.Dense)
-	logger.Info("qvalues: ", qValues)
-	actionIndex, err := qValues.Argmax(0)
+	logger.Infov("qvalues", qValues)
+	actionIndex, err := qValues.Argmax(1)
 	if err != nil {
 		return action, err
 	}
+	logger.Infov("actionIndex", actionIndex)
 	action = actionIndex.GetI(0)
-	logger.Info("best action: ", action)
+	logger.Infov("best action", action)
+	fmt.Println("************")
 	return
 }
 

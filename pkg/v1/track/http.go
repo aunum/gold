@@ -79,10 +79,7 @@ func (t *Tracker) AggregateValuesHandler(w http.ResponseWriter, req *http.Reques
 
 // ValuesHandler is an HTTP handler for revealing what values are tracked over the network.
 func (t *Tracker) ValuesHandler(w http.ResponseWriter, req *http.Request) {
-	valueNames := []string{}
-	for _, value := range t.Values {
-		valueNames = append(valueNames, value.Name())
-	}
+	valueNames := t.ValueNames()
 	b, err := json.Marshal(valueNames)
 	if err != nil {
 		logger.Error(err)

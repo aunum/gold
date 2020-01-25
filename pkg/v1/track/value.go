@@ -175,6 +175,13 @@ func (t *TrackedScalarValue) Scalar() float64 {
 	return toF64(t.value, t.index)
 }
 
+// Inc increments value.
+func (t *TrackedScalarValue) Inc(amount interface{}) {
+	v := toF64(t.value, t.index)
+	v += toF64(amount, 0)
+	t.value = v
+}
+
 // Print the value.
 func (t *TrackedScalarValue) Print() {
 	logger.Infov(t.name, t.Scalar())

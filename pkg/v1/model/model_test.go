@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	. "github.com/pbarker/go-rl/pkg/v1/model"
-	"github.com/pbarker/go-rl/pkg/v1/model/layers"
+	l "github.com/pbarker/go-rl/pkg/v1/model/layers"
 	"github.com/pbarker/logger"
 	g "gorgonia.org/gorgonia"
 	"gorgonia.org/tensor"
@@ -25,8 +25,8 @@ func TestSequential(t *testing.T) {
 	model, err := NewSequential("test", x, y)
 	require.NoError(t, err)
 	model.AddLayers(
-		layers.NewFC(12, 24, layers.WithActivation(g.Sigmoid)),
-		layers.NewFC(24, 4, layers.WithActivation(g.Sigmoid)),
+		l.NewFC(12, 24, l.WithActivation(l.Sigmoid())),
+		l.NewFC(24, 4, l.WithActivation(l.Sigmoid())),
 	)
 
 	optimizer := g.NewVanillaSolver(g.WithLearnRate(1.0))
@@ -46,7 +46,11 @@ func TestSequential(t *testing.T) {
 	logger.Infov("y", y)
 	logger.Infov("prediction", prediction)
 
-	model.Visualize()
+	// model.Visualize()
 	err = model.Tracker.PrintHistoryAll()
 	require.NoError(t, err)
+}
+
+func TestMNIST(t *testing.T) {
+
 }

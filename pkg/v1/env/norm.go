@@ -14,10 +14,10 @@ type Normalizer interface {
 	Init(env *Env) error
 
 	// Norm normalizes the input data.
-	Norm(input *tensor.Dense) *tensor.Dense
+	Norm(input *tensor.Dense) (*tensor.Dense, error)
 }
 
-// MinMaxNormalizer is a min/max
+// MinMaxNormalizer is a min/max normalizer that makes all values between 0>x<1.
 type MinMaxNormalizer struct {
 	min *tensor.Dense
 	max *tensor.Dense
@@ -38,8 +38,9 @@ func (m *MinMaxNormalizer) Init(e *Env) (err error) {
 }
 
 // Norm normalizes the input.
-func (m *MinMaxNormalizer) Norm(input *tensor.Dense) *tensor.Dense {
-	return dense.MinMaxNorm(input, m.min, m.max)
+func (m *MinMaxNormalizer) Norm(input *tensor.Dense) (*tensor.Dense, error) {
+	ret := dense.MinMaxNorm(input, m.min, m.max)
+	return ret, nil
 }
 
 // EqWidthBinNormalizer is an EqWidthBinner applied using tensors.
@@ -72,7 +73,57 @@ func (d *EqWidthBinNormalizer) Norm(input *tensor.Dense) (*tensor.Dense, error) 
 	return d.binner.Bin(input)
 }
 
+// ReshapeNormalizer will reshape the state.
+type ReshapeNormalizer struct {
+	shape tensor.Shape
+}
+
+// NewReshapeNormalizer returns a new reshape normalizer.
+func NewReshapeNormalizer(shape tensor.Shape) *ReshapeNormalizer {
+	return &ReshapeNormalizer{shape: shape}
+}
+
+// Init the normalizer.
+func (r *ReshapeNormalizer) Init(e *Env) error {
+	return nil
+}
+
+// Norm normalizes the values by reshaping them.
+func (r *ReshapeNormalizer) Norm(input *tensor.Dense) (*tensor.Dense, error) {
+	err := input.Reshape(r.shape...)
+	if err != nil {
+		return nil, err
+	}
+	return input, nil
+}
+
+// ExpandDimsNormalizer will expand the dims of the state.
+type ExpandDimsNormalizer struct {
+	axis  int
+	shape tensor.Shape
+}
+
+// NewExpandDimsNormalizer returns a new expand dims normalizer.
+func NewExpandDimsNormalizer(axis int) *ExpandDimsNormalizer {
+	return &ExpandDimsNormalizer{axis: axis}
+}
+
+// Init the normalizer.
+func (r *ExpandDimsNormalizer) Init(e *Env) error {
+	return nil
+}
+
+// Norm normalizes the values by expanding their dims along an axis.
+func (r *ExpandDimsNormalizer) Norm(input *tensor.Dense) (*tensor.Dense, error) {
+	err := dense.ExpandDims(input, r.axis)
+	if err != nil {
+		return nil, err
+	}
+	return input, nil
+}
+
 // SpaceMinMax returns the min/max for a space as tensors.
+// Sphere already normalizes infinite spaces to floats.
 func SpaceMinMax(space *sphere.Space) (min, max *tensor.Dense, err error) {
 	switch s := space.GetInfo().(type) {
 	case *sphere.Space_Box:
