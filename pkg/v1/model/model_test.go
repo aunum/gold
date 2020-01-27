@@ -1,6 +1,7 @@
 package model_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -22,17 +23,23 @@ func TestSequential(t *testing.T) {
 	logger.Infov("x", x)
 	logger.Infov("y", y)
 
-	model, err := NewSequential("test", x, y)
+	model, err := NewSequential("test")
 	require.NoError(t, err)
+	fmt.Println("adding layers")
 	model.AddLayers(
 		l.NewFC(12, 24, l.WithActivation(l.Sigmoid())),
 		l.NewFC(24, 4, l.WithActivation(l.Sigmoid())),
 	)
 
 	optimizer := g.NewVanillaSolver(g.WithLearnRate(1.0))
-	err = model.Compile(WithOptimizer(optimizer), WithLoss(MeanSquaredError))
+	fmt.Println("compiling")
+	err = model.Compile(x, y,
+		WithOptimizer(optimizer),
+		WithLoss(MeanSquaredError),
+	)
 	require.NoError(t, err)
-
+	fmt.Println("predicting")
+	fmt.Println("shape x: ", x.Shape())
 	prediction, err := model.Predict(x)
 	require.NoError(t, err)
 	logger.Infov("prediction", prediction)
@@ -49,8 +56,4 @@ func TestSequential(t *testing.T) {
 	// model.Visualize()
 	err = model.Tracker.PrintHistoryAll()
 	require.NoError(t, err)
-}
-
-func TestMNIST(t *testing.T) {
-
 }

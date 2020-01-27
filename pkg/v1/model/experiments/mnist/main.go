@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 
+	"gorgonia.org/tensor"
+
 	"github.com/pbarker/go-rl/pkg/v1/common"
 
 	"github.com/pbarker/go-rl/pkg/v1/dense"
@@ -31,15 +33,15 @@ func main() {
 	batches := exampleSize / batchSize
 	logger.Infov("batches", batches)
 
-	x0, err := x.Slice(dense.MakeRangedSlice(0, batchSize))
+	x0, err := x.Slice(dense.MakeRangedSlice(0, 1))
 	require.NoError(err)
 	fmt.Println("x0: ", x0.Shape())
 
-	y0, err := y.Slice(dense.MakeRangedSlice(0, batchSize))
+	y0, err := y.Slice(dense.MakeRangedSlice(0, 1))
 	require.NoError(err)
 	fmt.Println("y0: ", y0.Shape())
 
-	model, err := NewSequential("train", x0, y0)
+	model, err := NewSequential("mnist-solver")
 	require.NoError(err)
 
 	model.AddLayers(
@@ -49,10 +51,10 @@ func main() {
 	)
 
 	optimizer := g.NewRMSPropSolver(g.WithBatchSize(float64(batchSize)))
-	err = model.Compile(
+	err = model.Compile(x0, y0,
 		WithOptimizer(optimizer),
-		WithLoss(CrossEntropy),
-		AsBatch(),
+		WithLoss(MeanSquaredError),
+		WithBatchSize(batchSize),
 	)
 	require.NoError(err)
 
@@ -74,7 +76,8 @@ func main() {
 			yi, err := y.Slice(dense.MakeRangedSlice(start, end))
 			require.NoError(err)
 
-			err = model.Fit(xi, yi)
+			logger.Infov("xi shape", xi.Shape())
+			err = model.FitBatch(xi, yi)
 			require.NoError(err)
 			// for _, layer := range model.Layers.Layers {
 			// 	f := layer.(*l.FC)
@@ -83,6 +86,17 @@ func main() {
 			// 		logger.Infov(fmt.Sprintf("learnable %v", f.Name), learnable.Value())
 			// 	}
 			// }
+			x1, err := x.Slice(dense.MakeRangedSlice(0, 1))
+			require.NoError(err)
+			logger.Infov("x1", x1)
+
+			x1m := x1.Materialize().(*tensor.Dense)
+			err = dense.ExpandDims(x1m, 0)
+			require.NoError(err)
+			logger.Infov("x1m shape", x1m.Shape())
+			pred, err := model.Predict(x1m)
+			require.NoError(err)
+			logger.Infov("prediction", pred)
 		}
 		loss, err := model.Tracker.GetValue("train_loss")
 		require.NoError(err)

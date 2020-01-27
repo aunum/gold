@@ -24,7 +24,7 @@ type PolicyConfig struct {
 
 // DefaultPolicyConfig are the default hyperparameters for a policy.
 var DefaultPolicyConfig = &PolicyConfig{
-	LossFn:       modelv1.MeanSquaredError,
+	LossFn:       modelv1.CrossEntropy,
 	Optimizer:    g.NewAdamSolver(g.WithLearnRate(0.001)),
 	LayerBuilder: DefaultFCLayerBuilder,
 }

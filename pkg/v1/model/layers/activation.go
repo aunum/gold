@@ -1,7 +1,8 @@
 package layers
 
 import (
-	"github.com/pbarker/go-rl/pkg/v1/model"
+	"fmt"
+
 	g "gorgonia.org/gorgonia"
 )
 
@@ -9,6 +10,9 @@ import (
 type Activation interface {
 	// Fwd is a foward pass through x.
 	Fwd(x *g.Node) (*g.Node, error)
+
+	// Clone the activation.
+	Clone() Activation
 }
 
 // SigmoidActivation is a sigmoid activation layer.
@@ -30,7 +34,12 @@ func (s *SigmoidActivation) Learnables() (n g.Nodes) {
 }
 
 // Compile the layer.
-func (s *SigmoidActivation) Compile(model model.Model) {}
+func (s *SigmoidActivation) Compile(x *g.Node, opts ...LayerOpt) {}
+
+// Clone the activation.
+func (s *SigmoidActivation) Clone() Activation {
+	return Sigmoid()
+}
 
 // TanhActivation is a tanh activation layer.
 type TanhActivation struct{}
@@ -51,7 +60,12 @@ func (t *TanhActivation) Learnables() (n g.Nodes) {
 }
 
 // Compile the layer.
-func (t *TanhActivation) Compile(model model.Model) {}
+func (t *TanhActivation) Compile(x *g.Node, opts ...LayerOpt) {}
+
+// Clone the activation.
+func (t *TanhActivation) Clone() Activation {
+	return Tanh()
+}
 
 // ReLUActivation is a relu activation layer.
 type ReLUActivation struct{}
@@ -72,7 +86,12 @@ func (r *ReLUActivation) Learnables() (n g.Nodes) {
 }
 
 // Compile the layer.
-func (r *ReLUActivation) Compile(model model.Model) {}
+func (r *ReLUActivation) Compile(x *g.Node, opts ...LayerOpt) {}
+
+// Clone the activation.
+func (r *ReLUActivation) Clone() Activation {
+	return ReLU()
+}
 
 // LeakyReLUActivation is a leaky relu activation layer.
 type LeakyReLUActivation struct {
@@ -95,20 +114,29 @@ func (r *LeakyReLUActivation) Learnables() (n g.Nodes) {
 }
 
 // Compile the layer.
-func (r *LeakyReLUActivation) Compile(model model.Model) {}
+func (r *LeakyReLUActivation) Compile(x *g.Node, opts ...LayerOpt) {}
+
+// Clone the activation.
+func (r *LeakyReLUActivation) Clone() Activation {
+	return LeakyReLU(r.alpha)
+}
 
 // SoftmaxActivation is a softmax activation layer.
 type SoftmaxActivation struct {
 	axis []int
 }
 
-// Softmax returns a new leaky relu activation layer.
+// Softmax returns a new leaky softmax activation layer.
 func Softmax(axis ...int) *SoftmaxActivation {
+	// if len(axis) == 0 {
+	// 	axis = append(axis, 0)
+	// }
 	return &SoftmaxActivation{axis: axis}
 }
 
 // Fwd is a foward pass through the layer.
 func (s *SoftmaxActivation) Fwd(x *g.Node) (*g.Node, error) {
+	fmt.Printf("running softmax with x shape: %v dims: %v \n", x.Shape(), x.Dims())
 	return g.SoftMax(x, s.axis...)
 }
 
@@ -118,7 +146,12 @@ func (s *SoftmaxActivation) Learnables() (n g.Nodes) {
 }
 
 // Compile the layer.
-func (s *SoftmaxActivation) Compile(model model.Model) {}
+func (s *SoftmaxActivation) Compile(x *g.Node, opts ...LayerOpt) {}
+
+// Clone the activation.
+func (s *SoftmaxActivation) Clone() Activation {
+	return Softmax(s.axis...)
+}
 
 // LinearActivation is a linear (identity) activation layer.
 type LinearActivation struct{}
@@ -139,4 +172,9 @@ func (l *LinearActivation) Learnables() (n g.Nodes) {
 }
 
 // Compile the layer.
-func (l *LinearActivation) Compile(model model.Model) {}
+func (l *LinearActivation) Compile(x *g.Node, opts ...LayerOpt) {}
+
+// Clone the activation.
+func (l *LinearActivation) Clone() Activation {
+	return Linear()
+}

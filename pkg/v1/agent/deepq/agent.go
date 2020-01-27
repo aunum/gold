@@ -10,6 +10,7 @@ import (
 	"github.com/pbarker/go-rl/pkg/v1/common"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
 	"github.com/pbarker/logger"
+	g "gorgonia.org/gorgonia"
 	"gorgonia.org/tensor"
 )
 
@@ -21,12 +22,15 @@ type Agent struct {
 	// Hyperparameters for the dqn agent.
 	*Hyperparameters
 
-	Policy  model.Model
-	Epsilon common.Schedule
-	env     *envv1.Env
-	epsilon float32
+	Policy            model.Model
+	TargetPolicy      model.Model
+	Epsilon           common.Schedule
+	env               *envv1.Env
+	epsilon           float32
+	updateTargetSteps int
 
 	memory *Memory
+	steps  int
 }
 
 // Hyperparameters for the dqn agent.
@@ -41,13 +45,17 @@ type Hyperparameters struct {
 
 	// ReplayBatchSize determines how large a batch is replayed from memory.
 	ReplayBatchSize int
+
+	// UpdateTargetSteps determins how often the target network updates its parameters.
+	UpdateTargetSteps int
 }
 
 // DefaultHyperparameters are the default hyperparameters.
 var DefaultHyperparameters = &Hyperparameters{
-	Epsilon:         common.DefaultDecaySchedule(),
-	Gamma:           0.95,
-	ReplayBatchSize: 20,
+	Epsilon:           common.DefaultDecaySchedule(),
+	Gamma:             0.95,
+	ReplayBatchSize:   20,
+	UpdateTargetSteps: 100,
 }
 
 // AgentConfig is the config for a dqn agent.
@@ -83,19 +91,25 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 	if c.Epsilon == nil {
 		c.Epsilon = common.DefaultDecaySchedule()
 	}
-	policy, err := MakePolicy("train", c.PolicyConfig, c.Base, env)
+	policy, err := MakePolicy("online", c.PolicyConfig, c.Base, env)
+	if err != nil {
+		return nil, err
+	}
+	targetPolicy, err := MakePolicy("target", c.PolicyConfig, c.Base, env)
 	if err != nil {
 		return nil, err
 	}
 	c.Base.Tracker.TrackValue("epsilon", c.Epsilon.Initial())
 	return &Agent{
-		Base:            c.Base,
-		Hyperparameters: c.Hyperparameters,
-		memory:          NewMemory(),
-		Policy:          policy,
-		Epsilon:         c.Epsilon,
-		epsilon:         c.Epsilon.Initial(),
-		env:             env,
+		Base:              c.Base,
+		Hyperparameters:   c.Hyperparameters,
+		memory:            NewMemory(),
+		Policy:            policy,
+		TargetPolicy:      targetPolicy,
+		Epsilon:           c.Epsilon,
+		epsilon:           c.Epsilon.Initial(),
+		env:               env,
+		updateTargetSteps: c.UpdateTargetSteps,
 	}, nil
 }
 
@@ -116,7 +130,7 @@ func (a *Agent) Learn() error {
 		logger.Infov("i", event.i)
 		qUpdate := float32(event.Reward)
 		if !event.Done {
-			prediction, err := a.Policy.Predict(event.Observation)
+			prediction, err := a.TargetPolicy.Predict(event.Observation)
 			if err != nil {
 				return err
 			}
@@ -158,11 +172,42 @@ func (a *Agent) Learn() error {
 		fmt.Printf("---------- %v \n\n", i)
 	}
 	a.epsilon = a.Epsilon.Value()
+
+	err = a.updateTarget()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (a *Agent) updateTarget() error {
+	if a.steps%a.updateTargetSteps == 0 {
+		logger.Info("###################################")
+		logger.Infof("updating target model - steps %v target %v", a.steps, a.updateTargetSteps)
+		targetLearnables := a.TargetPolicy.Learnables()
+		for i, layer := range a.Policy.Learnables() {
+			err := g.Let(targetLearnables[i], layer.Clone().(*g.Node).Value())
+			if err != nil {
+				return err
+			}
+		}
+		logger.Info("online learnables: ", a.Policy.Learnables())
+		for _, layer := range a.Policy.Learnables() {
+			logger.Infov(layer.Name(), layer.Value())
+		}
+		logger.Info("-------")
+		logger.Info("target learnables: ", a.Policy.Learnables())
+		for _, layer := range a.TargetPolicy.Learnables() {
+			logger.Infov(layer.Name(), layer.Value())
+		}
+		logger.Info("###################################")
+	}
 	return nil
 }
 
 // Action selects the best known action for the given state.
 func (a *Agent) Action(state *tensor.Dense) (action int, err error) {
+	a.steps++
 	logger.Infov("epsilon", a.epsilon)
 	a.Tracker.TrackValue("epsilon", a.epsilon)
 	if common.RandFloat32(float32(0.0), float32(1.0)) < a.epsilon {

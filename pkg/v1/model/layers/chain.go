@@ -1,4 +1,4 @@
-package model
+package layers
 
 import (
 	g "gorgonia.org/gorgonia"
@@ -8,6 +8,8 @@ import (
 type Chain struct {
 	// Layers are the layers to chain together.
 	Layers []Layer
+
+	sharedLearnables *Chain
 }
 
 // NewChain returns a new chain of layers.
@@ -44,9 +46,36 @@ func (c *Chain) Add(l ...Layer) {
 	}
 }
 
-// Compile the chain of layers into the model.
-func (c *Chain) Compile(model Model) {
+// Clone the chain without any nodes.
+func (c *Chain) Clone() *Chain {
+	ch := &Chain{}
 	for _, layer := range c.Layers {
-		layer.Compile(model)
+		ch.Add(layer.Clone())
+	}
+	return ch
+}
+
+// ChainOpt is a chain option.
+type ChainOpt func(*Chain)
+
+// WithSharedChainLearnables shares the learnables from another chain.
+func WithSharedChainLearnables(shared *Chain) func(*Chain) {
+	return func(c *Chain) {
+		c.sharedLearnables = shared
+	}
+}
+
+// Compile the chain of layers into the model.
+func (c *Chain) Compile(x *g.Node, opts ...ChainOpt) {
+	for _, opt := range opts {
+		opt(c)
+	}
+	if c.sharedLearnables != nil {
+		for i, layer := range c.Layers {
+			layer.Compile(x, WithSharedLearnables(c.sharedLearnables.Layers[i]))
+		}
+	}
+	for _, layer := range c.Layers {
+		layer.Compile(x)
 	}
 }

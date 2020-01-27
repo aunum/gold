@@ -10,21 +10,36 @@ type LossFn func(yHat, y *g.Node) (loss *g.Node, err error)
 // MeanSquaredError cost function.
 // https://en.wikipedia.org/wiki/Mean_squared_error
 func MeanSquaredError(yHat, y *g.Node) (loss *g.Node, err error) {
-	loss = g.Must(g.Sub(yHat, y))
-	loss = g.Must(g.Square(loss))
-	loss = g.Must(g.Mean(loss))
+	loss, err = g.Sub(yHat, y)
+	if err != nil {
+		return nil, err
+	}
+	loss, err = g.Square(loss)
+	if err != nil {
+		return nil, err
+	}
+	loss, err = g.Mean(loss)
+	if err != nil {
+		return nil, err
+	}
 	return
 }
 
 // CrossEntropy cost function.
 // https://en.wikipedia.org/wiki/Cross_entropy#Cross-entropy_loss_function_and_logistic_regression
-func CrossEntropy(yHat, y *g.Node) (cost *g.Node, err error) {
-	losses, err := g.HadamardProd(yHat, y)
+func CrossEntropy(yHat, y *g.Node) (loss *g.Node, err error) {
+	loss, err = g.HadamardProd(yHat, y)
 	if err != nil {
 		return nil, err
 	}
-	cost = g.Must(g.Mean(losses))
-	cost = g.Must(g.Neg(cost))
+	loss, err = g.Mean(loss)
+	if err != nil {
+		return nil, err
+	}
+	loss, err = g.Neg(loss)
+	if err != nil {
+		return nil, err
+	}
 	return
 }
 
