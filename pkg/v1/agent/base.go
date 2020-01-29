@@ -12,7 +12,7 @@ import (
 	"github.com/phayes/freeport"
 
 	"github.com/pbarker/go-rl/pkg/v1/track"
-	"github.com/pbarker/logger"
+	"github.com/pbarker/log"
 	"github.com/skratchdot/open-golang/open"
 )
 
@@ -54,14 +54,14 @@ func NewBase(opts ...Opt) *Base {
 	if b.Tracker == nil {
 		tracker, err := track.NewTracker()
 		if err != nil {
-			logger.Fatal(err)
+			log.Fatal(err)
 		}
 		b.Tracker = tracker
 	}
 	if b.Port == "" {
 		port, err := freeport.GetFreePort()
 		if err != nil {
-			logger.Fatal(err)
+			log.Fatal(err)
 		}
 		b.Port = strconv.Itoa(port)
 	}
@@ -70,7 +70,7 @@ func NewBase(opts ...Opt) *Base {
 
 // MakeEpisodes creates a set of episodes for training and stores the number for configuration.
 func (b *Base) MakeEpisodes(num int) track.Episodes {
-	logger.Infof("running for %d episodes", num)
+	log.Infof("running for %d episodes", num)
 	eps := b.Tracker.MakeEpisodes(num)
 	return eps
 }
@@ -81,7 +81,7 @@ func (b *Base) Serve() {
 	b.Tracker.ApplyHandlers(mux)
 	b.ApplyHandlers(mux)
 	b.address = fmt.Sprintf("http://localhost:%s", b.Port)
-	logger.Infof("serving on %s", b.address)
+	log.Infof("serving on %s", b.address)
 	go http.ListenAndServe(fmt.Sprintf(":%s", b.Port), mux)
 }
 
@@ -90,7 +90,7 @@ func (b *Base) View() {
 	b.Serve()
 	err := open.Run(b.address)
 	if err != nil {
-		logger.Fatal(err)
+		log.Fatal(err)
 	}
 }
 
@@ -124,7 +124,7 @@ func (b *Base) execTmpl() ([]byte, error) {
 		return nil, err
 	}
 	valueNames := b.Tracker.ValueNames()
-	logger.Info("value names: ", valueNames)
+	log.Info("value names: ", valueNames)
 	templHelper := struct {
 		ValueNames []string
 		Port       string

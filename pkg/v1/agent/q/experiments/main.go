@@ -9,8 +9,8 @@ import (
 	. "github.com/pbarker/go-rl/pkg/v1/agent/q"
 	. "github.com/pbarker/go-rl/pkg/v1/agent/q/experiments/envs"
 	"github.com/pbarker/go-rl/pkg/v1/common"
-	"github.com/pbarker/logger"
-	sphere "github.com/pbarker/sphere/pkg/env"
+	sphere "github.com/pbarker/go-rl/pkg/v1/env"
+	"github.com/pbarker/log"
 	"github.com/schwarmco/go-cartesian-product"
 )
 
@@ -68,7 +68,7 @@ func gridSearch() {
 			defer wg.Done()
 			r, err := TestCartPole(s, c)
 			if err != nil {
-				logger.Error(err)
+				log.Error(err)
 			}
 			res <- &result{
 				results: r,

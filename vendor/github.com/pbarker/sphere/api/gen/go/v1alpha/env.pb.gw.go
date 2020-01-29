@@ -2,11 +2,11 @@
 // source: v1alpha/env.proto
 
 /*
-Package sphere_api_v1alpha is a reverse proxy.
+Package spherev1alpha is a reverse proxy.
 
 It translates gRPC into RESTful JSON APIs.
 */
-package sphere_api_v1alpha
+package spherev1alpha
 
 import (
 	"context"

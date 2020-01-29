@@ -28,7 +28,7 @@ import (
 	"google.golang.org/grpc/grpclog"
 )
 
-// NewLoggerFromConfigString reads the string and build a logger. It can be used
+// NewLoggerFromConfigString reads the string and build a log. It can be used
 // to build a new logger and assign it to binarylog.Logger.
 //
 // Example filter config strings:
@@ -60,7 +60,7 @@ func NewLoggerFromConfigString(s string) Logger {
 }
 
 // fillMethodLoggerWithConfigString parses config, creates methodLogger and adds
-// it to the right map in the logger.
+// it to the right map in the log.
 func (l *logger) fillMethodLoggerWithConfigString(config string) error {
 	// "" is invalid.
 	if config == "" {

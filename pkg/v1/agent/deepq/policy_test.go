@@ -7,7 +7,7 @@ import (
 	. "github.com/pbarker/go-rl/pkg/v1/agent/deepq"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
 	sphere "github.com/pbarker/go-rl/pkg/v1/env"
-	"github.com/pbarker/logger"
+	"github.com/pbarker/log"
 	"github.com/stretchr/testify/require"
 	"gorgonia.org/tensor"
 )
@@ -40,11 +40,11 @@ func TestPolicy(t *testing.T) {
 
 	qv1, err := m.Predict(x1)
 	require.NoError(t, err)
-	logger.Infov("initial prediction x1", qv1)
+	log.Infov("initial prediction x1", qv1)
 
 	qv2, err := m.Predict(x2)
 	require.NoError(t, err)
-	logger.Infov("initial prediction x2", qv2)
+	log.Infov("initial prediction x2", qv2)
 
 	err = m.Fit(x1, y1)
 	require.NoError(t, err)
@@ -56,9 +56,9 @@ func TestPolicy(t *testing.T) {
 	for i := 0; i < 10000; i++ {
 		j := float32(i)
 		state := tensor.New(tensor.WithShape(1, 4), tensor.WithBacking([]float32{j * .001, j * -.002, j * .003, j * -.004}))
-		logger.Info(state)
+		log.Info(state)
 		pred, err := m.Predict(state)
-		logger.Info(pred)
+		log.Info(pred)
 		require.NoError(t, err)
 		err = m.Fit(x1, y1)
 		require.NoError(t, err)
@@ -71,13 +71,13 @@ func TestPolicy(t *testing.T) {
 
 	qvf2, err := m.Predict(x2)
 	require.NoError(t, err)
-	logger.Info("----")
-	logger.Infov("initial prediction x1", qv1)
-	logger.Infov("expected 1", y1)
-	logger.Infov("final prediction 1", qvf1)
-	logger.Info("----")
-	logger.Infov("initial prediction x2", qv2)
-	logger.Infov("expected 2", y2)
-	logger.Infov("final prediction 2", qvf2)
+	log.Info("----")
+	log.Infov("initial prediction x1", qv1)
+	log.Infov("expected 1", y1)
+	log.Infov("final prediction 1", qvf1)
+	log.Info("----")
+	log.Infov("initial prediction x2", qv2)
+	log.Infov("expected 2", y2)
+	log.Infov("final prediction 2", qvf2)
 	// time.Sleep(60 * time.Second)
 }

@@ -32,58 +32,58 @@ var logger = newLoggerV2()
 
 // V reports whether verbosity level l is at least the requested verbose level.
 func V(l int) bool {
-	return logger.V(l)
+	return log.V(l)
 }
 
 // Info logs to the INFO log.
 func Info(args ...interface{}) {
-	logger.Info(args...)
+	log.Info(args...)
 }
 
 // Infof logs to the INFO log. Arguments are handled in the manner of fmt.Printf.
 func Infof(format string, args ...interface{}) {
-	logger.Infof(format, args...)
+	log.Infof(format, args...)
 }
 
 // Infoln logs to the INFO log. Arguments are handled in the manner of fmt.Println.
 func Infoln(args ...interface{}) {
-	logger.Infoln(args...)
+	log.Infoln(args...)
 }
 
 // Warning logs to the WARNING log.
 func Warning(args ...interface{}) {
-	logger.Warning(args...)
+	log.Warning(args...)
 }
 
 // Warningf logs to the WARNING log. Arguments are handled in the manner of fmt.Printf.
 func Warningf(format string, args ...interface{}) {
-	logger.Warningf(format, args...)
+	log.Warningf(format, args...)
 }
 
 // Warningln logs to the WARNING log. Arguments are handled in the manner of fmt.Println.
 func Warningln(args ...interface{}) {
-	logger.Warningln(args...)
+	log.Warningln(args...)
 }
 
 // Error logs to the ERROR log.
 func Error(args ...interface{}) {
-	logger.Error(args...)
+	log.Error(args...)
 }
 
 // Errorf logs to the ERROR log. Arguments are handled in the manner of fmt.Printf.
 func Errorf(format string, args ...interface{}) {
-	logger.Errorf(format, args...)
+	log.Errorf(format, args...)
 }
 
 // Errorln logs to the ERROR log. Arguments are handled in the manner of fmt.Println.
 func Errorln(args ...interface{}) {
-	logger.Errorln(args...)
+	log.Errorln(args...)
 }
 
 // Fatal logs to the FATAL log. Arguments are handled in the manner of fmt.Print.
 // It calls os.Exit() with exit code 1.
 func Fatal(args ...interface{}) {
-	logger.Fatal(args...)
+	log.Fatal(args...)
 	// Make sure fatal logs will exit.
 	os.Exit(1)
 }
@@ -91,7 +91,7 @@ func Fatal(args ...interface{}) {
 // Fatalf logs to the FATAL log. Arguments are handled in the manner of fmt.Printf.
 // It calls os.Exit() with exit code 1.
 func Fatalf(format string, args ...interface{}) {
-	logger.Fatalf(format, args...)
+	log.Fatalf(format, args...)
 	// Make sure fatal logs will exit.
 	os.Exit(1)
 }
@@ -99,28 +99,28 @@ func Fatalf(format string, args ...interface{}) {
 // Fatalln logs to the FATAL log. Arguments are handled in the manner of fmt.Println.
 // It calle os.Exit()) with exit code 1.
 func Fatalln(args ...interface{}) {
-	logger.Fatalln(args...)
+	log.Fatalln(args...)
 	// Make sure fatal logs will exit.
 	os.Exit(1)
 }
 
-// Print prints to the logger. Arguments are handled in the manner of fmt.Print.
+// Print prints to the log. Arguments are handled in the manner of fmt.Print.
 //
 // Deprecated: use Info.
 func Print(args ...interface{}) {
-	logger.Info(args...)
+	log.Info(args...)
 }
 
-// Printf prints to the logger. Arguments are handled in the manner of fmt.Printf.
+// Printf prints to the log. Arguments are handled in the manner of fmt.Printf.
 //
 // Deprecated: use Infof.
 func Printf(format string, args ...interface{}) {
-	logger.Infof(format, args...)
+	log.Infof(format, args...)
 }
 
-// Println prints to the logger. Arguments are handled in the manner of fmt.Println.
+// Println prints to the log. Arguments are handled in the manner of fmt.Println.
 //
 // Deprecated: use Infoln.
 func Println(args ...interface{}) {
-	logger.Infoln(args...)
+	log.Infoln(args...)
 }

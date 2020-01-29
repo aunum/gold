@@ -13,7 +13,7 @@ type Hook interface {
 // Internal type for storing the hooks on a logger instance.
 type LevelHooks map[Level][]Hook
 
-// Add a hook to an instance of logger. This is called with
+// Add a hook to an instance of log. This is called with
 // `log.Hooks.Add(new(MyHook))` where `MyHook` implements the `Hook` interface.
 func (hooks LevelHooks) Add(hook Hook) {
 	for _, level := range hook.Levels() {

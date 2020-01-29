@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -15,7 +14,7 @@ import (
 	"github.com/pbarker/go-rl/pkg/v1/common"
 
 	"github.com/ory/dockertest"
-	"github.com/pbarker/logger"
+	"github.com/pbarker/log"
 	sphere "github.com/pbarker/sphere/api/gen/go/v1alpha"
 	"github.com/skratchdot/open-golang/open"
 	"google.golang.org/grpc"
@@ -48,7 +47,7 @@ var GymServerConfig = &ServerConfig{Image: "sphereproject/gym", Version: "latest
 
 // NewLocalServer creates a new environment server by launching a docker container and connecting to it.
 func NewLocalServer(config *ServerConfig) (*Server, error) {
-	logger.Info("creating local server")
+	log.Info("creating local server")
 	pool, err := dockertest.NewPool("")
 	if err != nil {
 		return nil, fmt.Errorf("Could not connect to docker: %s", err)
@@ -72,7 +71,7 @@ func NewLocalServer(config *ServerConfig) (*Server, error) {
 		}
 		sphereClient = sphere.NewEnvironmentAPIClient(conn)
 		resp, err := sphereClient.Info(context.Background(), &sphere.Empty{})
-		logger.Successf("connected to server %q", resp.ServerName)
+		log.Successf("connected to server %q", resp.ServerName)
 		return err
 	}); err != nil {
 		return nil, fmt.Errorf("Could not connect to docker: %s", err)
@@ -82,7 +81,7 @@ func NewLocalServer(config *ServerConfig) (*Server, error) {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		sig := <-sigs
-		logger.Warningf("closing env on sig %s", sig.String())
+		log.Warningf("closing env on sig %s", sig.String())
 		resource.Close()
 		os.Exit(1)
 	}()
@@ -118,12 +117,12 @@ func (s *Server) Make(model string, opts ...Opt) (*Env, error) {
 		return nil, err
 	}
 	env := resp.Environment
-	logger.Successf("created env: %s", env.Id)
+	log.Successf("created env: %s", env.Id)
 	rresp, err := s.Client.StartRecordEnv(ctx, &sphere.StartRecordEnvRequest{Id: env.Id})
 	if err != nil {
 		return nil, err
 	}
-	logger.Success(rresp.Message)
+	log.Success(rresp.Message)
 	e := &Env{
 		Environment: env,
 		Client:      s.Client,
@@ -208,7 +207,7 @@ func (e *Env) Close() error {
 	if err != nil {
 		return err
 	}
-	logger.Success(resp.Message)
+	log.Success(resp.Message)
 	return nil
 }
 
@@ -250,7 +249,8 @@ func (e *Env) PrintResults() error {
 	if err != nil {
 		return err
 	}
-	logger.Infoy("results", results)
+	log.Infoy("results", results)
+	log.Infov("avg reward", results.AverageReward)
 	return nil
 }
 
@@ -316,7 +316,7 @@ func (e *Env) End() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	logger.Successy("saved videos", videoPaths)
+	log.Successy("saved videos", videoPaths)
 	err = e.Close()
 	if err != nil {
 		log.Fatal(err)
@@ -326,7 +326,7 @@ func (e *Env) End() {
 // PlayAll videos stored locally.
 func (e *Env) PlayAll() {
 	for _, video := range e.VideoPaths {
-		logger.Debugf("playing video: %s", video)
+		log.Debugf("playing video: %s", video)
 		err := open.Run(video)
 		if err != nil {
 			log.Fatal(err)
@@ -345,9 +345,9 @@ func (e *Env) Clean() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		logger.Debugf("removed video: %s", videoPath)
+		log.Debugf("removed video: %s", videoPath)
 	}
-	logger.Success("removed all local videos")
+	log.Success("removed all local videos")
 }
 
 // MaxSteps that can be taken per episode.
@@ -377,12 +377,12 @@ func SpaceShape(space *sphere.Space) []int {
 	case *sphere.Space_MultiDiscrete:
 		shape = []int{len(s.MultiDiscrete.DiscreteSpaces)}
 	case *sphere.Space_StructSpace:
-		logger.Fatalf("struct space not supported")
+		log.Fatalf("struct space not supported")
 	default:
-		logger.Fatalf("unknown action space type: %v", space)
+		log.Fatalf("unknown action space type: %v", space)
 	}
 	if len(shape) == 0 {
-		logger.Fatalf("space had no shape: %v", space)
+		log.Fatalf("space had no shape: %v", space)
 	}
 	return shape
 }
@@ -398,12 +398,12 @@ func PotentialsShape(space *sphere.Space) []int {
 	case *sphere.Space_MultiDiscrete:
 		shape = common.Int32SliceToInt(s.MultiDiscrete.DiscreteSpaces)
 	case *sphere.Space_StructSpace:
-		logger.Fatalf("struct space not supported")
+		log.Fatalf("struct space not supported")
 	default:
-		logger.Fatalf("unknown action space type: %v", space)
+		log.Fatalf("unknown action space type: %v", space)
 	}
 	if len(shape) == 0 {
-		logger.Fatalf("space had no shape: %v", space)
+		log.Fatalf("space had no shape: %v", space)
 	}
 	return shape
 }
@@ -442,5 +442,5 @@ func (e *Env) BoxSpace() (*BoxSpace, error) {
 
 // Print a YAML representation of the environment.
 func (e *Env) Print() {
-	logger.Infoy("environment", e.Environment)
+	log.Infoy("environment", e.Environment)
 }

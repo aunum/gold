@@ -3,7 +3,7 @@ package track
 import (
 	"fmt"
 
-	"github.com/pbarker/logger"
+	"github.com/pbarker/log"
 	g "gorgonia.org/gorgonia"
 )
 
@@ -117,7 +117,7 @@ func (t *TrackedNodeValue) Scalar() float64 {
 
 // Print the value.
 func (t *TrackedNodeValue) Print() {
-	logger.Infov(t.name, t.Scalar())
+	log.Infov(t.name, t.Scalar())
 }
 
 // Data converts the value to a historical value.
@@ -184,7 +184,7 @@ func (t *TrackedScalarValue) Inc(amount interface{}) {
 
 // Print the value.
 func (t *TrackedScalarValue) Print() {
-	logger.Infov(t.name, t.Scalar())
+	log.Infov(t.name, t.Scalar())
 }
 
 // Data takes the current tracked value and returns a historical value.
@@ -228,7 +228,7 @@ func toF64(data interface{}, index int) float64 {
 	case []interface{}:
 		ret = toF64(val[index], index)
 	default:
-		logger.Fatalf("unknown type %T %v could not cast to float64", val, val)
+		log.Fatalf("unknown type %T %v could not cast to float64", val, val)
 	}
 	return ret
 }

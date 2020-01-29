@@ -27,7 +27,7 @@ import (
 	"google.golang.org/grpc/grpclog"
 )
 
-// Logger is the global binary logger. It can be used to get binary logger for
+// Logger is the global binary log. It can be used to get binary logger for
 // each method.
 type Logger interface {
 	getMethodLogger(methodName string) *MethodLogger
@@ -39,7 +39,7 @@ type Logger interface {
 // It is used to get a methodLogger for each individual method.
 var binLogger Logger
 
-// SetLogger sets the binarg logger.
+// SetLogger sets the binarg log.
 //
 // Only call this at init time.
 func SetLogger(l Logger) {
@@ -78,7 +78,7 @@ type logger struct {
 	blacklist map[string]struct{}
 }
 
-// newEmptyLogger creates an empty logger. The map fields need to be filled in
+// newEmptyLogger creates an empty log. The map fields need to be filled in
 // using the set* functions.
 func newEmptyLogger() *logger {
 	return &logger{}

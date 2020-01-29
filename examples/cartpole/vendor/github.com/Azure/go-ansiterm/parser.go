@@ -47,10 +47,10 @@ func CreateParser(initialState string, evtHandler AnsiEventHandler, opts ...Opti
 			l := ap.logf
 			ap.logf = func(s string, v ...interface{}) {
 				l(s, v...)
-				logger.Printf(s, v...)
+				log.Printf(s, v...)
 			}
 		} else {
-			ap.logf = logger.Printf
+			ap.logf = log.Printf
 		}
 	}
 

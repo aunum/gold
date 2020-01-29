@@ -1,13 +1,13 @@
 package common
 
 import (
-	"github.com/pbarker/logger"
+	"github.com/pbarker/log"
 )
 
 // MinMaxNorm is min-max normalization.
 func MinMaxNorm(x, min, max float32) float32 {
 	if x < min || x > max || min >= max {
-		logger.Fatalf("parameters for min-max norm not valid")
+		log.Fatalf("parameters for min-max norm not valid")
 	}
 	return (x - min) / (max - min)
 }
@@ -15,7 +15,7 @@ func MinMaxNorm(x, min, max float32) float32 {
 // MeanNorm is mean normalization.
 func MeanNorm(x, min, max, average float32) float32 {
 	if x < min || x > max || min >= max {
-		logger.Fatalf("parameters for mean norm not valid")
+		log.Fatalf("parameters for mean norm not valid")
 	}
 	return (x - average) / (max - min)
 }

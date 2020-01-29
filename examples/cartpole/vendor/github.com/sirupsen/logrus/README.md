@@ -1,7 +1,7 @@
 # Logrus <img src="http://i.imgur.com/hTeVwmJ.png" width="40" height="40" alt=":walrus:" class="emoji" title=":walrus:"/>&nbsp;[![Build Status](https://travis-ci.org/sirupsen/logrus.svg?branch=master)](https://travis-ci.org/sirupsen/logrus)&nbsp;[![GoDoc](https://godoc.org/github.com/sirupsen/logrus?status.svg)](https://godoc.org/github.com/sirupsen/logrus)
 
 Logrus is a structured logger for Go (golang), completely API compatible with
-the standard library logger.
+the standard library log.
 
 **Seeing weird case-sensitive problems?** It's in the past been possible to
 import Logrus as both upper- and lower-case. Due to the Go package environment,
@@ -178,12 +178,12 @@ import (
   "github.com/sirupsen/logrus"
 )
 
-// Create a new instance of the logger. You can have any number of instances.
+// Create a new instance of the log. You can have any number of instances.
 var log = logrus.New()
 
 func main() {
   // The API for setting attributes is a little different than the package level
-  // exported logger. See Godoc.
+  // exported log. See Godoc.
   log.Out = os.Stdout
 
   // You could set this to any `io.Writer` such as a file
@@ -395,7 +395,7 @@ func (f *MyJSONFormatter) Format(entry *Entry) ([]byte, error) {
 Logrus can be transformed into an `io.Writer`. That writer is the end of an `io.Pipe` and it is your responsibility to close it.
 
 ```go
-w := logger.Writer()
+w := log.Writer()
 defer w.Close()
 
 srv := http.Server{
@@ -412,19 +412,19 @@ This means that we can override the standard library logger easily:
 
 ```go
 logger := logrus.New()
-logger.Formatter = &logrus.JSONFormatter{}
+log.Formatter = &logrus.JSONFormatter{}
 
 // Use logrus for standard log output
 // Note that `log` here references stdlib's log
 // Not logrus imported under the name `log`.
-log.SetOutput(logger.Writer())
+log.SetOutput(log.Writer())
 ```
 
 #### Rotation
 
 Log rotation is not provided with Logrus. Log rotation should be done by an
 external program (like `logrotate(8)`) that can compress and delete old log
-entries. It should not be a feature of the application-level logger.
+entries. It should not be a feature of the application-level log.
 
 #### Tools
 
@@ -450,7 +450,7 @@ import(
 
 func TestSomething(t*testing.T){
   logger, hook := test.NewNullLogger()
-  logger.Error("Helloerror")
+  log.Error("Helloerror")
 
   assert.Equal(t, 1, len(hook.Entries))
   assert.Equal(t, logrus.ErrorLevel, hook.LastEntry().Level)
@@ -480,16 +480,16 @@ logrus.RegisterExitHandler(handler)
 #### Thread safety
 
 By default, Logger is protected by a mutex for concurrent writes. The mutex is held when calling hooks and writing logs.
-If you are sure such locking is not needed, you can call logger.SetNoLock() to disable the locking.
+If you are sure such locking is not needed, you can call log.SetNoLock() to disable the locking.
 
 Situation when locking is not needed includes:
 
 * You have no hooks registered, or hooks calling is already thread-safe.
 
-* Writing to logger.Out is already thread-safe, for example:
+* Writing to log.Out is already thread-safe, for example:
 
-  1) logger.Out is protected by locks.
+  1) log.Out is protected by locks.
 
-  2) logger.Out is a os.File handler opened with `O_APPEND` flag, and every write is smaller than 4k. (This allow multi-thread/multi-process writing)
+  2) log.Out is a os.File handler opened with `O_APPEND` flag, and every write is smaller than 4k. (This allow multi-thread/multi-process writing)
 
      (Refer to http://www.notthewizard.com/2014/06/17/are-files-appends-really-atomic/)

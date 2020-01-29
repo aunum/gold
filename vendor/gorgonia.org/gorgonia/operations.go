@@ -171,7 +171,6 @@ func SoftMax(a *Node, axes ...int) (retVal *Node, err error) {
 		}
 		axis = axes[0]
 	}
-
 	var exp, sum *Node
 	if exp, err = Exp(a); err != nil {
 		return nil, errors.Wrap(err, operationError)

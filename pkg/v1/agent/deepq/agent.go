@@ -9,8 +9,7 @@ import (
 	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
 	"github.com/pbarker/go-rl/pkg/v1/common"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
-	"github.com/pbarker/logger"
-	g "gorgonia.org/gorgonia"
+	"github.com/pbarker/log"
 	"gorgonia.org/tensor"
 )
 
@@ -28,6 +27,7 @@ type Agent struct {
 	env               *envv1.Env
 	epsilon           float32
 	updateTargetSteps int
+	batchSize         int
 
 	memory *Memory
 	steps  int
@@ -43,9 +43,6 @@ type Hyperparameters struct {
 	// Epsilon is the rate at which the agent should exploit vs explore.
 	Epsilon common.Schedule
 
-	// ReplayBatchSize determines how large a batch is replayed from memory.
-	ReplayBatchSize int
-
 	// UpdateTargetSteps determins how often the target network updates its parameters.
 	UpdateTargetSteps int
 }
@@ -54,7 +51,6 @@ type Hyperparameters struct {
 var DefaultHyperparameters = &Hyperparameters{
 	Epsilon:           common.DefaultDecaySchedule(),
 	Gamma:             0.95,
-	ReplayBatchSize:   20,
 	UpdateTargetSteps: 100,
 }
 
@@ -95,6 +91,7 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 	if err != nil {
 		return nil, err
 	}
+	c.PolicyConfig.Track = false
 	targetPolicy, err := MakePolicy("target", c.PolicyConfig, c.Base, env)
 	if err != nil {
 		return nil, err
@@ -110,24 +107,22 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 		epsilon:           c.Epsilon.Initial(),
 		env:               env,
 		updateTargetSteps: c.UpdateTargetSteps,
+		batchSize:         c.PolicyConfig.BatchSize,
 	}, nil
 }
 
 // Learn the agent.
 func (a *Agent) Learn() error {
-	// logger.Infof("batch size: %v", a.memory.Len())
-	if a.memory.Len() < a.ReplayBatchSize {
+	if a.memory.Len() < a.batchSize {
 		return nil
 	}
-	logger.Info("learning")
-	batch, err := a.memory.Sample(a.ReplayBatchSize)
+	batch, err := a.memory.Sample(a.batchSize)
 	if err != nil {
 		return err
 	}
-	for i, event := range batch {
-		fmt.Printf("\n---------- %v \n", i)
-		event.Print()
-		logger.Infov("i", event.i)
+	batchStates := []*tensor.Dense{}
+	batchQValues := []*tensor.Dense{}
+	for _, event := range batch {
 		qUpdate := float32(event.Reward)
 		if !event.Done {
 			prediction, err := a.TargetPolicy.Predict(event.Observation)
@@ -135,43 +130,44 @@ func (a *Agent) Learn() error {
 				return err
 			}
 			qValues := prediction.(*tensor.Dense)
-			logger.Infov("next qvalues", qValues)
 			nextMax, err := dense.AMaxF32(qValues, 1)
 			if err != nil {
 				return err
 			}
-			logger.Infov("next max", nextMax)
 			qUpdate = event.Reward + a.Gamma*nextMax
 		}
-		logger.Infof("qUpdate %v for action %v", qUpdate, event.Action)
 		prediction, err := a.Policy.Predict(event.State)
 		if err != nil {
 			return err
 		}
 		qValues := prediction.(*tensor.Dense)
-		logger.Infov("current qvalues", qValues)
 		qValues.Set(event.Action, qUpdate)
-		logger.Infov("x", event.State)
-		logger.Infov("y", qValues)
-		err = a.Policy.Fit(event.State, qValues)
-		if err != nil {
-			return err
-		}
-		// for i := 0; i < 10; i++ {
-		// 	err = a.Policy.Fit(event.State, qValues)
-		// 	if err != nil {
-		// 		return err
-		// 	}
-		// }
-		fpred, err := a.Policy.Predict(event.State)
-		if err != nil {
-			return err
-		}
-		fqValues := fpred.(*tensor.Dense)
-		logger.Infov("final qvalues", fqValues)
-		fmt.Printf("---------- %v \n\n", i)
+		batchStates = append(batchStates, event.State)
+		batchQValues = append(batchQValues, qValues)
+	}
+	states, err := dense.Concat(0, batchStates...)
+	if err != nil {
+		return err
+	}
+	qValues, err := dense.Concat(0, batchQValues...)
+	if err != nil {
+		return err
+	}
+	// log.Infovb("states", states)
+	// log.Infovb("qvalues", qValues)
+	// log.Break()
+	err = a.Policy.FitBatch(states, qValues)
+	if err != nil {
+		return err
 	}
 	a.epsilon = a.Epsilon.Value()
+
+	// pred, err := a.Policy.PredictBatch(states)
+	// if err != nil {
+	// 	return err
+	// }
+	// log.Infovb("pred", pred)
+	// log.Break()
 
 	err = a.updateTarget()
 	if err != nil {
@@ -182,25 +178,23 @@ func (a *Agent) Learn() error {
 
 func (a *Agent) updateTarget() error {
 	if a.steps%a.updateTargetSteps == 0 {
-		logger.Info("###################################")
-		logger.Infof("updating target model - steps %v target %v", a.steps, a.updateTargetSteps)
-		targetLearnables := a.TargetPolicy.Learnables()
-		for i, layer := range a.Policy.Learnables() {
-			err := g.Let(targetLearnables[i], layer.Clone().(*g.Node).Value())
-			if err != nil {
-				return err
-			}
+		log.BreakPound()
+		log.Infof("updating target model - current steps %v target update %v", a.steps, a.updateTargetSteps)
+		err := a.Policy.(*model.Sequential).CloneLearnablesTo(a.TargetPolicy.(*model.Sequential))
+		if err != nil {
+			return err
 		}
-		logger.Info("online learnables: ", a.Policy.Learnables())
+		log.Info("online learnables: ", a.Policy.Learnables())
 		for _, layer := range a.Policy.Learnables() {
-			logger.Infov(layer.Name(), layer.Value())
+			log.Infovb("layer", layer)
+			log.Infov(layer.Name(), layer.Value())
 		}
-		logger.Info("-------")
-		logger.Info("target learnables: ", a.Policy.Learnables())
+		log.Break()
+		log.Info("target learnables: ", a.Policy.Learnables())
 		for _, layer := range a.TargetPolicy.Learnables() {
-			logger.Infov(layer.Name(), layer.Value())
+			log.Infov(layer.Name(), layer.Value())
 		}
-		logger.Info("###################################")
+		log.BreakPound()
 	}
 	return nil
 }
@@ -208,7 +202,6 @@ func (a *Agent) updateTarget() error {
 // Action selects the best known action for the given state.
 func (a *Agent) Action(state *tensor.Dense) (action int, err error) {
 	a.steps++
-	logger.Infov("epsilon", a.epsilon)
 	a.Tracker.TrackValue("epsilon", a.epsilon)
 	if common.RandFloat32(float32(0.0), float32(1.0)) < a.epsilon {
 		// explore
@@ -223,21 +216,16 @@ func (a *Agent) Action(state *tensor.Dense) (action int, err error) {
 }
 
 func (a *Agent) action(state *tensor.Dense) (action int, err error) {
-	fmt.Println("************")
 	prediction, err := a.Policy.Predict(state)
 	if err != nil {
 		return
 	}
 	qValues := prediction.(*tensor.Dense)
-	logger.Infov("qvalues", qValues)
 	actionIndex, err := qValues.Argmax(1)
 	if err != nil {
 		return action, err
 	}
-	logger.Infov("actionIndex", actionIndex)
 	action = actionIndex.GetI(0)
-	logger.Infov("best action", action)
-	fmt.Println("************")
 	return
 }
 

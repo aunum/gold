@@ -1,59 +1,79 @@
 package model_test
 
 import (
-	"fmt"
 	"testing"
+
+	"github.com/pbarker/go-rl/pkg/v1/dense"
 
 	"github.com/stretchr/testify/require"
 
 	. "github.com/pbarker/go-rl/pkg/v1/model"
 	l "github.com/pbarker/go-rl/pkg/v1/model/layers"
-	"github.com/pbarker/logger"
+	"github.com/pbarker/log"
 	g "gorgonia.org/gorgonia"
 	"gorgonia.org/tensor"
 )
 
 func TestSequential(t *testing.T) {
-	xB := []float32{-20, 0, 10, 0, 1, 10000, 1, 0, 20, 1, 5000, -20000}
-	x := tensor.New(tensor.WithBacking(xB), tensor.WithShape(1, 12))
+	batchSize := 10
+	x := tensor.New(tensor.WithShape(batchSize, 5), tensor.WithBacking(tensor.Range(tensor.Float32, 0, 50)))
+	x0, err := x.Slice(dense.MakeRangedSlice(0, 1))
+	require.NoError(t, err)
 
-	yB := []float32{1, 0, 0, 1}
-	y := tensor.New(tensor.WithBacking(yB), tensor.WithShape(1, 4))
+	y := tensor.New(tensor.WithShape(batchSize, 3), tensor.WithBacking(tensor.Range(tensor.Float32, 15, 45)))
+	y0, err := y.Slice(dense.MakeRangedSlice(0, 1))
+	require.NoError(t, err)
 
-	logger.Infov("x", x)
-	logger.Infov("y", y)
+	log.Infovb("x", x)
+	log.Infovb("y", y)
+	log.Break()
+
+	log.Infov("x0", x0)
+	log.Infov("y0", y0)
+	log.Break()
 
 	model, err := NewSequential("test")
 	require.NoError(t, err)
-	fmt.Println("adding layers")
 	model.AddLayers(
-		l.NewFC(12, 24, l.WithActivation(l.Sigmoid())),
-		l.NewFC(24, 4, l.WithActivation(l.Sigmoid())),
+		l.NewFC(5, 24, l.WithActivation(l.Sigmoid())),
+		l.NewFC(24, 24, l.WithActivation(l.Sigmoid())),
+		l.NewFC(24, 3, l.WithActivation(l.Linear())),
 	)
 
-	optimizer := g.NewVanillaSolver(g.WithLearnRate(1.0))
-	fmt.Println("compiling")
-	err = model.Compile(x, y,
+	optimizer := g.NewAdamSolver()
+	err = model.Compile(x0, y0,
 		WithOptimizer(optimizer),
 		WithLoss(MeanSquaredError),
+		WithBatchSize(batchSize),
 	)
 	require.NoError(t, err)
-	fmt.Println("predicting")
-	fmt.Println("shape x: ", x.Shape())
-	prediction, err := model.Predict(x)
-	require.NoError(t, err)
-	logger.Infov("prediction", prediction)
+	log.Break()
 
-	for i := 0; i < 10000; i++ {
-		err = model.Fit(x, y)
+	prediction, err := model.Predict(x0)
+	require.NoError(t, err)
+	log.Infov("y0", y0)
+	log.Infov("initial single prediction", prediction)
+	log.Break()
+
+	numSteps := 10000
+	log.Infof("fitting for %v steps", numSteps)
+	for i := 0; i < numSteps; i++ {
+		err = model.FitBatch(x, y)
 		require.NoError(t, err)
 	}
-	prediction, err = model.Predict(x)
+	log.Break()
+	prediction, err = model.PredictBatch(x)
 	require.NoError(t, err)
-	logger.Infov("y", y)
-	logger.Infov("prediction", prediction)
+	log.Infovb("y", y)
+	log.Infovb("final batch prediction", prediction)
+	log.Break()
+
+	prediction, err = model.Predict(x0)
+	require.NoError(t, err)
+	log.Infov("y0", y0)
+	log.Infov("final single prediction", prediction)
 
 	// model.Visualize()
-	err = model.Tracker.PrintHistoryAll()
-	require.NoError(t, err)
+	// err = model.Tracker.PrintHistoryAll()
+	// require.NoError(t, err)
 }

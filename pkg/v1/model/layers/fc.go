@@ -94,41 +94,21 @@ func WithNoBias() func(*FC) {
 	}
 }
 
-// AsBatch informs the layer compilation that it is a batch.
-func AsBatch() func(Layer) {
-	return func(l Layer) {
-		fc := l.(*FC)
-		fc.isBatched = true
-	}
-}
-
 // Compile the layer into the graph.
-// func (f *FC) Compile(x *g.Node, opts ...LayerOpt) {
-// 	for _, opt := range opts {
-// 		opt(f)
-// 	}
-// 	if f.shared != nil {
-// 		f.weights = g.NewMatrix(x.Graph(), f.dtype, g.WithShape(f.Input, f.Output), g.WithName(f.Name), g.WithValue(f.shared.weights.Value()))
-// 		if f.useBias {
-// 			f.bias = g.NewMatrix(x.Graph(), f.dtype, g.WithShape(1, f.Output), g.WithName(fmt.Sprintf("%s-bias", f.Name)), g.WithValue(f.shared.bias.Value()))
-// 		}
-// 		return
-// 	}
-// 	f.weights = g.NewMatrix(x.Graph(), f.dtype, g.WithShape(f.Input, f.Output), g.WithInit(f.init), g.WithName(f.Name))
-// 	if f.useBias {
-// 		// Note: the handling of bias here may be wrong.
-// 		f.bias = g.NewMatrix(x.Graph(), f.dtype, g.WithShape(1, f.Output), g.WithInit(f.biasInit), g.WithName(fmt.Sprintf("%s-bias", f.Name)))
-// 	}
-// }
-
 func (f *FC) Compile(x *g.Node, opts ...LayerOpt) {
+	for _, opt := range opts {
+		opt(f)
+	}
+	if f.shared != nil {
+		f.weights = g.NewMatrix(x.Graph(), f.dtype, g.WithShape(f.Input, f.Output), g.WithName(f.Name), g.WithValue(f.shared.weights.Value()))
+		if f.useBias {
+			f.bias = g.NewMatrix(x.Graph(), f.dtype, g.WithShape(1, f.Output), g.WithName(fmt.Sprintf("%s-bias", f.Name)), g.WithValue(f.shared.bias.Value()))
+		}
+		return
+	}
 	f.weights = g.NewMatrix(x.Graph(), f.dtype, g.WithShape(f.Input, f.Output), g.WithInit(f.init), g.WithName(f.Name))
 	if f.useBias {
-		if f.isBatched {
-			f.bias = g.NewMatrix(x.Graph(), f.dtype, g.WithShape(1, f.Output), g.WithInit(f.biasInit))
-		} else {
-			f.bias = g.NewMatrix(x.Graph(), f.dtype, g.WithShape(x.Shape()[0], f.Output), g.WithInit(f.biasInit))
-		}
+		f.bias = g.NewMatrix(x.Graph(), f.dtype, g.WithShape(1, f.Output), g.WithInit(f.biasInit), g.WithName(fmt.Sprintf("%s-bias", f.Name)))
 	}
 }
 
@@ -136,34 +116,33 @@ func (f *FC) Compile(x *g.Node, opts ...LayerOpt) {
 func (f *FC) Fwd(x *g.Node) (*g.Node, error) {
 	var xw, xwb *g.Node
 	var err error
-	fmt.Println("x shape fwd: ", x.Shape())
-	fmt.Println("w shape fwd: ", f.weights.Shape())
 	if xw, err = g.Mul(x, f.weights); err != nil {
 		return nil, err
 	}
 
-	fmt.Println("xw shape: ", xw.Shape())
 	if f.bias == nil {
 		xwb = xw
 		goto act
 	}
 
-	fmt.Println("broadcast adding")
-	// Note: not sure if this is right to just always broadcast.
-	if xwb, err = g.BroadcastAdd(xw, f.bias, nil, []byte{0}); err != nil {
-		return nil, err
+	if f.isBatched {
+		if xwb, err = g.BroadcastAdd(xw, f.bias, nil, []byte{0}); err != nil {
+			return nil, err
+		}
+	} else {
+		if xwb, err = g.Add(xw, f.bias); err != nil {
+			return nil, err
+		}
 	}
+
 act:
 	if f.activation == nil {
 		return xwb, nil
 	}
-	fmt.Println("xwb: ", xwb.Shape())
-	fmt.Printf("activation: %#v\n", f.activation)
 	a, err := f.activation.Fwd(xwb)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("out shape: ", a.Shape())
 	return a, err
 }
 

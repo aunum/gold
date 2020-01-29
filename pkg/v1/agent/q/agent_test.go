@@ -9,7 +9,7 @@ package q_test
 
 // 	. "github.com/pbarker/go-rl/pkg/v1/agent/q"
 // 	"github.com/pbarker/go-rl/pkg/v1/common"
-// 	"github.com/pbarker/logger"
+// 	"github.com/pbarker/log"
 // 	sphere "github.com/pbarker/sphere/pkg/env"
 // 	"github.com/schwarmco/go-cartesian-product"
 // 	"github.com/stretchr/testify/require"
@@ -36,7 +36,7 @@ package q_test
 // }
 
 // func testCartPole(s *sphere.Server, c cartPoleConfig) (*sphere.Results, error) {
-// 	logger.Infoy("config", c)
+// 	log.Infoy("config", c)
 // 	env, err := s.Make("CartPole-v1")
 // 	if err != nil {
 // 		return nil, err
@@ -67,7 +67,7 @@ package q_test
 // 	// fmt.Printf("widths: %#v\n", obvBinner.Widths())
 // 	// fmt.Printf("bounds: %#v\n", obvBinner.Bounds())
 
-// 	logger.Infof("running for %d episodes", c.NumEpisodes)
+// 	log.Infof("running for %d episodes", c.NumEpisodes)
 // 	for i := 0; i <= c.NumEpisodes; i++ {
 // 		state, err := env.Reset()
 // 		if err != nil {
@@ -105,7 +105,7 @@ package q_test
 // 			}
 
 // 			if outcome.Done {
-// 				logger.Successf("Episode %d finished after %d timesteps", i, ts+1)
+// 				log.Successf("Episode %d finished after %d timesteps", i, ts+1)
 // 				agent.Visualize()
 // 				// should we clear the state table here?
 // 				break
@@ -161,7 +161,7 @@ package q_test
 // 			defer wg.Done()
 // 			r, err := testCartPole(s, c)
 // 			if err != nil {
-// 				logger.Error(err)
+// 				log.Error(err)
 // 			}
 // 			res <- &result{
 // 				results: r,

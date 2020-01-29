@@ -59,10 +59,10 @@ func CreateWinEventHandler(fd uintptr, file *os.File, opts ...Option) ansiterm.A
 			l := h.logf
 			h.logf = func(s string, v ...interface{}) {
 				l(s, v...)
-				logger.Printf(s, v...)
+				log.Printf(s, v...)
 			}
 		} else {
-			h.logf = logger.Printf
+			h.logf = log.Printf
 		}
 	}
 

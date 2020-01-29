@@ -352,6 +352,7 @@ func Uname(uname *Utsname) error {
 // clock_settime
 // closefrom
 // execve
+// fcntl
 // fhopen
 // fhstat
 // fhstatfs

@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/pbarker/logger"
+	"github.com/pbarker/log"
 	g "gorgonia.org/gorgonia"
 )
 
@@ -34,7 +34,7 @@ func NewTracker(opts ...TrackerOpt) (*Tracker, error) {
 	if err != nil {
 		return nil, err
 	}
-	logger.Infof("tracking data in %s", f.Name())
+	log.Infof("tracking data in %s", f.Name())
 	encoder := json.NewEncoder(f)
 	scanner := bufio.NewScanner(f)
 	t := &Tracker{
@@ -52,7 +52,7 @@ func WithDir(dir string) func(*Tracker) {
 	return func(t *Tracker) {
 		f, err := ioutil.TempFile(dir, "stats")
 		if err != nil {
-			logger.Fatal(err)
+			log.Fatal(err)
 		}
 		encoder := json.NewEncoder(f)
 		t.encoder = encoder
@@ -178,7 +178,7 @@ func (t *Tracker) ZeroValue(name string) error {
 func (t *Tracker) checkName(name string) {
 	for _, val := range t.values {
 		if val.Name() == name {
-			logger.Fatal("cannot track duplicate name: ", name)
+			log.Fatal("cannot track duplicate name: ", name)
 		}
 	}
 }
@@ -243,7 +243,7 @@ func (t *Tracker) GetHistoryAll() ([]HistoricalValues, error) {
 func (t *Tracker) PrintValue(name string) {
 	v, err := t.GetValue(name)
 	if err != nil {
-		logger.Error(err)
+		log.Error(err)
 	}
 	v.Print()
 }
@@ -277,7 +277,7 @@ func (t *Tracker) PrintHistoryAll() error {
 
 // Print the tracked values.
 func (v HistoricalValues) Print() {
-	logger.Infoy("history", v)
+	log.Infoy("history", v)
 }
 
 // GetEpisodeHistories returns the episode history.

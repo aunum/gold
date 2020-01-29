@@ -5,8 +5,8 @@ import (
 
 	. "github.com/pbarker/go-rl/pkg/v1/agent/q"
 	"github.com/pbarker/go-rl/pkg/v1/common"
-	"github.com/pbarker/logger"
-	sphere "github.com/pbarker/sphere/pkg/env"
+	sphere "github.com/pbarker/go-rl/pkg/v1/env"
+	"github.com/pbarker/log"
 	"gorgonia.org/tensor"
 )
 
@@ -19,7 +19,7 @@ type CartPoleTestConfig struct {
 
 // TestCartPole tests the cartpole env.
 func TestCartPole(s *sphere.Server, c CartPoleTestConfig) (*sphere.Results, error) {
-	logger.Infoy("config", c)
+	log.Infoy("config", c)
 	env, err := s.Make("CartPole-v0")
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func TestCartPole(s *sphere.Server, c CartPoleTestConfig) (*sphere.Results, erro
 	// fmt.Printf("widths: %#v\n", obvBinner.Widths())
 	// fmt.Printf("bounds: %#v\n", obvBinner.Bounds())
 
-	logger.Infof("running for %d episodes", c.NumEpisodes)
+	log.Infof("running for %d episodes", c.NumEpisodes)
 	for i := 0; i <= c.NumEpisodes; i++ {
 		state, err := env.Reset()
 		if err != nil {
@@ -90,7 +90,7 @@ func TestCartPole(s *sphere.Server, c CartPoleTestConfig) (*sphere.Results, erro
 			}
 
 			if outcome.Done {
-				logger.Successf("Episode %d finished after %d timesteps", i, ts+1)
+				log.Successf("Episode %d finished after %d timesteps", i, ts+1)
 				agent.Visualize()
 				// should we clear the state table here?
 				break

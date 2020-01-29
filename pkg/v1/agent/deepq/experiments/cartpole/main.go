@@ -6,7 +6,7 @@ import (
 	"github.com/pbarker/go-rl/pkg/v1/common/require"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
 	"github.com/pbarker/go-rl/pkg/v1/track"
-	"github.com/pbarker/logger"
+	"github.com/pbarker/log"
 )
 
 func main() {
@@ -18,13 +18,12 @@ func main() {
 	env, err := s.Make("CartPole-v1", envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
 	require.NoError(err)
 
-	// agentConfig := deepq.AgentConfig{}
 	agent, err := deepq.NewAgent(deepq.DefaultAgentConfig, env)
 	require.NoError(err)
 
 	agent.View()
 
-	numEpisodes := 400
+	numEpisodes := 200
 	agent.Epsilon = common.DefaultDecaySchedule(common.WithDecayRate(0.9995))
 	for _, episode := range agent.MakeEpisodes(numEpisodes) {
 		state, err := env.Reset()
@@ -36,7 +35,7 @@ func main() {
 			action, err := agent.Action(state)
 			require.NoError(err)
 
-			logger.Infov("action", action)
+			// log.Infov("action", action)
 			outcome, err := env.Step(action)
 			require.NoError(err)
 
@@ -54,11 +53,11 @@ func main() {
 			timestep.Log()
 
 			if outcome.Done {
-				logger.Successf("Episode %d finished after %d timesteps", episode.I, timestep.I+1)
+				log.Successf("Episode %d finished after %d timesteps", episode.I, timestep.I+1)
 				break
 			}
 			state = outcome.Observation
-			logger.Infov("state", state)
+			// log.Infov("state", state)
 		}
 	}
 	agent.Wait()

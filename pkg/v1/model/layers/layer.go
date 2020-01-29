@@ -31,3 +31,11 @@ func WithSharedLearnables(shared Layer) func(Layer) {
 		}
 	}
 }
+
+// AsBatch informs the layer compilation that it is a batch.
+func AsBatch() func(Layer) {
+	return func(l Layer) {
+		fc := l.(*FC)
+		fc.isBatched = true
+	}
+}

@@ -13,7 +13,7 @@ import (
 
 	. "github.com/pbarker/go-rl/pkg/v1/model"
 	l "github.com/pbarker/go-rl/pkg/v1/model/layers"
-	"github.com/pbarker/logger"
+	"github.com/pbarker/log"
 	g "gorgonia.org/gorgonia"
 	"gorgonia.org/gorgonia/examples/mnist"
 )
@@ -26,12 +26,12 @@ func main() {
 	fmt.Println("y shape: ", y.Shape())
 
 	exampleSize := x.Shape()[0]
-	logger.Infov("exampleSize", exampleSize)
+	log.Infov("exampleSize", exampleSize)
 
 	batchSize := 100
-	logger.Infov("batchsize", batchSize)
+	log.Infov("batchsize", batchSize)
 	batches := exampleSize / batchSize
-	logger.Infov("batches", batches)
+	log.Infov("batches", batches)
 
 	x0, err := x.Slice(dense.MakeRangedSlice(0, 1))
 	require.NoError(err)
@@ -60,7 +60,7 @@ func main() {
 
 	epochs := 100
 
-	logger.Infov("epochs", epochs)
+	log.Infov("epochs", epochs)
 	for epoch := 0; epoch < epochs; epoch++ {
 		for batch := 0; batch < batches; batch++ {
 			start := batch * batchSize
@@ -76,35 +76,35 @@ func main() {
 			yi, err := y.Slice(dense.MakeRangedSlice(start, end))
 			require.NoError(err)
 
-			logger.Infov("xi shape", xi.Shape())
+			log.Infov("xi shape", xi.Shape())
 			err = model.FitBatch(xi, yi)
 			require.NoError(err)
 			// for _, layer := range model.Layers.Layers {
 			// 	f := layer.(*l.FC)
-			// 	// logger.Infov(fmt.Sprintf("last value %v", f.Name), f.LastValue())
+			// 	// log.Infov(fmt.Sprintf("last value %v", f.Name), f.LastValue())
 			// 	for _, learnable := range layer.Learnables() {
-			// 		logger.Infov(fmt.Sprintf("learnable %v", f.Name), learnable.Value())
+			// 		log.Infov(fmt.Sprintf("learnable %v", f.Name), learnable.Value())
 			// 	}
 			// }
 			x1, err := x.Slice(dense.MakeRangedSlice(0, 1))
 			require.NoError(err)
-			logger.Infov("x1", x1)
+			log.Infov("x1", x1)
 
 			x1m := x1.Materialize().(*tensor.Dense)
 			err = dense.ExpandDims(x1m, 0)
 			require.NoError(err)
-			logger.Infov("x1m shape", x1m.Shape())
+			log.Infov("x1m shape", x1m.Shape())
 			pred, err := model.Predict(x1m)
 			require.NoError(err)
-			logger.Infov("prediction", pred)
+			log.Infov("prediction", pred)
 		}
 		loss, err := model.Tracker.GetValue("train_loss")
 		require.NoError(err)
-		logger.Infof("completed train epoch %v with loss %v", epoch, loss.Scalar())
+		log.Infof("completed train epoch %v with loss %v", epoch, loss.Scalar())
 
 	}
 	// load our test set
-	logger.Info("loading test set")
+	log.Info("loading test set")
 	x, y, err = mnist.Load("train", "./testdata", g.Float32)
 	require.NoError(err)
 
@@ -134,7 +134,7 @@ func main() {
 		}
 		loss, err := model.Tracker.GetValue("train_loss")
 		require.NoError(err)
-		logger.Infof("completed eval epoch %v with loss of %v", epoch, loss.Scalar())
+		log.Infof("completed eval epoch %v with loss of %v", epoch, loss.Scalar())
 	}
-	logger.Infov("mean eval loss", common.Mean(losses))
+	log.Infov("mean eval loss", common.Mean(losses))
 }

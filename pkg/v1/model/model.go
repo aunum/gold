@@ -8,7 +8,7 @@ import (
 	"github.com/pbarker/go-rl/pkg/v1/common"
 	"github.com/pbarker/go-rl/pkg/v1/model/layers"
 	"github.com/pbarker/go-rl/pkg/v1/track"
-	"github.com/pbarker/logger"
+	"github.com/pbarker/log"
 	g "gorgonia.org/gorgonia"
 	"gorgonia.org/tensor"
 )
@@ -52,7 +52,8 @@ type Sequential struct {
 	Chain *layers.Chain
 
 	// Tracker of values.
-	Tracker *track.Tracker
+	Tracker   *track.Tracker
+	noTracker bool
 
 	name string
 
@@ -111,7 +112,7 @@ func WithLoss(lossFn LossFn) func(Model) {
 		case *Sequential:
 			t.lossFn = lossFn
 		default:
-			logger.Fatal("unknown model type")
+			log.Fatal("unknown model type")
 		}
 	}
 }
@@ -124,7 +125,7 @@ func WithOptimizer(optimizer g.Solver) func(Model) {
 		case *Sequential:
 			t.optimizer = optimizer
 		default:
-			logger.Fatal("unknown model type")
+			log.Fatal("unknown model type")
 		}
 	}
 }
@@ -136,7 +137,19 @@ func WithTracker(tracker *track.Tracker) func(Model) {
 		case *Sequential:
 			t.Tracker = tracker
 		default:
-			logger.Fatal("unknown model type")
+			log.Fatal("unknown model type")
+		}
+	}
+}
+
+// WithNoTracker uses no tracking with the model.
+func WithNoTracker() func(Model) {
+	return func(m Model) {
+		switch t := m.(type) {
+		case *Sequential:
+			t.noTracker = true
+		default:
+			log.Fatal("unknown model type")
 		}
 	}
 }
@@ -149,7 +162,7 @@ func WithBatchSize(size int) func(Model) {
 		case *Sequential:
 			t.batchSize = size
 		default:
-			logger.Fatal("unknown model type")
+			log.Fatal("unknown model type")
 		}
 	}
 }
@@ -168,19 +181,23 @@ func (s *Sequential) AddLayers(layers ...layers.Layer) {
 
 // Compile the model.
 func (s *Sequential) Compile(x, y g.Value, opts ...Opt) error {
-	// TODO: find a better way of taking input values.
+	// X must be a matrix so that it can be shared with the batch graphs.
+	// TODO: there may be a better way of building this.
 	if len(x.Shape()) == 1 {
-		logger.Infof("expanding dimensions of x %v to a matrix", x.Shape())
+		s := x.Shape().Clone()
 		dense.ExpandDims(x.(*tensor.Dense), 0)
+		log.Infof("expanding dimensions of x %v to %v", s, x.Shape())
 	}
 	if len(y.Shape()) == 1 {
-		logger.Infof("expanding dimensions of y %v to a matrix", y.Shape())
+		s := y.Shape().Clone()
 		dense.ExpandDims(y.(*tensor.Dense), 0)
+		log.Infof("expanding dimensions of y %v to %v", s, y.Shape())
 	}
 	if x.Shape()[0] != 1 || y.Shape()[0] != 1 {
 		return fmt.Errorf(`Should compile x and y as a tensor with a batch size of 1 e.g. [1, 4]
 		Use WithBatchSize() constructor option to set batch size`)
 	}
+
 	for _, opt := range opts {
 		opt(s)
 	}
@@ -190,37 +207,25 @@ func (s *Sequential) Compile(x, y g.Value, opts ...Opt) error {
 	if s.optimizer == nil {
 		s.optimizer = g.NewAdamSolver()
 	}
-	if s.Tracker == nil {
+	if s.Tracker == nil && !s.noTracker {
 		tracker, err := track.NewTracker()
 		if err != nil {
 			return err
 		}
 		s.Tracker = tracker
 	}
-	fmt.Println("         ")
-	fmt.Println("-- xshape1: ", x.Shape())
-	fmt.Println("         ")
 	err := s.buildTrainGraph(x, y)
 	if err != nil {
 		return err
 	}
-	fmt.Println("         ")
-	fmt.Println("-- xshape2: ", x.Shape())
-	fmt.Println("         ")
 	err = s.buildTrainBatchGraph(x, y)
 	if err != nil {
 		return err
 	}
-	fmt.Println("         ")
-	fmt.Println("-- xshape3: ", x.Shape())
-	fmt.Println("         ")
 	err = s.buildOnlineGraph(x)
 	if err != nil {
 		return err
 	}
-	fmt.Println("         ")
-	fmt.Println("-- xshape4: ", x.Shape())
-	fmt.Println("         ")
 	err = s.buildOnlineBatchGraph(x)
 	if err != nil {
 		return err
@@ -247,7 +252,9 @@ func (s *Sequential) buildTrainGraph(x, y g.Value) error {
 	if err != nil {
 		return err
 	}
-	s.Tracker.TrackValue("train_loss", loss, track.WithNamespace(s.name))
+	if s.Tracker != nil {
+		s.Tracker.TrackValue("train_loss", loss, track.WithNamespace(s.name))
+	}
 
 	_, err = g.Grad(loss, s.trainChain.Learnables()...)
 	if err != nil {
@@ -269,47 +276,34 @@ func (s *Sequential) buildTrainBatchGraph(x, y g.Value) error {
 	s.yTrainBatch = g.NewTensor(s.trainBatchGraph, y.Dtype(), len(yBatchShape), g.WithShape(yBatchShape...), g.WithInit(g.Zeroes()), g.WithName("yTrainBatch"))
 
 	s.trainBatchChain = s.Chain.Clone()
-	s.trainBatchChain.Compile(s.xTrainBatch, layers.WithSharedChainLearnables(s.trainChain))
+	s.trainBatchChain.Compile(s.xTrainBatch, layers.WithSharedChainLearnables(s.trainChain), layers.WithLayerOpts(layers.AsBatch()))
 
-	fmt.Println("batch train fwd")
 	prediction, err := s.trainBatchChain.Fwd(s.xTrainBatch)
 	if err != nil {
 		return err
 	}
 	g.Read(prediction, &s.trainBatchPredVal)
 
-	fmt.Println("batch train loss")
-	fmt.Printf("pred: %v y: %v\n", prediction.Shape(), s.yTrainBatch.Shape())
-	fmt.Printf("loss fn: %+v\n", s.lossFn)
 	loss, err := s.lossFn(prediction, s.yTrainBatch)
 	if err != nil {
 		return err
 	}
-	s.Tracker.TrackValue("batch_loss", loss, track.WithNamespace(s.name))
-
-	fmt.Println("batch train grad")
-	fmt.Println("loss shape: ", loss.Shape())
-	fmt.Printf("loss: %#v\n", loss)
-	fmt.Printf("learnables: %#v\n", s.trainBatchChain.Learnables())
-	for _, learnable := range s.trainBatchChain.Learnables() {
-		fmt.Printf("learnable %s shape %v\n", learnable.Name(), learnable.Shape())
+	if s.Tracker != nil {
+		s.Tracker.TrackValue("batch_loss", loss, track.WithNamespace(s.name))
 	}
-	g.DebugDerives()
+
 	_, err = g.Grad(loss, s.trainBatchChain.Learnables()...)
 	if err != nil {
 		return err
 	}
-	fmt.Println("batch train vm")
-	s.trainBatchVM = g.NewTapeMachine(s.trainGraph, g.BindDualValues(s.trainBatchChain.Learnables()...))
+	s.trainBatchVM = g.NewTapeMachine(s.trainBatchGraph, g.BindDualValues(s.trainBatchChain.Learnables()...))
 	return nil
 }
 
 func (s *Sequential) buildOnlineGraph(x g.Value) error {
 	s.onlineGraph = g.NewGraph()
 
-	fmt.Println("online graph shape: ", x.Shape())
 	s.xOnline = g.NewTensor(s.onlineGraph, x.Dtype(), len(x.Shape()), g.WithValue(x), g.WithName("xOnline"))
-	fmt.Println("online graph shape stored: ", s.xOnline.Shape())
 
 	s.onlineChain = s.Chain.Clone()
 	s.onlineChain.Compile(s.xOnline, layers.WithSharedChainLearnables(s.trainChain))
@@ -331,7 +325,7 @@ func (s *Sequential) buildOnlineBatchGraph(x g.Value) error {
 	s.xOnlineBatch = g.NewTensor(s.onlineBatchGraph, x.Dtype(), len(xBatchShape), g.WithShape(xBatchShape...), g.WithInit(g.Zeroes()), g.WithName("xTrainBatch"))
 
 	s.onlineBatchChain = s.Chain.Clone()
-	s.onlineBatchChain.Compile(s.xOnlineBatch, layers.WithSharedChainLearnables(s.trainChain))
+	s.onlineBatchChain.Compile(s.xOnlineBatch, layers.WithSharedChainLearnables(s.trainChain), layers.WithLayerOpts(layers.AsBatch()))
 
 	prediction, err := s.onlineBatchChain.Fwd(s.xOnlineBatch)
 	if err != nil {
@@ -344,20 +338,17 @@ func (s *Sequential) buildOnlineBatchGraph(x g.Value) error {
 
 // Predict x.
 func (s *Sequential) Predict(x g.Value) (prediction g.Value, err error) {
-	fmt.Println("running predice with x: ", x.Shape())
-	fmt.Println("xOnline shape: ", s.xOnline.Shape())
+	if !x.Shape().Eq(s.xOnline.Shape()) {
+		return nil, fmt.Errorf("attempting to run predict with the wrong shape %v, predict expects %v", x.Shape(), s.xOnline.Shape())
+	}
 	err = g.Let(s.xOnline, x)
 	if err != nil {
 		return prediction, err
 	}
-	fmt.Println("running predict with node :", s.xOnline)
-	fmt.Println("running predict with value :", s.xOnline.Value())
-	fmt.Println("running predict with shape :", s.xOnline.Shape())
 	err = s.onlineVM.RunAll()
 	if err != nil {
 		return prediction, err
 	}
-	fmt.Println("prediction: ", s.onlinePredVal)
 	prediction = s.onlinePredVal
 	s.onlineVM.Reset()
 	return
@@ -365,6 +356,9 @@ func (s *Sequential) Predict(x g.Value) (prediction g.Value, err error) {
 
 // PredictBatch predicts x as a batch.
 func (s *Sequential) PredictBatch(x g.Value) (prediction g.Value, err error) {
+	if !x.Shape().Eq(s.xOnlineBatch.Shape()) {
+		return nil, fmt.Errorf("attempting to run predict batch with the wrong shape %v, predict batch expects %v", x.Shape(), s.xOnlineBatch.Shape())
+	}
 	err = g.Let(s.xOnlineBatch, x)
 	if err != nil {
 		return prediction, err
@@ -380,7 +374,12 @@ func (s *Sequential) PredictBatch(x g.Value) (prediction g.Value, err error) {
 
 // Fit x to y.
 func (s *Sequential) Fit(x, y g.Value) error {
-	// TODO: need to create a separate training graph
+	if !x.Shape().Eq(s.xTrain.Shape()) {
+		return fmt.Errorf("attempting to run fit with the wrong x shape %v, fit expects %v", x.Shape(), s.xTrain.Shape())
+	}
+	if !y.Shape().Eq(s.yTrain.Shape()) {
+		return fmt.Errorf("attempting to run fit with the wrong y shape %v, fit expects %v", y.Shape(), s.yTrain.Shape())
+	}
 	g.Let(s.yTrain, y)
 	g.Let(s.xTrain, x)
 
@@ -394,9 +393,14 @@ func (s *Sequential) Fit(x, y g.Value) error {
 	return nil
 }
 
-// FitBatch fits x to y as a batch
+// FitBatch fits x to y as a batch.
 func (s *Sequential) FitBatch(x, y g.Value) error {
-	// TODO: need to create a separate training graph
+	if !x.Shape().Eq(s.xTrainBatch.Shape()) {
+		return fmt.Errorf("attempting to run fit batch with the wrong x batch shape %v, fit batch expects %v", x.Shape(), s.xTrainBatch.Shape())
+	}
+	if !y.Shape().Eq(s.yTrainBatch.Shape()) {
+		return fmt.Errorf("attempting to run fit batch with the wrong y batch shape %v, fit batch expects %v", y.Shape(), s.yTrainBatch.Shape())
+	}
 	g.Let(s.yTrainBatch, y)
 	g.Let(s.xTrainBatch, x)
 
@@ -437,9 +441,58 @@ func (s *Sequential) Y() g.Value {
 
 // Learnables are the model learnables.
 func (s *Sequential) Learnables() g.Nodes {
-	nodes := g.Nodes{}
-	for _, layer := range s.Chain.Layers {
-		nodes = append(nodes, layer.Learnables()...)
+	return s.trainChain.Learnables()
+}
+
+// CloneLearnablesTo another model.
+func (s *Sequential) CloneLearnablesTo(to *Sequential) error {
+	desired := s.trainChain.Learnables()
+	destination := to.trainChain.Learnables()
+	if len(desired) != len(destination) {
+		return fmt.Errorf("models must be identical to clone learnables")
 	}
-	return nodes
+	for i, learnable := range destination {
+		c := desired[i].Clone()
+		err := g.Let(learnable, c.(*g.Node).Value())
+		if err != nil {
+			return err
+		}
+	}
+	new := to.trainChain.Learnables()
+	shared := map[string]*layers.Chain{
+		"trainBatch":  to.trainBatchChain,
+		"online":      to.onlineChain,
+		"onlineBatch": to.onlineBatchChain,
+	}
+	for name, chain := range shared {
+		log.Info("chain: ", name)
+		for i, learnable := range chain.Learnables() {
+			err := g.Let(learnable, new[i].Value())
+			if err != nil {
+				return err
+			}
+			log.Infovb(learnable.Name(), learnable.Value())
+		}
+	}
+	return nil
+}
+
+// Opts are optsion for a model
+type Opts struct {
+	opts []Opt
+}
+
+// NewOpts returns a new set of options for a model.
+func NewOpts() *Opts {
+	return &Opts{opts: []Opt{}}
+}
+
+// Add an option to the options.
+func (o *Opts) Add(opts ...Opt) {
+	o.opts = append(o.opts, opts...)
+}
+
+// Values are the options.
+func (o *Opts) Values() []Opt {
+	return o.opts
 }

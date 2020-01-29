@@ -62,7 +62,7 @@ type LoggerV2 interface {
 	V(l int) bool
 }
 
-// SetLoggerV2 sets logger that is used in grpc to a V2 logger.
+// SetLoggerV2 sets logger that is used in grpc to a V2 log.
 // Not mutex-protected, should be called before any gRPC functions.
 func SetLoggerV2(l LoggerV2) {
 	logger = l
@@ -114,7 +114,7 @@ func NewLoggerV2WithVerbosity(infoW, warningW, errorW io.Writer, v int) LoggerV2
 	return &loggerT{m: m, v: v}
 }
 
-// newLoggerV2 creates a loggerV2 to be used as default logger.
+// newLoggerV2 creates a loggerV2 to be used as default log.
 // All logs are written to stderr.
 func newLoggerV2() LoggerV2 {
 	errorW := ioutil.Discard

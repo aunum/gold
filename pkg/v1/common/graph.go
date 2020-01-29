@@ -6,7 +6,7 @@ import (
 	"os/exec"
 
 	"github.com/pbarker/go-rl/pkg/v1/common/require"
-	"github.com/pbarker/logger"
+	"github.com/pbarker/log"
 
 	g "gorgonia.org/gorgonia"
 )
@@ -19,7 +19,7 @@ func Visualize(graph *g.ExprGraph) {
 	require.NoError(err)
 	tempPath := f.Name()
 	svgPath := fmt.Sprintf("%s.svg", f.Name())
-	logger.Info("saved file: ", tempPath)
+	log.Info("saved file: ", tempPath)
 	cmd := exec.Command("dot", "-Tsvg", tempPath, "-O")
 	err = cmd.Run()
 	require.NoError(err)

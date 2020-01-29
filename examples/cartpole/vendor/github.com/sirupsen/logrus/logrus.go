@@ -94,7 +94,7 @@ const (
 	// PanicLevel level, highest level of severity. Logs and then calls panic with the
 	// message passed to Debug, Info, ...
 	PanicLevel Level = iota
-	// FatalLevel level. Logs and then calls `logger.Exit(1)`. It will exit even if the
+	// FatalLevel level. Logs and then calls `log.Exit(1)`. It will exit even if the
 	// logging level is set to Panic.
 	FatalLevel
 	// ErrorLevel level. Logs. Used for errors that should definitely be noted.
@@ -119,7 +119,7 @@ var (
 )
 
 // StdLogger is what your logrus-enabled library should take, that way
-// it'll accept a stdlib logger and a logrus logger. There's no standard
+// it'll accept a stdlib logger and a logrus log. There's no standard
 // interface, this is the closest we get, unfortunately.
 type StdLogger interface {
 	Print(...interface{})

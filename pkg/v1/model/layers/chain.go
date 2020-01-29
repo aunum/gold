@@ -10,6 +10,7 @@ type Chain struct {
 	Layers []Layer
 
 	sharedLearnables *Chain
+	layerOpts        []LayerOpt
 }
 
 // NewChain returns a new chain of layers.
@@ -65,6 +66,13 @@ func WithSharedChainLearnables(shared *Chain) func(*Chain) {
 	}
 }
 
+// WithLayerOpts adds the given layer opts to all layers.
+func WithLayerOpts(opts ...LayerOpt) func(*Chain) {
+	return func(c *Chain) {
+		c.layerOpts = opts
+	}
+}
+
 // Compile the chain of layers into the model.
 func (c *Chain) Compile(x *g.Node, opts ...ChainOpt) {
 	for _, opt := range opts {
@@ -72,10 +80,11 @@ func (c *Chain) Compile(x *g.Node, opts ...ChainOpt) {
 	}
 	if c.sharedLearnables != nil {
 		for i, layer := range c.Layers {
-			layer.Compile(x, WithSharedLearnables(c.sharedLearnables.Layers[i]))
+			c.layerOpts = append(c.layerOpts, WithSharedLearnables(c.sharedLearnables.Layers[i]))
+			layer.Compile(x, c.layerOpts...)
 		}
 	}
 	for _, layer := range c.Layers {
-		layer.Compile(x)
+		layer.Compile(x, c.layerOpts...)
 	}
 }

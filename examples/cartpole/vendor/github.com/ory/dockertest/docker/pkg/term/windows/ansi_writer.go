@@ -32,7 +32,7 @@ func NewAnsiWriter(nFile int) io.Writer {
 	}
 
 	parser := ansiterm.CreateParser("Ground", winterm.CreateWinEventHandler(fd, file))
-	logger.Infof("newAnsiWriter: parser %p", parser)
+	log.Infof("newAnsiWriter: parser %p", parser)
 
 	aw := &ansiWriter{
 		file:           file,
@@ -43,8 +43,8 @@ func NewAnsiWriter(nFile int) io.Writer {
 		parser:         parser,
 	}
 
-	logger.Infof("newAnsiWriter: aw.parser %p", aw.parser)
-	logger.Infof("newAnsiWriter: %v", aw)
+	log.Infof("newAnsiWriter: aw.parser %p", aw.parser)
+	log.Infof("newAnsiWriter: %v", aw)
 	return aw
 }
 
@@ -58,7 +58,7 @@ func (aw *ansiWriter) Write(p []byte) (total int, err error) {
 		return 0, nil
 	}
 
-	logger.Infof("Write: % x", p)
-	logger.Infof("Write: %s", string(p))
+	log.Infof("Write: % x", p)
+	log.Infof("Write: %s", string(p))
 	return aw.parser.Parse(p)
 }

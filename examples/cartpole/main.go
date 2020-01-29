@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/pbarker/logger"
+	"github.com/pbarker/log"
 
 	"github.com/pbarker/sphere/pkg/common/errors"
 	"github.com/pbarker/sphere/pkg/env"
@@ -18,7 +18,7 @@ func main() {
 	env.Print()
 
 	numEpisodes := 20
-	logger.Infof("running for %d episodes", numEpisodes)
+	log.Infof("running for %d episodes", numEpisodes)
 	for i := 0; i <= numEpisodes; i++ {
 		// Reset environment on each episode.
 		_, err := env.Reset()
@@ -36,7 +36,7 @@ func main() {
 
 			// Check if environment is complete.
 			if resp.Done {
-				logger.Successf("Episode %d finished after %d timesteps", i, ts+1)
+				log.Successf("Episode %d finished after %d timesteps", i, ts+1)
 				break
 			}
 		}
