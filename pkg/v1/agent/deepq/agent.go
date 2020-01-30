@@ -153,21 +153,11 @@ func (a *Agent) Learn() error {
 	if err != nil {
 		return err
 	}
-	// log.Infovb("states", states)
-	// log.Infovb("qvalues", qValues)
-	// log.Break()
 	err = a.Policy.FitBatch(states, qValues)
 	if err != nil {
 		return err
 	}
 	a.epsilon = a.Epsilon.Value()
-
-	// pred, err := a.Policy.PredictBatch(states)
-	// if err != nil {
-	// 	return err
-	// }
-	// log.Infovb("pred", pred)
-	// log.Break()
 
 	err = a.updateTarget()
 	if err != nil {
@@ -176,6 +166,7 @@ func (a *Agent) Learn() error {
 	return nil
 }
 
+// updateTarget copies the weights from the online network to the target network on the provided interval.
 func (a *Agent) updateTarget() error {
 	if a.steps%a.updateTargetSteps == 0 {
 		log.BreakPound()
@@ -184,17 +175,6 @@ func (a *Agent) updateTarget() error {
 		if err != nil {
 			return err
 		}
-		log.Info("online learnables: ", a.Policy.Learnables())
-		for _, layer := range a.Policy.Learnables() {
-			log.Infovb("layer", layer)
-			log.Infov(layer.Name(), layer.Value())
-		}
-		log.Break()
-		log.Info("target learnables: ", a.Policy.Learnables())
-		for _, layer := range a.TargetPolicy.Learnables() {
-			log.Infov(layer.Name(), layer.Value())
-		}
-		log.BreakPound()
 	}
 	return nil
 }

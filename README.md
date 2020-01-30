@@ -2,24 +2,18 @@
 
 Reinforcement learning in Go!
 
-## Why
-
-Go is a lovely language that is efficient, reliable, and easy to grok.
-
-There is a reproducability problem in machine learning. Go is prescriptive, lowering the threshold for entry and understanding of other peoples work. This allows us to build stronger communities.
-
-Go is also an excellent distributed systems language, and RL is beginning to look more like a distributed system.
-
 ## Getting Started
+
+All of the agent implementations can be found in `pkg/v1/agents` each agent has an experiment folder providing demos across various environments.
 
 ## Roadmap
 
-- [ ] Q
+- [x] Q
 - [ ] A2C
 - [ ] ACER
 - [ ] ACKTR
 - [ ] DDPG
-- [ ] DQN
+- [x] DQN
 - [ ] GAIL
 - [ ] HER
 - [ ] PPO1

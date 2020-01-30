@@ -1,13 +1,30 @@
 # Q-learning
 
-An implementation fo the Q learning algorithm with adaptive learning.
+An implementation fo the Q-learning algorithm with adaptive learning.
 
+## How it works
 In Q-learning the agent stores Q-values (quality values) for each state that it encounters. Q-values are determined by the following equation.
-```
-Q(state,action)←(1−α)Q(state,action)+α(reward+γmaxaQ(next state,all actions))
-```
+
+![q-learning](https://wikimedia.org/api/rest_v1/media/math/render/svg/678cb558a9d59c33ef4810c9618baf34a9577686)
+
+Q-learning is an off-policy form of [temporal difference](https://en.wikipedia.org/wiki/Temporal_difference_learning). The agent has no concept of the 
+environment and simply learns by storing a quality value for the state that it encountered and the reward that it recieved for the action taken along with 
+the expected future reward.
+
 An agent will explore or exploit the Q-values based on the `epsilon` hyperparameter.
 
 The implemented agent also employs adaptive learning by which the `alpha` and `epsilon` hyperparameters are dynamically tuned based on the timestep and a `ada divisor`.
 
-See [agent_test.go](agent_test.go) for an implemetation example. It also includes a grid search to find the best hyperparameters.
+Q-learning doesn't work well in continous environments, the `pkg/v1/env` package provides a normalization adapter. One of the adapter is for discretization and can be used to make continuous states discrete.
+
+## Examples
+
+See the experiments folder for implementations.
+
+## Roadmap
+This algorithm currently doesn't converge on cartpole, more investigation is needed to find why.
+
+## References
+- https://en.wikipedia.org/wiki/Q-learning
+- https://en.wikipedia.org/wiki/Temporal_difference_learning
+- https://dev.to/n1try/cartpole-with-q-learning---first-experiences-with-openai-gym
