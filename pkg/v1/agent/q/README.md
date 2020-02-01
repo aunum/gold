@@ -7,9 +7,9 @@ In Q-learning the agent stores Q-values (quality values) for each state that it 
 
 ![q-learning](https://wikimedia.org/api/rest_v1/media/math/render/svg/678cb558a9d59c33ef4810c9618baf34a9577686)
 
-Q-learning is an off-policy form of [temporal difference](https://en.wikipedia.org/wiki/Temporal_difference_learning). The agent has no concept of the 
-environment and simply learns by storing a quality value for the state that it encountered and the reward that it recieved for the action taken along with 
-the expected future reward.
+Q-learning is an off-policy form of [temporal difference](https://en.wikipedia.org/wiki/Temporal_difference_learning). The Agent simply learns by 
+storing a quality value for the state that it encountered and the reward that it recieved for the action taken along with 
+the discounted future reward.
 
 An agent will explore or exploit the Q-values based on the `epsilon` hyperparameter.
 

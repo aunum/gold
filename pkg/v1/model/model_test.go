@@ -20,9 +20,13 @@ func TestSequential(t *testing.T) {
 	x0, err := x.Slice(dense.MakeRangedSlice(0, 1))
 	require.NoError(t, err)
 
+	xi := NewInput("x", x0.Shape())
+
 	y := tensor.New(tensor.WithShape(batchSize, 3), tensor.WithBacking(tensor.Range(tensor.Float32, 15, 45)))
 	y0, err := y.Slice(dense.MakeRangedSlice(0, 1))
 	require.NoError(t, err)
+
+	yi := NewInput("y", y0.Shape())
 
 	log.Infovb("x", x)
 	log.Infovb("y", y)
@@ -41,7 +45,7 @@ func TestSequential(t *testing.T) {
 	)
 
 	optimizer := g.NewAdamSolver()
-	err = model.Compile(x0, y0,
+	err = model.Compile(xi, yi,
 		WithOptimizer(optimizer),
 		WithLoss(MeanSquaredError),
 		WithBatchSize(batchSize),

@@ -7,7 +7,6 @@ import (
 	l "github.com/pbarker/go-rl/pkg/v1/model/layers"
 	"github.com/pbarker/log"
 	g "gorgonia.org/gorgonia"
-	"gorgonia.org/tensor"
 )
 
 // PolicyConfig are the hyperparameters for a policy.
@@ -41,9 +40,9 @@ var DefaultPolicyConfig = &PolicyConfig{
 type LayerBuilder func(env *envv1.Env) []l.Layer
 
 // DefaultFCLayerBuilder is a default fully connected layer builder.
-var DefaultFCLayerBuilder = func(env *envv1.Env) []l.Layer {
+var DefaultFCLayerBuilder = func(env *envv1.Env, input *modelv1.Input) []l.Layer {
 	return []l.Layer{
-		l.NewFC(env.ObservationSpaceShape()[0], 24, l.WithActivation(l.ReLU()), l.WithName("w0")),
+		l.NewFC(input.Shape(), 24, l.WithActivation(l.ReLU()), l.WithName("w0")),
 		l.NewFC(24, 24, l.WithActivation(l.ReLU()), l.WithName("w1")),
 		l.NewFC(24, envv1.PotentialsShape(env.ActionSpace)[0], l.WithActivation(l.Linear()), l.WithName("w2")),
 	}
@@ -51,8 +50,8 @@ var DefaultFCLayerBuilder = func(env *envv1.Env) []l.Layer {
 
 // MakePolicy makes a model.
 func MakePolicy(name string, config *PolicyConfig, base *agentv1.Base, env *envv1.Env) (modelv1.Model, error) {
-	x := tensor.Ones(tensor.Float32, 1, env.ObservationSpaceShape()[0])
-	y := tensor.Ones(tensor.Float32, 1, envv1.PotentialsShape(env.ActionSpace)[0])
+	x := modelv1.NewInput("state", []int{1, env.ObservationSpaceShape()[0]})
+	y := modelv1.NewInput("actionPotentials", []int{1, envv1.PotentialsShape(env.ActionSpace)[0]})
 
 	log.Infov("xshape", x.Shape())
 	log.Infov("yshape", y.Shape())
@@ -61,7 +60,7 @@ func MakePolicy(name string, config *PolicyConfig, base *agentv1.Base, env *envv
 	if err != nil {
 		return nil, err
 	}
-	model.AddLayers(config.LayerBuilder(env)...)
+	model.AddLayers(config.LayerBuilder(env, x)...)
 
 	opts := modelv1.NewOpts()
 	opts.Add(
