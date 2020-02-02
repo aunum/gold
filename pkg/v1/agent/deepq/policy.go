@@ -40,9 +40,10 @@ var DefaultPolicyConfig = &PolicyConfig{
 type LayerBuilder func(env *envv1.Env) []l.Layer
 
 // DefaultFCLayerBuilder is a default fully connected layer builder.
-var DefaultFCLayerBuilder = func(env *envv1.Env, input *modelv1.Input) []l.Layer {
+var DefaultFCLayerBuilder = func(env *envv1.Env, x *modelv1.Input) []l.Layer {
 	return []l.Layer{
-		l.NewFC(input.Shape(), 24, l.WithActivation(l.ReLU()), l.WithName("w0")),
+		x,
+		l.NewFC(x.Shape(), 24, l.WithActivation(l.ReLU()), l.WithName("w0")),
 		l.NewFC(24, 24, l.WithActivation(l.ReLU()), l.WithName("w1")),
 		l.NewFC(24, envv1.PotentialsShape(env.ActionSpace)[0], l.WithActivation(l.Linear()), l.WithName("w2")),
 	}
@@ -74,7 +75,7 @@ func MakePolicy(name string, config *PolicyConfig, base *agentv1.Base, env *envv
 		opts.Add(modelv1.WithNoTracker())
 	}
 
-	err = model.Compile(x, y, opts.Values()...)
+	err = model.Compile(x.AsInputs(), y.AsInputs(), opts.Values()...)
 	if err != nil {
 		return nil, err
 	}

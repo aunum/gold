@@ -3,6 +3,7 @@ package model
 import (
 	"fmt"
 
+	l "github.com/pbarker/go-rl/pkg/v1/model/layers"
 	"github.com/pbarker/log"
 
 	g "gorgonia.org/gorgonia"
@@ -110,20 +111,33 @@ func (i *Input) Set(value g.Value) error {
 // AsBatch converts an input to a batched representation.
 func (i *Input) AsBatch(size int) *Input {
 	ret := i.Clone()
+	if len(ret.Shape()) == 1 {
+		err := ret.Normalize()
+		if err != nil {
+			panic(err)
+		}
+	}
 	ret.shape[0] = size
 	ret.name = fmt.Sprintf("%v_batch", ret.name)
 	return ret
 }
 
 // Normalize the input. If the input is a scalar it will expand it to a matrix.
-func (i *Input) Normalize() {
+func (i *Input) Normalize() (err error) {
 	if len(i.shape) == 1 {
 		i.shape = []int{1, i.shape[0]}
-		log.Infof("normalizing dimensions of %q to %v", i.name, i.shape)
+		log.Debugf("normalizing dimensions of %q to %v", i.name, i.shape)
+		if i.node != nil {
+			i.node, err = g.Reshape(i.node, i.shape)
+			if err != nil {
+				return err
+			}
+		}
 	}
 	if i.shape[0] != 1 {
 		log.Fatalf("input shape %q %v must be a scalar or have the first dimension 1 e.g. [1, 4]", i.name, i.shape)
 	}
+	return nil
 }
 
 // Inputs is a slice of input.
@@ -157,3 +171,71 @@ func (i Inputs) Clone() Inputs {
 	}
 	return inputs
 }
+
+// Set the values to the inputs.
+func (i Inputs) Set(values Values) {
+	for index, value := range values {
+		g.Let(i[index].Node(), value)
+	}
+}
+
+// InputLayer is an input layer to be used in a chain.
+type InputLayer struct {
+	input *Input
+}
+
+// AsLayer converts the input to a layer.
+func (i *Input) AsLayer() l.Layer {
+	return &InputLayer{
+		input: i,
+	}
+}
+
+// Inputs puts the input into an inputs slice.
+func (i *Input) Inputs() Inputs {
+	return Inputs{i}
+}
+
+// Compile the layer.
+func (i *InputLayer) Compile(graph *g.ExprGraph, opts ...l.LayerOpt) {
+	if i.Graph() != nil {
+		return
+	}
+	i.input.Compile(graph)
+}
+
+// Fwd is a foward pass through the layer.
+func (i *InputLayer) Fwd(x *g.Node) (*g.Node, error) {
+	return x, nil
+}
+
+// Learnables returns all learnable nodes within this layer.
+func (i *InputLayer) Learnables() g.Nodes {
+	return g.Nodes{}
+}
+
+// Clone the layer.
+func (i *InputLayer) Clone() l.Layer {
+	return &InputLayer{
+		input: i.input.Clone(),
+	}
+}
+
+// Graph returns the graph for this layer.
+func (i *InputLayer) Graph() *g.ExprGraph {
+	if i.input.Node() == nil {
+		return nil
+	}
+	return i.input.Node().Graph()
+}
+
+// Node of the input.
+func (i *InputLayer) Node() *g.Node {
+	if i.input.Node() == nil {
+		return nil
+	}
+	return i.input.Node()
+}
+
+// Output from a model.
+type Output *Input

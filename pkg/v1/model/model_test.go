@@ -39,13 +39,13 @@ func TestSequential(t *testing.T) {
 	model, err := NewSequential("test")
 	require.NoError(t, err)
 	model.AddLayers(
-		l.NewFC(5, 24, l.WithActivation(l.Sigmoid())),
-		l.NewFC(24, 24, l.WithActivation(l.Sigmoid())),
-		l.NewFC(24, 3, l.WithActivation(l.Linear())),
+		l.NewFC(5, 24, l.WithActivation(l.Sigmoid()), l.WithName("w0")),
+		l.NewFC(24, 24, l.WithActivation(l.Sigmoid()), l.WithName("w1")),
+		l.NewFC(24, 3, l.WithActivation(l.Linear()), l.WithName("w2")),
 	)
 
 	optimizer := g.NewAdamSolver()
-	err = model.Compile(xi, yi,
+	err = model.Compile(xi.Inputs(), yi,
 		WithOptimizer(optimizer),
 		WithLoss(MeanSquaredError),
 		WithBatchSize(batchSize),
@@ -62,7 +62,7 @@ func TestSequential(t *testing.T) {
 	numSteps := 10000
 	log.Infof("fitting for %v steps", numSteps)
 	for i := 0; i < numSteps; i++ {
-		err = model.FitBatch(x, y)
+		err = model.FitBatch(Values{x}, y)
 		require.NoError(t, err)
 	}
 	log.Break()

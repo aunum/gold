@@ -21,8 +21,8 @@ func NewChain(layers ...Layer) *Chain {
 }
 
 // Fwd is a forward pass thorugh all layers of the chain.
-func (c *Chain) Fwd(inputs *g.Node) (prediction *g.Node, err error) {
-	prediction = inputs
+func (c *Chain) Fwd(x *g.Node) (prediction *g.Node, err error) {
+	prediction = x
 	for _, layer := range c.Layers {
 		if prediction, err = layer.Fwd(prediction); err != nil {
 			return nil, err
@@ -74,17 +74,17 @@ func WithLayerOpts(opts ...LayerOpt) func(*Chain) {
 }
 
 // Compile the chain of layers into the model.
-func (c *Chain) Compile(x *g.Node, opts ...ChainOpt) {
+func (c *Chain) Compile(graph *g.ExprGraph, opts ...ChainOpt) {
 	for _, opt := range opts {
 		opt(c)
 	}
 	if c.sharedLearnables != nil {
 		for i, layer := range c.Layers {
 			c.layerOpts = append(c.layerOpts, WithSharedLearnables(c.sharedLearnables.Layers[i]))
-			layer.Compile(x, c.layerOpts...)
+			layer.Compile(graph, c.layerOpts...)
 		}
 	}
 	for _, layer := range c.Layers {
-		layer.Compile(x, c.layerOpts...)
+		layer.Compile(graph, c.layerOpts...)
 	}
 }

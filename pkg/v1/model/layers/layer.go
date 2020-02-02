@@ -2,12 +2,13 @@ package layers
 
 import (
 	g "gorgonia.org/gorgonia"
+	t "gorgonia.org/tensor"
 )
 
 // Layer in a network.
 type Layer interface {
 	// Compile the layer.
-	Compile(x *g.Node, opts ...LayerOpt)
+	Compile(graph *g.ExprGraph, opts ...LayerOpt)
 
 	// Fwd is a foward pass through the layer.
 	Fwd(x *g.Node) (*g.Node, error)
@@ -17,6 +18,9 @@ type Layer interface {
 
 	// Clone the layer.
 	Clone() Layer
+
+	// Graph returns the graph for this layer.
+	Graph() *g.ExprGraph
 }
 
 // LayerOpt is a layer option.
@@ -37,5 +41,15 @@ func AsBatch() func(Layer) {
 	return func(l Layer) {
 		fc := l.(*FC)
 		fc.isBatched = true
+	}
+}
+
+// AsType sets the datatype for the layer.
+func AsType(dtype t.Dtype) func(Layer) {
+	return func(l Layer) {
+		switch lay := l.(type) {
+		case *FC:
+			lay.dtype = dtype
+		}
 	}
 }

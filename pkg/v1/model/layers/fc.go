@@ -3,9 +3,9 @@ package layers
 import (
 	"fmt"
 
-	"gorgonia.org/tensor"
-
+	"github.com/pbarker/log"
 	g "gorgonia.org/gorgonia"
+	t "gorgonia.org/tensor"
 )
 
 // FC is a fully connected layer of neurons.
@@ -22,7 +22,7 @@ type FC struct {
 	activation Activation
 	weights    *g.Node
 	init       g.InitWFn
-	dtype      tensor.Dtype
+	dtype      t.Dtype
 	bias       *g.Node
 	useBias    bool
 	biasInit   g.InitWFn
@@ -73,9 +73,9 @@ func WithInit(fn g.InitWFn) func(*FC) {
 
 // WithType sets the type for the layer
 // Defaults to Float32.
-func WithType(t tensor.Dtype) func(*FC) {
+func WithType(dtype t.Dtype) func(*FC) {
 	return func(f *FC) {
-		f.dtype = t
+		f.dtype = dtype
 	}
 }
 
@@ -95,20 +95,20 @@ func WithNoBias() func(*FC) {
 }
 
 // Compile the layer into the graph.
-func (f *FC) Compile(x *g.Node, opts ...LayerOpt) {
+func (f *FC) Compile(graph *g.ExprGraph, opts ...LayerOpt) {
 	for _, opt := range opts {
 		opt(f)
 	}
 	if f.shared != nil {
-		f.weights = g.NewMatrix(x.Graph(), f.dtype, g.WithShape(f.Input, f.Output), g.WithName(f.Name), g.WithValue(f.shared.weights.Value()))
+		f.weights = g.NewMatrix(graph, f.dtype, g.WithShape(f.Input, f.Output), g.WithName(f.Name), g.WithValue(f.shared.weights.Value()))
 		if f.useBias {
-			f.bias = g.NewMatrix(x.Graph(), f.dtype, g.WithShape(1, f.Output), g.WithName(fmt.Sprintf("%s-bias", f.Name)), g.WithValue(f.shared.bias.Value()))
+			f.bias = g.NewMatrix(graph, f.dtype, g.WithShape(1, f.Output), g.WithName(fmt.Sprintf("%s-bias", f.Name)), g.WithValue(f.shared.bias.Value()))
 		}
 		return
 	}
-	f.weights = g.NewMatrix(x.Graph(), f.dtype, g.WithShape(f.Input, f.Output), g.WithInit(f.init), g.WithName(f.Name))
+	f.weights = g.NewMatrix(graph, f.dtype, g.WithShape(f.Input, f.Output), g.WithInit(f.init), g.WithName(f.Name))
 	if f.useBias {
-		f.bias = g.NewMatrix(x.Graph(), f.dtype, g.WithShape(1, f.Output), g.WithInit(f.biasInit), g.WithName(fmt.Sprintf("%s-bias", f.Name)))
+		f.bias = g.NewMatrix(graph, f.dtype, g.WithShape(1, f.Output), g.WithInit(f.biasInit), g.WithName(fmt.Sprintf("%s-bias", f.Name)))
 	}
 }
 
@@ -116,6 +116,12 @@ func (f *FC) Compile(x *g.Node, opts ...LayerOpt) {
 func (f *FC) Fwd(x *g.Node) (*g.Node, error) {
 	var xw, xwb *g.Node
 	var err error
+	if x.IsVector() {
+		s := t.Shape{1}
+		s = append(s, x.Shape()...)
+		x, err = g.Reshape(x, s)
+		log.Debugf("normalizing dimensions of x to %v", s)
+	}
 	if xw, err = g.Mul(x, f.weights); err != nil {
 		return nil, err
 	}
@@ -167,4 +173,12 @@ func (f *FC) Clone() Layer {
 		biasInit:   f.biasInit,
 		isBatched:  f.isBatched,
 	}
+}
+
+// Graph returns the graph this layer was compiled with.
+func (f *FC) Graph() *g.ExprGraph {
+	if f.weights == nil {
+		return nil
+	}
+	return f.weights.Graph()
 }

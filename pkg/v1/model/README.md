@@ -1,5 +1,5 @@
-# Models
+# Model
 
-Models is a high-level helper library for Gorgonia, think of it as the Keras of the Gorgonia ecosystem.
+Model is a high-level helper library for Gorgonia, it aims to have a similar feel to Keras.
 
 ## Usage
