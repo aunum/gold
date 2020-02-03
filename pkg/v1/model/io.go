@@ -10,6 +10,15 @@ import (
 	t "gorgonia.org/tensor"
 )
 
+// In is a sum type of input or inputs.
+type In interface {
+	// Input present.
+	Input() *Input
+
+	// Inputs present.
+	Inputs() Inputs
+}
+
 // Input into the model.
 type Input struct {
 	name  string
@@ -42,8 +51,21 @@ func NewInput(name string, shape t.Shape, opts ...InputOpt) *Input {
 	return i
 }
 
+// Input implements an In.
+func (i *Input) Input() *Input {
+	return i
+}
+
+// Inputs implements an In.
+func (i *Input) Inputs() Inputs {
+	return Inputs{i}
+}
+
 // Compile an input into a graph.
 func (i *Input) Compile(graph *g.ExprGraph, opts ...InputOpt) *g.Node {
+	if i.node != nil {
+		panic(fmt.Sprintf("trying ot compile input %q that is already compiled", i.name))
+	}
 	for _, opt := range opts {
 		opt(i)
 	}
@@ -79,6 +101,17 @@ func (i *Input) Clone() *Input {
 		shape: i.shape.Clone(),
 		dtype: i.dtype,
 	}
+}
+
+// CloneTo clones an input with the node value (if present) to another graph.
+func (i *Input) CloneTo(graph *g.ExprGraph) *Input {
+	ret := i.Clone()
+	if ret.node != nil {
+		ret.node = i.node.CloneTo(graph)
+	} else {
+		ret.Compile(graph)
+	}
+	return ret
 }
 
 // Check that the dimensions and type of the given value are congruent with the
@@ -140,8 +173,26 @@ func (i *Input) Normalize() (err error) {
 	return nil
 }
 
+// Squeeze returns the shape of the input with any leading dimensions of size 1 removed.
+func (i *Input) Squeeze() t.Shape {
+	if i.Shape()[0] == 1 {
+		return i.Shape().Clone()[1:]
+	}
+	return i.Shape().Clone()
+}
+
 // Inputs is a slice of input.
 type Inputs []*Input
+
+// Input implements an In, returns the first element of the inputs.
+func (i Inputs) Input() *Input {
+	return nil
+}
+
+// Inputs implements an In.
+func (i Inputs) Inputs() Inputs {
+	return i
+}
 
 // Get an input by name.
 func (i Inputs) Get(name string) (*Input, error) {
@@ -191,11 +242,6 @@ func (i *Input) AsLayer() l.Layer {
 	}
 }
 
-// Inputs puts the input into an inputs slice.
-func (i *Input) Inputs() Inputs {
-	return Inputs{i}
-}
-
 // Compile the layer.
 func (i *InputLayer) Compile(graph *g.ExprGraph, opts ...l.LayerOpt) {
 	if i.Graph() != nil {
@@ -237,5 +283,5 @@ func (i *InputLayer) Node() *g.Node {
 	return i.input.Node()
 }
 
-// Output from a model.
-type Output *Input
+// Values is a slice of value.
+type Values []g.Value

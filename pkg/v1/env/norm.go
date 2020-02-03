@@ -10,7 +10,7 @@ import (
 
 // Normalizer will normalize the data coming from an environment.
 type Normalizer interface {
-	// Init initializes the normalizer.
+	// Init the normalizer.
 	Init(env *Env) error
 
 	// Norm normalizes the input data.

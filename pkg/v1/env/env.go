@@ -15,7 +15,7 @@ import (
 
 	"github.com/ory/dockertest"
 	"github.com/pbarker/log"
-	sphere "github.com/pbarker/sphere/api/gen/go/v1alpha"
+	spherev1alpha "github.com/pbarker/sphere/api/gen/go/v1alpha"
 	"github.com/skratchdot/open-golang/open"
 	"google.golang.org/grpc"
 	"gorgonia.org/tensor"
@@ -27,7 +27,7 @@ type Server struct {
 	Resource *dockertest.Resource
 
 	// Client to connect to the Sphere server.
-	Client sphere.EnvironmentAPIClient
+	Client spherev1alpha.EnvironmentAPIClient
 }
 
 // ServerConfig is the environment server config.
@@ -58,7 +58,7 @@ func NewLocalServer(config *ServerConfig) (*Server, error) {
 		return nil, fmt.Errorf("Could not start resource: %s", err)
 	}
 
-	var sphereClient sphere.EnvironmentAPIClient
+	var sphereClient spherev1alpha.EnvironmentAPIClient
 
 	// exponential backoff-retry, because the application in the container might
 	// not be ready to accept connections yet
@@ -69,8 +69,8 @@ func NewLocalServer(config *ServerConfig) (*Server, error) {
 		if err != nil {
 			return err
 		}
-		sphereClient = sphere.NewEnvironmentAPIClient(conn)
-		resp, err := sphereClient.Info(context.Background(), &sphere.Empty{})
+		sphereClient = spherev1alpha.NewEnvironmentAPIClient(conn)
+		resp, err := sphereClient.Info(context.Background(), &spherev1alpha.Empty{})
 		log.Successf("connected to server %q", resp.ServerName)
 		return err
 	}); err != nil {
@@ -94,10 +94,10 @@ func NewLocalServer(config *ServerConfig) (*Server, error) {
 
 // Env is a convienience environment wrapper.
 type Env struct {
-	*sphere.Environment
+	*spherev1alpha.Environment
 
 	// Client to connect to the Sphere server.
-	Client sphere.EnvironmentAPIClient
+	Client spherev1alpha.EnvironmentAPIClient
 
 	// VideoPaths of result videos downloadloaded from the server.
 	VideoPaths []string
@@ -112,13 +112,13 @@ type Opt func(*Env)
 // Make an environment.
 func (s *Server) Make(model string, opts ...Opt) (*Env, error) {
 	ctx := context.Background()
-	resp, err := s.Client.CreateEnv(ctx, &sphere.CreateEnvRequest{ModelName: model})
+	resp, err := s.Client.CreateEnv(ctx, &spherev1alpha.CreateEnvRequest{ModelName: model})
 	if err != nil {
 		return nil, err
 	}
 	env := resp.Environment
 	log.Successf("created env: %s", env.Id)
-	rresp, err := s.Client.StartRecordEnv(ctx, &sphere.StartRecordEnvRequest{Id: env.Id})
+	rresp, err := s.Client.StartRecordEnv(ctx, &spherev1alpha.StartRecordEnvRequest{Id: env.Id})
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +159,7 @@ type Outcome struct {
 // Step through the environment.
 func (e *Env) Step(value int) (*Outcome, error) {
 	ctx := context.Background()
-	resp, err := e.Client.StepEnv(ctx, &sphere.StepEnvRequest{Id: e.Id, Action: int32(value)})
+	resp, err := e.Client.StepEnv(ctx, &spherev1alpha.StepEnvRequest{Id: e.Id, Action: int32(value)})
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +176,7 @@ func (e *Env) Step(value int) (*Outcome, error) {
 // SampleAction returns a sample action for the environment.
 func (e *Env) SampleAction() (int, error) {
 	ctx := context.Background()
-	resp, err := e.Client.SampleAction(ctx, &sphere.SampleActionRequest{Id: e.Id})
+	resp, err := e.Client.SampleAction(ctx, &spherev1alpha.SampleActionRequest{Id: e.Id})
 	if err != nil {
 		return 0, err
 	}
@@ -186,7 +186,7 @@ func (e *Env) SampleAction() (int, error) {
 // Reset the environment.
 func (e *Env) Reset() (observation *tensor.Dense, err error) {
 	ctx := context.Background()
-	resp, err := e.Client.ResetEnv(ctx, &sphere.ResetEnvRequest{Id: e.Id})
+	resp, err := e.Client.ResetEnv(ctx, &spherev1alpha.ResetEnvRequest{Id: e.Id})
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +203,7 @@ func (e *Env) Reset() (observation *tensor.Dense, err error) {
 // Close the environment.
 func (e *Env) Close() error {
 	ctx := context.Background()
-	resp, err := e.Client.DeleteEnv(ctx, &sphere.DeleteEnvRequest{Id: e.Id})
+	resp, err := e.Client.DeleteEnv(ctx, &spherev1alpha.DeleteEnvRequest{Id: e.Id})
 	if err != nil {
 		return err
 	}
@@ -214,10 +214,10 @@ func (e *Env) Close() error {
 // Results from an environment run.
 type Results struct {
 	// Episodes is a map of episode id to result.
-	Episodes map[int32]*sphere.EpisodeResult
+	Episodes map[int32]*spherev1alpha.EpisodeResult
 
 	// Videos is a map of episode id to result.
-	Videos map[int32]*sphere.Video
+	Videos map[int32]*spherev1alpha.Video
 
 	// AverageReward is the average reward of the episodes.
 	AverageReward float32
@@ -226,7 +226,7 @@ type Results struct {
 // Results results for the environment.
 func (e *Env) Results() (*Results, error) {
 	ctx := context.Background()
-	resp, err := e.Client.Results(ctx, &sphere.ResultsRequest{Id: e.Id})
+	resp, err := e.Client.Results(ctx, &spherev1alpha.ResultsRequest{Id: e.Id})
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +267,7 @@ func (e *Env) Videos(path string) ([]string, error) {
 	}
 	videoPaths := []string{}
 	for _, video := range results.Videos {
-		stream, err := e.Client.GetVideo(ctx, &sphere.GetVideoRequest{Id: e.Id, EpisodeId: video.EpisodeId})
+		stream, err := e.Client.GetVideo(ctx, &spherev1alpha.GetVideoRequest{Id: e.Id, EpisodeId: video.EpisodeId})
 		if err != nil {
 			return nil, err
 		}
@@ -367,16 +367,16 @@ func (e *Env) ObservationSpaceShape() []int {
 }
 
 // SpaceShape return the shape of the given space.
-func SpaceShape(space *sphere.Space) []int {
+func SpaceShape(space *spherev1alpha.Space) []int {
 	shape := []int{}
 	switch s := space.GetInfo().(type) {
-	case *sphere.Space_Box:
+	case *spherev1alpha.Space_Box:
 		shape = common.Int32SliceToInt(s.Box.GetShape())
-	case *sphere.Space_Discrete:
+	case *spherev1alpha.Space_Discrete:
 		shape = []int{1}
-	case *sphere.Space_MultiDiscrete:
+	case *spherev1alpha.Space_MultiDiscrete:
 		shape = []int{len(s.MultiDiscrete.DiscreteSpaces)}
-	case *sphere.Space_StructSpace:
+	case *spherev1alpha.Space_StructSpace:
 		log.Fatalf("struct space not supported")
 	default:
 		log.Fatalf("unknown action space type: %v", space)
@@ -388,16 +388,16 @@ func SpaceShape(space *sphere.Space) []int {
 }
 
 // PotentialsShape is an overloaded method that will return a dense tensor of potentials for a given space.
-func PotentialsShape(space *sphere.Space) []int {
+func PotentialsShape(space *spherev1alpha.Space) []int {
 	shape := []int{}
 	switch s := space.GetInfo().(type) {
-	case *sphere.Space_Box:
+	case *spherev1alpha.Space_Box:
 		shape = common.Int32SliceToInt(s.Box.GetShape())
-	case *sphere.Space_Discrete:
+	case *spherev1alpha.Space_Discrete:
 		shape = []int{int(s.Discrete.N)}
-	case *sphere.Space_MultiDiscrete:
+	case *spherev1alpha.Space_MultiDiscrete:
 		shape = common.Int32SliceToInt(s.MultiDiscrete.DiscreteSpaces)
-	case *sphere.Space_StructSpace:
+	case *spherev1alpha.Space_StructSpace:
 		log.Fatalf("struct space not supported")
 	default:
 		log.Fatalf("unknown action space type: %v", space)

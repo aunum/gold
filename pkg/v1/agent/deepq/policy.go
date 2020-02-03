@@ -5,6 +5,7 @@ import (
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
 	modelv1 "github.com/pbarker/go-rl/pkg/v1/model"
 	l "github.com/pbarker/go-rl/pkg/v1/model/layers"
+
 	"github.com/pbarker/log"
 	g "gorgonia.org/gorgonia"
 )
@@ -12,7 +13,7 @@ import (
 // PolicyConfig are the hyperparameters for a policy.
 type PolicyConfig struct {
 	// Loss function to evaluate network perfomance.
-	LossFn modelv1.LossFn
+	Loss modelv1.Loss
 
 	// Optimizer to optimize the wieghts with regards to the error.
 	Optimizer g.Solver
@@ -29,7 +30,7 @@ type PolicyConfig struct {
 
 // DefaultPolicyConfig are the default hyperparameters for a policy.
 var DefaultPolicyConfig = &PolicyConfig{
-	LossFn:       modelv1.MeanSquaredError,
+	Loss:         modelv1.MSE,
 	Optimizer:    g.NewAdamSolver(g.WithLearnRate(0.001)),
 	LayerBuilder: DefaultFCLayerBuilder,
 	BatchSize:    20,
@@ -37,15 +38,14 @@ var DefaultPolicyConfig = &PolicyConfig{
 }
 
 // LayerBuilder builds layers.
-type LayerBuilder func(env *envv1.Env) []l.Layer
+type LayerBuilder func(x, y *modelv1.Input) []l.Layer
 
 // DefaultFCLayerBuilder is a default fully connected layer builder.
-var DefaultFCLayerBuilder = func(env *envv1.Env, x *modelv1.Input) []l.Layer {
+var DefaultFCLayerBuilder = func(x, y *modelv1.Input) []l.Layer {
 	return []l.Layer{
-		x,
-		l.NewFC(x.Shape(), 24, l.WithActivation(l.ReLU()), l.WithName("w0")),
-		l.NewFC(24, 24, l.WithActivation(l.ReLU()), l.WithName("w1")),
-		l.NewFC(24, envv1.PotentialsShape(env.ActionSpace)[0], l.WithActivation(l.Linear()), l.WithName("w2")),
+		l.NewFC(x.Squeeze()[0], 24, l.WithActivation(l.ReLU), l.WithName("w0")),
+		l.NewFC(24, 24, l.WithActivation(l.ReLU), l.WithName("w1")),
+		l.NewFC(24, y.Squeeze()[0], l.WithActivation(l.Linear), l.WithName("w2")),
 	}
 }
 
@@ -61,12 +61,12 @@ func MakePolicy(name string, config *PolicyConfig, base *agentv1.Base, env *envv
 	if err != nil {
 		return nil, err
 	}
-	model.AddLayers(config.LayerBuilder(env, x)...)
+	model.AddLayers(config.LayerBuilder(x, y)...)
 
 	opts := modelv1.NewOpts()
 	opts.Add(
 		modelv1.WithOptimizer(config.Optimizer),
-		modelv1.WithLoss(config.LossFn),
+		modelv1.WithLoss(config.Loss),
 		modelv1.WithBatchSize(config.BatchSize),
 	)
 	if config.Track {
@@ -75,7 +75,7 @@ func MakePolicy(name string, config *PolicyConfig, base *agentv1.Base, env *envv
 		opts.Add(modelv1.WithNoTracker())
 	}
 
-	err = model.Compile(x.AsInputs(), y.AsInputs(), opts.Values()...)
+	err = model.Compile(x, y, opts.Values()...)
 	if err != nil {
 		return nil, err
 	}

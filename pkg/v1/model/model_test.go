@@ -39,15 +39,15 @@ func TestSequential(t *testing.T) {
 	model, err := NewSequential("test")
 	require.NoError(t, err)
 	model.AddLayers(
-		l.NewFC(5, 24, l.WithActivation(l.Sigmoid()), l.WithName("w0")),
-		l.NewFC(24, 24, l.WithActivation(l.Sigmoid()), l.WithName("w1")),
-		l.NewFC(24, 3, l.WithActivation(l.Linear()), l.WithName("w2")),
+		l.NewFC(5, 24, l.WithActivation(l.Sigmoid), l.WithName("w0")),
+		l.NewFC(24, 24, l.WithActivation(l.Sigmoid), l.WithName("w1")),
+		l.NewFC(24, 3, l.WithActivation(l.Linear), l.WithName("w2")),
 	)
 
 	optimizer := g.NewAdamSolver()
-	err = model.Compile(xi.Inputs(), yi,
+	err = model.Compile(xi, yi,
 		WithOptimizer(optimizer),
-		WithLoss(MeanSquaredError),
+		WithLoss(MSE),
 		WithBatchSize(batchSize),
 	)
 	require.NoError(t, err)

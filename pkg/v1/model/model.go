@@ -13,7 +13,7 @@ import (
 // Model is a prediction model.
 type Model interface {
 	// Compile the model.
-	Compile(x Inputs, y *Input, opts ...Opt) error
+	Compile(x In, y *Input, opts ...Opt) error
 
 	// Predict x.
 	Predict(x g.Value) (prediction g.Value, err error)
@@ -34,7 +34,7 @@ type Model interface {
 	Graphs() map[string]*g.ExprGraph
 
 	// X is the inputs to the model.
-	X() Inputs
+	X() In
 
 	// Y is the expected output of the model.
 	Y() *Input
@@ -85,8 +85,11 @@ type Sequential struct {
 	onlinePredVal      g.Value
 	onlineBatchPredVal g.Value
 
+	loss           Loss
+	trainLoss      Loss
+	trainBatchLoss Loss
+
 	batchSize int
-	lossFn    LossFn
 	optimizer g.Solver
 
 	trainVM       g.VM
@@ -109,11 +112,11 @@ type Opt func(Model)
 
 // WithLoss uses a specific loss function with the model.
 // Defaults to MSE.
-func WithLoss(lossFn LossFn) func(Model) {
+func WithLoss(loss Loss) func(Model) {
 	return func(m Model) {
 		switch t := m.(type) {
 		case *Sequential:
-			t.lossFn = lossFn
+			t.loss = loss
 		default:
 			log.Fatal("unknown model type")
 		}
@@ -170,9 +173,6 @@ func WithBatchSize(size int) func(Model) {
 	}
 }
 
-// Values is a slice of value.
-type Values []g.Value
-
 // AddLayer adds a layer.
 func (s *Sequential) AddLayer(layer layers.Layer) {
 	s.Chain.Add(layer)
@@ -192,8 +192,8 @@ func (s *Sequential) Fwd(x *Input) {
 }
 
 // Compile the model.
-func (s *Sequential) Compile(x Inputs, y *Input, opts ...Opt) error {
-	s.x = x
+func (s *Sequential) Compile(x In, y *Input, opts ...Opt) error {
+	s.x = x.Inputs()
 
 	err := y.Normalize()
 	if err != nil {
@@ -204,8 +204,8 @@ func (s *Sequential) Compile(x Inputs, y *Input, opts ...Opt) error {
 	for _, opt := range opts {
 		opt(s)
 	}
-	if s.lossFn == nil {
-		s.lossFn = MeanSquaredError
+	if s.loss == nil {
+		s.loss = MSE
 	}
 	if s.optimizer == nil {
 		s.optimizer = g.NewAdamSolver()
@@ -218,22 +218,22 @@ func (s *Sequential) Compile(x Inputs, y *Input, opts ...Opt) error {
 		s.Tracker = tracker
 	}
 	if s.fwd == nil {
-		s.fwd = x[0]
+		s.fwd = x.Inputs()[0]
 		log.Infof("setting foward for layers to input %q", s.fwd.Name())
 	}
-	err = s.buildTrainGraph(x, y)
+	err = s.buildTrainGraph(s.x, y)
 	if err != nil {
 		return err
 	}
-	err = s.buildTrainBatchGraph(x, y)
+	err = s.buildTrainBatchGraph(s.x, y)
 	if err != nil {
 		return err
 	}
-	err = s.buildOnlineGraph(x)
+	err = s.buildOnlineGraph(s.x)
 	if err != nil {
 		return err
 	}
-	err = s.buildOnlineBatchGraph(x)
+	err = s.buildOnlineBatchGraph(s.x)
 	if err != nil {
 		return err
 	}
@@ -251,6 +251,8 @@ func (s *Sequential) buildTrainGraph(x Inputs, y *Input) (err error) {
 		return err
 	}
 
+	s.trainLoss = s.loss.CloneTo(s.trainGraph)
+
 	s.yTrain = y.Clone()
 	s.yTrain.Compile(s.trainGraph)
 
@@ -263,7 +265,7 @@ func (s *Sequential) buildTrainGraph(x Inputs, y *Input) (err error) {
 	}
 	g.Read(prediction, &s.trainPredVal)
 
-	loss, err := s.lossFn(prediction, s.yTrain.Node())
+	loss, err := s.trainLoss.Compute(prediction, s.yTrain.Node())
 	if err != nil {
 		return err
 	}
@@ -290,13 +292,14 @@ func (s *Sequential) buildTrainBatchGraph(x Inputs, y *Input) (err error) {
 			s.xTrainBatch = append(s.xTrainBatch, s.xTrainBatchFwd)
 			continue
 		}
-		i := input.Clone()
-		i.Compile(s.trainBatchGraph)
+		i := input.CloneTo(s.trainBatchGraph)
 		s.xTrainBatch = append(s.xTrainBatch, i)
 	}
 
 	s.yTrainBatch = s.y.AsBatch(s.batchSize)
 	s.yTrainBatch.Compile(s.trainBatchGraph)
+
+	s.trainBatchLoss = s.loss.CloneTo(s.trainBatchGraph)
 
 	s.trainBatchChain = s.Chain.Clone()
 	s.trainBatchChain.Compile(s.trainBatchGraph, layers.WithSharedChainLearnables(s.trainChain), layers.WithLayerOpts(layers.AsBatch()))
@@ -307,7 +310,7 @@ func (s *Sequential) buildTrainBatchGraph(x Inputs, y *Input) (err error) {
 	}
 	g.Read(prediction, &s.trainBatchPredVal)
 
-	loss, err := s.lossFn(prediction, s.yTrainBatch.Node())
+	loss, err := s.trainBatchLoss.Compute(prediction, s.yTrainBatch.Node())
 	if err != nil {
 		return err
 	}
@@ -356,8 +359,7 @@ func (s *Sequential) buildOnlineBatchGraph(x Inputs) error {
 			s.xOnlineBatch = append(s.xOnlineBatch, s.xOnlineBatchFwd)
 			continue
 		}
-		i := input.Clone()
-		i.Compile(s.onlineBatchGraph)
+		i := input.CloneTo(s.onlineBatchGraph)
 		s.xOnlineBatch = append(s.xOnlineBatch, i)
 	}
 
@@ -449,7 +451,7 @@ func (s *Sequential) Graphs() map[string]*g.ExprGraph {
 }
 
 // X is is the input to the model.
-func (s *Sequential) X() Inputs {
+func (s *Sequential) X() In {
 	return s.x
 }
 

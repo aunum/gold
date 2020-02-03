@@ -18,8 +18,11 @@ type Activation interface {
 // SigmoidActivation is a sigmoid activation layer.
 type SigmoidActivation struct{}
 
-// Sigmoid returns a new sigmoid activation layer.
-func Sigmoid() *SigmoidActivation {
+// Sigmoid activation function.
+var Sigmoid = &SigmoidActivation{}
+
+// NewSigmoid returns a new sigmoid activation layer.
+func NewSigmoid() *SigmoidActivation {
 	return &SigmoidActivation{}
 }
 
@@ -38,14 +41,17 @@ func (s *SigmoidActivation) Compile(x *g.Node, opts ...LayerOpt) {}
 
 // Clone the activation.
 func (s *SigmoidActivation) Clone() Activation {
-	return Sigmoid()
+	return NewSigmoid()
 }
 
 // TanhActivation is a tanh activation layer.
 type TanhActivation struct{}
 
-// Tanh returns a new tanh activation layer.
-func Tanh() *TanhActivation {
+// Tanh activation.
+var Tanh = &TanhActivation{}
+
+// NewTanh returns a new tanh activation layer.
+func NewTanh() *TanhActivation {
 	return &TanhActivation{}
 }
 
@@ -64,14 +70,17 @@ func (t *TanhActivation) Compile(x *g.Node, opts ...LayerOpt) {}
 
 // Clone the activation.
 func (t *TanhActivation) Clone() Activation {
-	return Tanh()
+	return NewTanh()
 }
 
 // ReLUActivation is a relu activation layer.
 type ReLUActivation struct{}
 
-// ReLU returns a new relu activation layer.
-func ReLU() *ReLUActivation {
+// ReLU activation.
+var ReLU = &ReLUActivation{}
+
+// NewReLU returns a new relu activation layer.
+func NewReLU() *ReLUActivation {
 	return &ReLUActivation{}
 }
 
@@ -90,7 +99,7 @@ func (r *ReLUActivation) Compile(x *g.Node, opts ...LayerOpt) {}
 
 // Clone the activation.
 func (r *ReLUActivation) Clone() Activation {
-	return ReLU()
+	return NewReLU()
 }
 
 // LeakyReLUActivation is a leaky relu activation layer.
@@ -98,8 +107,11 @@ type LeakyReLUActivation struct {
 	alpha float64
 }
 
-// LeakyReLU returns a new leaky relu activation layer.
-func LeakyReLU(alpha float64) *LeakyReLUActivation {
+// LeakyReLU is default leaky relu activation.
+var LeakyReLU = &LeakyReLUActivation{0.01}
+
+// NewLeakyReLU returns a new leaky relu activation layer.
+func NewLeakyReLU(alpha float64) *LeakyReLUActivation {
 	return &LeakyReLUActivation{alpha: alpha}
 }
 
@@ -118,7 +130,7 @@ func (r *LeakyReLUActivation) Compile(x *g.Node, opts ...LayerOpt) {}
 
 // Clone the activation.
 func (r *LeakyReLUActivation) Clone() Activation {
-	return LeakyReLU(r.alpha)
+	return NewLeakyReLU(r.alpha)
 }
 
 // SoftmaxActivation is a softmax activation layer.
@@ -126,8 +138,11 @@ type SoftmaxActivation struct {
 	axis []int
 }
 
-// Softmax returns a new leaky softmax activation layer.
-func Softmax(axis ...int) *SoftmaxActivation {
+// SoftMax is the default softmax activation.
+var SoftMax = &SoftmaxActivation{}
+
+// NewSoftmax returns a new leaky softmax activation layer.
+func NewSoftmax(axis ...int) *SoftmaxActivation {
 	// if len(axis) == 0 {
 	// 	axis = append(axis, 0)
 	// }
@@ -150,14 +165,17 @@ func (s *SoftmaxActivation) Compile(x *g.Node, opts ...LayerOpt) {}
 
 // Clone the activation.
 func (s *SoftmaxActivation) Clone() Activation {
-	return Softmax(s.axis...)
+	return NewSoftmax(s.axis...)
 }
 
 // LinearActivation is a linear (identity) activation layer.
 type LinearActivation struct{}
 
-// Linear is a linear activation layer.
-func Linear() *LinearActivation {
+// Linear activation.
+var Linear = &LinearActivation{}
+
+// NewLinear is a linear activation layer.
+func NewLinear() *LinearActivation {
 	return &LinearActivation{}
 }
 
@@ -176,5 +194,5 @@ func (l *LinearActivation) Compile(x *g.Node, opts ...LayerOpt) {}
 
 // Clone the activation.
 func (l *LinearActivation) Clone() Activation {
-	return Linear()
+	return NewLinear()
 }

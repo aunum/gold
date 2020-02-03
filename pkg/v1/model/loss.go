@@ -4,12 +4,23 @@ import (
 	g "gorgonia.org/gorgonia"
 )
 
-// LossFn is a cost function.
-type LossFn func(yHat, y *g.Node) (loss *g.Node, err error)
+// Loss is the loss of a model.
+type Loss interface {
+	// Comput the loss.
+	Compute(yHat, y *g.Node) (loss *g.Node, err error)
 
-// MeanSquaredError cost function.
-// https://en.wikipedia.org/wiki/Mean_squared_error
-func MeanSquaredError(yHat, y *g.Node) (loss *g.Node, err error) {
+	// Clone the loss to another graph.
+	CloneTo(graph *g.ExprGraph) Loss
+}
+
+// MSE is standard mean squared error loss.
+var MSE = &MSELoss{}
+
+// MSELoss is mean squared error loss.
+type MSELoss struct{}
+
+// Compute the loss
+func (m *MSELoss) Compute(yHat, y *g.Node) (loss *g.Node, err error) {
 	loss, err = g.Sub(yHat, y)
 	if err != nil {
 		return nil, err
@@ -25,9 +36,19 @@ func MeanSquaredError(yHat, y *g.Node) (loss *g.Node, err error) {
 	return
 }
 
-// CrossEntropy cost function.
-// https://en.wikipedia.org/wiki/Cross_entropy#Cross-entropy_loss_function_and_logistic_regression
-func CrossEntropy(yHat, y *g.Node) (loss *g.Node, err error) {
+// CloneTo another graph.
+func (m *MSELoss) CloneTo(graph *g.ExprGraph) Loss {
+	return m
+}
+
+// CrossEntropy loss.
+var CrossEntropy = &CrossEntropyLoss{}
+
+// CrossEntropyLoss is standard cross entropy loss.
+type CrossEntropyLoss struct{}
+
+// Compute the loss.
+func (c *CrossEntropyLoss) Compute(yHat, y *g.Node) (loss *g.Node, err error) {
 	loss, err = g.HadamardProd(yHat, y)
 	if err != nil {
 		return nil, err
@@ -41,6 +62,11 @@ func CrossEntropy(yHat, y *g.Node) (loss *g.Node, err error) {
 		return nil, err
 	}
 	return
+}
+
+// CloneTo another graph.
+func (c *CrossEntropyLoss) CloneTo(graph *g.ExprGraph) Loss {
+	return c
 }
 
 // Huber loss function.
