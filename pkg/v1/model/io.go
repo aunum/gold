@@ -10,8 +10,8 @@ import (
 	t "gorgonia.org/tensor"
 )
 
-// In is a sum type of input or inputs.
-type In interface {
+// InputOr is a sum type of input or inputs.
+type InputOr interface {
 	// Input present.
 	Input() *Input
 
@@ -285,3 +285,19 @@ func (i *InputLayer) Node() *g.Node {
 
 // Values is a slice of value.
 type Values []g.Value
+
+// ValueOr is a sum type that represents a gorgonia.Value or []gorgonia.Value.
+type ValueOr interface{}
+
+// ValuesFrom returns the value as an array of gorgonia values.
+func ValuesFrom(v ValueOr) Values {
+	switch val := v.(type) {
+	case g.Value:
+		return []g.Value{val}
+	case []g.Value:
+		return val
+	default:
+		log.Fatalf("value type %v is not supported; gorgonia.Value and []gorgonia.Values are currently supported.", val)
+	}
+	return nil
+}

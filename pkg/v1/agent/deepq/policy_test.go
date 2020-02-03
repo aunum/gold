@@ -7,6 +7,7 @@ import (
 	. "github.com/pbarker/go-rl/pkg/v1/agent/deepq"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
 	sphere "github.com/pbarker/go-rl/pkg/v1/env"
+
 	"github.com/pbarker/log"
 	"github.com/stretchr/testify/require"
 	"gorgonia.org/tensor"

@@ -62,7 +62,7 @@ func TestSequential(t *testing.T) {
 	numSteps := 10000
 	log.Infof("fitting for %v steps", numSteps)
 	for i := 0; i < numSteps; i++ {
-		err = model.FitBatch(Values{x}, y)
+		err = model.FitBatch(x, y)
 		require.NoError(t, err)
 	}
 	log.Break()

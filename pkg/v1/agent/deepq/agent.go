@@ -9,7 +9,6 @@ import (
 	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
 	"github.com/pbarker/go-rl/pkg/v1/common"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
-	modelv1 "github.com/pbarker/go-rl/pkg/v1/model"
 	"github.com/pbarker/log"
 	"gorgonia.org/tensor"
 )
@@ -154,7 +153,7 @@ func (a *Agent) Learn() error {
 	if err != nil {
 		return err
 	}
-	err = a.Policy.FitBatch(modelv1.Values{states}, qValues)
+	err = a.Policy.FitBatch(states, qValues)
 	if err != nil {
 		return err
 	}

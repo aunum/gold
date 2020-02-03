@@ -13,16 +13,16 @@ import (
 // Model is a prediction model.
 type Model interface {
 	// Compile the model.
-	Compile(x In, y *Input, opts ...Opt) error
+	Compile(x InputOr, y *Input, opts ...Opt) error
 
 	// Predict x.
 	Predict(x g.Value) (prediction g.Value, err error)
 
 	// Fit x to y.
-	Fit(x Values, y g.Value) error
+	Fit(x ValueOr, y g.Value) error
 
 	// FitBatch fits x to y as batches.
-	FitBatch(x Values, y g.Value) error
+	FitBatch(x ValueOr, y g.Value) error
 
 	// PredictBatch predicts x as a batch
 	PredictBatch(x g.Value) (prediction g.Value, err error)
@@ -34,7 +34,7 @@ type Model interface {
 	Graphs() map[string]*g.ExprGraph
 
 	// X is the inputs to the model.
-	X() In
+	X() InputOr
 
 	// Y is the expected output of the model.
 	Y() *Input
@@ -192,7 +192,7 @@ func (s *Sequential) Fwd(x *Input) {
 }
 
 // Compile the model.
-func (s *Sequential) Compile(x In, y *Input, opts ...Opt) error {
+func (s *Sequential) Compile(x InputOr, y *Input, opts ...Opt) error {
 	s.x = x.Inputs()
 
 	err := y.Normalize()
@@ -406,9 +406,10 @@ func (s *Sequential) PredictBatch(x g.Value) (prediction g.Value, err error) {
 }
 
 // Fit x to y.
-func (s *Sequential) Fit(x Values, y g.Value) error {
+func (s *Sequential) Fit(x ValueOr, y g.Value) error {
 	s.yTrain.Set(y)
-	s.xTrain.Set(x)
+	xVals := ValuesFrom(x)
+	s.xTrain.Set(xVals)
 
 	err := s.trainVM.RunAll()
 	if err != nil {
@@ -421,9 +422,10 @@ func (s *Sequential) Fit(x Values, y g.Value) error {
 }
 
 // FitBatch fits x to y as a batch.
-func (s *Sequential) FitBatch(x Values, y g.Value) error {
+func (s *Sequential) FitBatch(x ValueOr, y g.Value) error {
 	s.yTrainBatch.Set(y)
-	s.xTrainBatch.Set(x)
+	xVals := ValuesFrom(x)
+	s.xTrainBatch.Set(xVals)
 
 	err := s.trainBatchVM.RunAll()
 	if err != nil {
@@ -451,7 +453,7 @@ func (s *Sequential) Graphs() map[string]*g.ExprGraph {
 }
 
 // X is is the input to the model.
-func (s *Sequential) X() In {
+func (s *Sequential) X() InputOr {
 	return s.x
 }
 
