@@ -121,6 +121,7 @@ func (i *Input) Check(value g.Value) error {
 	if len(vShape) != len(i.Shape()) {
 		return fmt.Errorf("shape mismatch: input %v expects %v got %v", i.name, i.shape, vShape)
 	}
+
 	for index, s := range i.Shape() {
 		if vShape[index] != s {
 			return fmt.Errorf("shape mismatch: input %v expects %v got %v", i.name, i.shape, vShape)
@@ -224,10 +225,14 @@ func (i Inputs) Clone() Inputs {
 }
 
 // Set the values to the inputs.
-func (i Inputs) Set(values Values) {
+func (i Inputs) Set(values Values) error {
 	for index, value := range values {
-		g.Let(i[index].Node(), value)
+		err := i[index].Set(value)
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // InputLayer is an input layer to be used in a chain.

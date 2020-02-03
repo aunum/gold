@@ -123,9 +123,11 @@ func (t *Tracker) TrackValue(name string, value interface{}, opts ...TrackedValu
 		tv := NewTrackedNodeValue(name, opts...)
 		t.values[tv.name] = tv
 		g.Read(n, &tv.value)
+		log.Infof("tracking node value %q", tv.name)
 	} else {
 		tv := NewTrackedScalarValue(name, value, opts...)
 		t.values[tv.name] = tv
+		log.Infof("tracking scalar value %q", tv.name)
 	}
 }
 
@@ -172,6 +174,21 @@ func (t *Tracker) ZeroValue(name string) error {
 		return fmt.Errorf("can only increment tracked values")
 	}
 	val.value = 0.0
+	return nil
+}
+
+// Clear all tracked data.
+func (t *Tracker) Clear() error {
+	f, err := os.OpenFile(t.filePath, os.O_RDWR, os.ModePerm)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	err = f.Truncate(0)
+	if err != nil {
+		return err
+	}
+	f.Seek(0, 0)
 	return nil
 }
 
@@ -260,6 +277,11 @@ func (t *Tracker) PrintAll() {
 func (t *Tracker) LogStep(episode, timestep int) error {
 	t.episode = episode
 	t.timestep = timestep
+	return t.Write()
+}
+
+// Write tracker data.
+func (t *Tracker) Write() error {
 	return t.encoder.Encode(t.Data())
 }
 

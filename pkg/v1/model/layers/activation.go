@@ -3,7 +3,9 @@ package layers
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
 	g "gorgonia.org/gorgonia"
+	t "gorgonia.org/tensor"
 )
 
 // Activation is an activation function.
@@ -138,8 +140,8 @@ type SoftmaxActivation struct {
 	axis []int
 }
 
-// SoftMax is the default softmax activation.
-var SoftMax = &SoftmaxActivation{}
+// Softmax is the default softmax activation.
+var Softmax = &SoftmaxActivation{}
 
 // NewSoftmax returns a new leaky softmax activation layer.
 func NewSoftmax(axis ...int) *SoftmaxActivation {
@@ -151,8 +153,8 @@ func NewSoftmax(axis ...int) *SoftmaxActivation {
 
 // Fwd is a foward pass through the layer.
 func (s *SoftmaxActivation) Fwd(x *g.Node) (*g.Node, error) {
-	fmt.Printf("running softmax with x shape: %v dims: %v \n", x.Shape(), x.Dims())
-	return g.SoftMax(x, s.axis...)
+	// fmt.Printf("running softmax with x shape: %v dims: %v \n", x.Shape(), x.Dims())
+	return softMax(x, s.axis...)
 }
 
 // Learnables returns all learnable nodes within this layer.
@@ -195,4 +197,72 @@ func (l *LinearActivation) Compile(x *g.Node, opts ...LayerOpt) {}
 // Clone the activation.
 func (l *LinearActivation) Clone() Activation {
 	return NewLinear()
+}
+
+// softMax performs softmax on the input. Specifically this is used:
+//		e^(a[i]) / sum((e^(a[i])))
+// For a more numerically stable SoftMax, use StableSoftMax.
+//
+// This is ripped from Gorgonia core as there was a bug in it that needs to be
+// contributed back upstream once I have authorization to do so.
+func softMax(a *g.Node, axes ...int) (retVal *g.Node, err error) {
+	aShape := a.Shape()
+
+	if aShape[0] == 1 {
+		aShape = aShape[1:]
+		g.Reshape(a, aShape)
+	}
+	axis := aShape.Dims() - 1 // default: last dim
+	if a.IsColVec() || (a.IsVector() && !a.IsRowVec()) {
+		axis = 0
+	}
+
+	if len(axes) > 0 {
+		if axes[0] >= axis+1 || axes[0] < 0 {
+			return nil, fmt.Errorf("Cannot perform SoftMax on axis %d. Input has shape %v", axes[0], a.Shape())
+		}
+		axis = axes[0]
+	}
+
+	var exp, sum *g.Node
+	if exp, err = g.Exp(a); err != nil {
+		return nil, err
+	}
+	if sum, err = g.Sum(exp, axis); err != nil {
+		return nil, err
+	}
+
+	if sum.IsScalar() {
+		return g.HadamardDiv(exp, sum)
+	}
+
+	// reshape if necessary
+	ss := sum.Shape()
+	diff := exp.Shape().Dims() - ss.Dims()
+
+	// TODO: multirank softmax
+	if diff > 0 {
+		newShape := t.Shape(t.BorrowInts(ss.Dims() + diff))
+		copy(newShape, ss)
+		copy(newShape[axis+1:], newShape[axis:])
+		newShape[axis] = 1
+
+		if sum, err = g.Reshape(sum, newShape); err != nil {
+			return nil, errors.Wrap(err, "Failed to reshape")
+		}
+	}
+	retVal, err = g.BroadcastHadamardDiv(exp, sum, nil, []byte{byte(axis)})
+	if err != nil {
+		return
+	}
+	// if squeezed {
+	// 	rShape := retVal.Shape()
+	// 	fmt.Println("rshape: ", rShape)
+	// 	nShape := []int{1}
+	// 	nShape = append(nShape, rShape...)
+	// 	g.Reshape(retVal, nShape)
+	// 	fmt.Println("nshape: ", nShape)
+	// }
+	return
+
 }

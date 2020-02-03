@@ -65,6 +65,8 @@ github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5y
 github.com/golang/protobuf v1.3.0/go.mod h1:Qd/q+1AKNOZr9uGQzbzCmRO6sUih6GTPZv6a1/R87v0=
 github.com/golang/protobuf v1.3.2 h1:6nsPYzhq5kReh6QImI3k5qWzO4PEbvbIW2cwSfR/6xs=
 github.com/golang/protobuf v1.3.2/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
+github.com/golang/protobuf v1.3.3 h1:gyjaxf+svBWX08ZjK86iN9geUJF0H6gp2IRKX6Nf6/I=
+github.com/golang/protobuf v1.3.3/go.mod h1:vzj43D7+SQXF/4pzW/hwtAqwc6iTitCiVSaWz5lYuqw=
 github.com/gonum/blas v0.0.0-20181208220705-f22b278b28ac/go.mod h1:P32wAyui1PQ58Oce/KYkOqQv8cVw1zAapXOl+dRFGbc=
 github.com/google/flatbuffers v1.10.0/go.mod h1:1AeVuKshWv4vARoZatz6mlQ0JxURH0Kv5+zNeJKJCa8=
 github.com/google/flatbuffers v1.11.0 h1:O7CEyB8Cb3/DmtxODGtLHcEvpr81Jm5qLg/hsHnxA2A=
@@ -114,6 +116,10 @@ github.com/pbarker/log v0.0.0-20200129164756-c1fff5571d12 h1:gd0TA+PcJXafIYh9Ke2
 github.com/pbarker/log v0.0.0-20200129164756-c1fff5571d12/go.mod h1:CK0TColIVvtHR705mUvnZ6JZQYBZud2bjA3OKZUyP/0=
 github.com/pbarker/log v0.0.0-20200129204005-5a4e2d10433e h1:biQj8cMp4GXV9H2hXcJtxLQSGLHPpDMgVQKZQnKEkpE=
 github.com/pbarker/log v0.0.0-20200129204005-5a4e2d10433e/go.mod h1:CK0TColIVvtHR705mUvnZ6JZQYBZud2bjA3OKZUyP/0=
+github.com/pbarker/log v0.0.0-20200203192917-17d55842bddf h1:Q7njIWECeJGSQemx+EObMqoTFbQtqK86mJjGrT/2MiY=
+github.com/pbarker/log v0.0.0-20200203192917-17d55842bddf/go.mod h1:CK0TColIVvtHR705mUvnZ6JZQYBZud2bjA3OKZUyP/0=
+github.com/pbarker/log v0.0.0-20200203210754-97f67228913d h1:JpSJQLjVqiKmuq8DhHV65BT39PHrgPaGsbu50amGAQE=
+github.com/pbarker/log v0.0.0-20200203210754-97f67228913d/go.mod h1:CK0TColIVvtHR705mUvnZ6JZQYBZud2bjA3OKZUyP/0=
 github.com/pbarker/sphere v0.0.0-20200117211912-c3407250edb1 h1:HVjfhq5AOIDMbTCV6p98nOGcfBoYQX1Phd1CYjsTytM=
 github.com/pbarker/sphere v0.0.0-20200117211912-c3407250edb1/go.mod h1:CJARWU7+MAp0dVWBbATBJynIb++o+Q3+hrfn8j4LAsk=
 github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2 h1:JhzVVoYvbOACxoUmOs6V/G4D5nPVUW73rKvXxP4XUJc=
@@ -187,6 +193,8 @@ golang.org/x/sys v0.0.0-20191220220014-0732a990476f/go.mod h1:h1NjWce9XRLGQEsW7w
 golang.org/x/sys v0.0.0-20200116001909-b77594299b42/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20200124204421-9fbb57f87de9 h1:1/DFK4b7JH8DmkqhUk48onnSfrPzImPoVxuomtbT2nk=
 golang.org/x/sys v0.0.0-20200124204421-9fbb57f87de9/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5 h1:LfCXLvNmTYH9kEmVgqbnsWfruoXZIrh4YBgqVHtDvw0=
+golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0 h1:g61tztE5qeGQ89tm6NTjjM9VPIm088od1l6aSorWRWg=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 golang.org/x/tools v0.0.0-20180221164845-07fd8470d635/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=

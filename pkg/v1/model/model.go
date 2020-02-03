@@ -315,7 +315,7 @@ func (s *Sequential) buildTrainBatchGraph(x Inputs, y *Input) (err error) {
 		return err
 	}
 	if s.Tracker != nil {
-		s.Tracker.TrackValue("batch_loss", loss, track.WithNamespace(s.name))
+		s.Tracker.TrackValue("train_batch_loss", loss, track.WithNamespace(s.name))
 	}
 
 	_, err = g.Grad(loss, s.trainBatchChain.Learnables()...)
@@ -407,11 +407,17 @@ func (s *Sequential) PredictBatch(x g.Value) (prediction g.Value, err error) {
 
 // Fit x to y.
 func (s *Sequential) Fit(x ValueOr, y g.Value) error {
-	s.yTrain.Set(y)
+	err := s.yTrain.Set(y)
+	if err != nil {
+		return err
+	}
 	xVals := ValuesFrom(x)
-	s.xTrain.Set(xVals)
+	err = s.xTrain.Set(xVals)
+	if err != nil {
+		return err
+	}
 
-	err := s.trainVM.RunAll()
+	err = s.trainVM.RunAll()
 	if err != nil {
 		return err
 	}
@@ -423,11 +429,18 @@ func (s *Sequential) Fit(x ValueOr, y g.Value) error {
 
 // FitBatch fits x to y as a batch.
 func (s *Sequential) FitBatch(x ValueOr, y g.Value) error {
-	s.yTrainBatch.Set(y)
-	xVals := ValuesFrom(x)
-	s.xTrainBatch.Set(xVals)
+	err := s.yTrainBatch.Set(y)
+	if err != nil {
+		return err
+	}
 
-	err := s.trainBatchVM.RunAll()
+	xVals := ValuesFrom(x)
+	err = s.xTrainBatch.Set(xVals)
+	if err != nil {
+		return err
+	}
+
+	err = s.trainBatchVM.RunAll()
 	if err != nil {
 		return err
 	}
