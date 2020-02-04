@@ -58,44 +58,30 @@ type Sequential struct {
 	y   *Input
 	fwd *Input
 
-	trainChain       *layers.Chain
-	trainBatchChain  *layers.Chain
-	onlineChain      *layers.Chain
-	onlineBatchChain *layers.Chain
+	trainChain, trainBatchChain   *layers.Chain
+	onlineChain, onlineBatchChain *layers.Chain
 
-	trainGraph       *g.ExprGraph
-	trainBatchGraph  *g.ExprGraph
-	onlineGraph      *g.ExprGraph
-	onlineBatchGraph *g.ExprGraph
+	trainGraph, trainBatchGraph   *g.ExprGraph
+	onlineGraph, onlineBatchGraph *g.ExprGraph
 
-	xTrain          Inputs
-	xTrainFwd       *Input
-	xTrainBatch     Inputs
-	xTrainBatchFwd  *Input
-	xOnline         Inputs
-	xOnlineFwd      *Input
-	xOnlineBatch    Inputs
-	xOnlineBatchFwd *Input
+	xTrain, xTrainBatch         Inputs
+	xTrainFwd, xTrainBatchFwd   *Input
+	xOnline, xOnlineBatch       Inputs
+	xOnlineFwd, xOnlineBatchFwd *Input
 
-	yTrain      *Input
-	yTrainBatch *Input
+	yTrain, yTrainBatch *Input
 
-	trainPredVal       g.Value
-	trainBatchPredVal  g.Value
-	onlinePredVal      g.Value
-	onlineBatchPredVal g.Value
+	trainPredVal, trainBatchPredVal   g.Value
+	onlinePredVal, onlineBatchPredVal g.Value
 
-	loss           Loss
-	trainLoss      Loss
-	trainBatchLoss Loss
+	loss                      Loss
+	trainLoss, trainBatchLoss Loss
 
 	batchSize int
 	optimizer g.Solver
 
-	trainVM       g.VM
-	trainBatchVM  g.VM
-	onlineVM      g.VM
-	onlineBatchVM g.VM
+	trainVM, trainBatchVM   g.VM
+	onlineVM, onlineBatchVM g.VM
 }
 
 // NewSequential returns a new sequential model.

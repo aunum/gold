@@ -43,21 +43,21 @@ type LayerBuilder func(env *envv1.Env) []l.Layer
 // DefaultActorLayerBuilder is a default fully connected layer builder.
 var DefaultActorLayerBuilder = func(env *envv1.Env) []l.Layer {
 	return []l.Layer{
-		l.NewFC(env.ObservationSpaceShape()[0], 24, l.WithActivation(l.ReLU()), l.WithName("fc1")),
-		l.NewFC(24, 24, l.WithActivation(l.ReLU()), l.WithName("fc2")),
-		l.NewFC(24, envv1.PotentialsShape(env.ActionSpace)[0], l.WithActivation(l.Softmax()), l.WithName("predictions")),
+		l.NewFC(env.ObservationSpaceShape()[0], 24, l.WithActivation(l.ReLU), l.WithName("fc1")),
+		l.NewFC(24, 24, l.WithActivation(l.ReLU), l.WithName("fc2")),
+		l.NewFC(24, envv1.PotentialsShape(env.ActionSpace)[0], l.WithActivation(l.Softmax), l.WithName("predictions")),
 	}
 }
 
 // MakeActor makes the actor which chooses actions based on the policy.
 func MakeActor(config *ModelConfig, base *agentv1.Base, env *envv1.Env) (modelv1.Model, error) {
-	x := tensor.Ones(tensor.Float32, 1, env.ObservationSpaceShape()[0])
-	y := tensor.Ones(tensor.Float32, 1, envv1.PotentialsShape(env.ActionSpace)[0])
+	x := modelv1.NewInput("x", []int{1, env.ObservationSpaceShape()[0]})
+	y := modelv1.NewInput("y", []int{1, envv1.PotentialsShape(env.ActionSpace)[0]})
 
-	oldPolicyProbabilities := tensor.Ones(tensor.Float32, 1, envv1.PotentialsShape(env.ActionSpace)[0])
-	advantages := tensor.Ones(tensor.Float32, 1, 1)
-	rewards := tensor.Ones(tensor.Float32, 1, 1)
-	values := tensor.Ones(tensor.Float32, 1, 1)
+	oldPolicyProbabilities := modelv1.NewInput("oldProbs", []int{1, envv1.PotentialsShape(env.ActionSpace)[0]})
+	advantages := modelv1.NewInput("advantages", []int{1, 1})
+	rewards := modelv1.NewInput("rewards", []int{1, 1})
+	values := modelv1.NewInput("values", []int{1, 1})
 
 	log.Infov("xshape", x.Shape())
 	log.Infov("yshape", y.Shape())
@@ -79,8 +79,12 @@ func MakeActor(config *ModelConfig, base *agentv1.Base, env *envv1.Env) (modelv1
 	} else {
 		opts.Add(modelv1.WithNoTracker())
 	}
-
-	err = model.Compile(x, y, opts.Values()...)
+	model.Fwd(x)
+	err = model.Compile(
+		modelv1.Inputs{x, oldPolicyProbabilities, advantages, rewards, values},
+		y,
+		opts.Values()...,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -119,11 +123,56 @@ def get_advantages(values, masks, rewards):
 	return returns, (adv - np.mean(adv)) / (np.std(adv) + 1e-10)
 */
 
-// PPOLoss is a custom loss funciton for the PPO alogrithm.
-func PPOLoss(yHat, y *g.Node) (loss *g.Node, err error) {
-
-	return nil, nil
+// PPOLoss is a custom loss for PPO. It is designed to ensure that policies are never
+// updated more than the previous.
+type PPOLoss struct {
+	oldProbs, advantages, rewards, values *modelv1.Input
 }
+
+// NewPPOLoss returns a new PPO loss.
+func NewPPOLoss(oldProbs, advantages, rewards, values *modelv1.Input) *PPOLoss {
+	return &PPOLoss{oldProbs, advantages, rewards, values}
+}
+
+// Compute the loss
+func (p *PPOLoss) Compute(yHat, y *g.Node) (loss *g.Node, err error) {
+	newProbs := yHat
+
+	// Find the ratio between the old policy and new policy. Using log for this is computationally cheaper.
+	ratio, err := g.Exp(g.Must(g.Log(newProbs+1e-10)) - g.Must(g.Log(p.oldProbs.Node()+1e-10)))
+	if err != nil {
+		return err
+	}
+	p1, err := g.Mul(ratio, p.advantages)
+	if err != nil {
+		return err
+	}
+	p2 := 
+	
+
+	return
+}
+
+// CloneTo another graph.
+func (p *PPOLoss) CloneTo(graph *g.ExprGraph) modelv1.Loss {
+	return p
+}
+
+/*
+def ppo_loss(oldpolicy_probs, advantages, rewards, values):
+    def loss(y_true, y_pred):
+        newpolicy_probs = y_pred
+        ratio = K.exp(K.log(newpolicy_probs + 1e-10) - K.log(oldpolicy_probs + 1e-10))
+        p1 = ratio * advantages
+        p2 = K.clip(ratio, min_value=1 - clipping_val, max_value=1 + clipping_val) * advantages
+        actor_loss = -K.mean(K.minimum(p1, p2))
+        critic_loss = K.mean(K.square(rewards - values))
+        total_loss = critic_discount * critic_loss + actor_loss - entropy_beta * K.mean(
+            -(newpolicy_probs * K.log(newpolicy_probs + 1e-10)))
+        return total_loss
+
+	return loss
+*/
 
 // MakePolicy makes a model.
 func MakePolicy(name string, config *ModelConfig, base *agentv1.Base, env *envv1.Env) (modelv1.Model, error) {

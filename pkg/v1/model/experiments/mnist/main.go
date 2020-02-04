@@ -78,13 +78,6 @@ func main() {
 			err = model.FitBatch(xi, yi)
 			require.NoError(err)
 			model.Tracker.LogStep(epoch, batch)
-			// x1, err := x.Slice(dense.MakeRangedSlice(0, 1))
-			// require.NoError(err)
-			// x1m := x1.Materialize().(*tensor.Dense)
-
-			// pred, err := model.Predict(x1m)
-			// require.NoError(err)
-			// log.Infov("prediction", pred)
 		}
 		loss, err := model.Tracker.GetValue("mnist_train_batch_loss")
 		require.NoError(err)
