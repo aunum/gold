@@ -1,4 +1,4 @@
-package deepq
+package ppo1
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
 	"github.com/pbarker/go-rl/pkg/v1/common"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
+	modelv1 "github.com/pbarker/go-rl/pkg/v1/model"
 	"gorgonia.org/tensor"
 )
 
@@ -17,11 +18,21 @@ type Agent struct {
 	// Hyperparameters for the dqn agent.
 	*Hyperparameters
 
+	// Actor chooses actions.
+	Actor modelv1.Model
+
+	// Critic updates params.
+	Critic modelv1.Model
+
+	// Memory of the agent.
+	Memory *Memory
+
 	Epsilon common.Schedule
 	env     *envv1.Env
 	epsilon float32
 
-	steps int
+	steps    int
+	ppoSteps int
 }
 
 // Hyperparameters for the dqn agent.
@@ -48,12 +59,20 @@ type AgentConfig struct {
 
 	// Hyperparameters for the agent.
 	*Hyperparameters
+
+	// ActorConfig is the actor model config.
+	ActorConfig *ModelConfig
+
+	// CriticConfig is the critic model config.
+	CriticConfig *ModelConfig
 }
 
 // DefaultAgentConfig is the default config for a dqn agent.
 var DefaultAgentConfig = &AgentConfig{
 	Hyperparameters: DefaultHyperparameters,
 	Base:            agentv1.NewBase(),
+	ActorConfig:     DefaultActorConfig,
+	CriticConfig:    DefaultCriticConfig,
 }
 
 // NewAgent returns a new dqn agent.
@@ -71,9 +90,21 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 		c.Epsilon = common.DefaultDecaySchedule()
 	}
 	c.Base.Tracker.TrackValue("epsilon", c.Epsilon.Initial())
+
+	actor, err := MakeActor(c.ActorConfig, c.Base, env)
+	if err != nil {
+		return nil, err
+	}
+
+	critic, err := MakeCritic(c.CriticConfig, c.Base, env)
+	if err != nil {
+		return nil, err
+	}
 	return &Agent{
 		Base:            c.Base,
 		Hyperparameters: c.Hyperparameters,
+		Actor:           actor,
+		Critic:          critic,
 		Epsilon:         c.Epsilon,
 		epsilon:         c.Epsilon.Initial(),
 		env:             env,
@@ -81,7 +112,16 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 }
 
 // Learn the agent.
-func (a *Agent) Learn() error {
+func (a *Agent) Learn(event *Event) error {
+	err := a.Memory.Remember(event)
+	if err != nil {
+		return err
+	}
+	if a.ppoSteps > a.Memory.Len() {
+		return nil
+	}
+	events := a.Memory.Pop()
+
 	return nil
 }
 

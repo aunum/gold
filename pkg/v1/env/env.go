@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/pbarker/go-rl/pkg/v1/common"
+	"github.com/pbarker/go-rl/pkg/v1/common/num"
 
 	"github.com/ory/dockertest"
 	"github.com/pbarker/log"
@@ -371,7 +371,7 @@ func SpaceShape(space *spherev1alpha.Space) []int {
 	shape := []int{}
 	switch s := space.GetInfo().(type) {
 	case *spherev1alpha.Space_Box:
-		shape = common.Int32SliceToInt(s.Box.GetShape())
+		shape = num.I32SliceToI(s.Box.GetShape())
 	case *spherev1alpha.Space_Discrete:
 		shape = []int{1}
 	case *spherev1alpha.Space_MultiDiscrete:
@@ -392,11 +392,11 @@ func PotentialsShape(space *spherev1alpha.Space) []int {
 	shape := []int{}
 	switch s := space.GetInfo().(type) {
 	case *spherev1alpha.Space_Box:
-		shape = common.Int32SliceToInt(s.Box.GetShape())
+		shape = num.I32SliceToI(s.Box.GetShape())
 	case *spherev1alpha.Space_Discrete:
 		shape = []int{int(s.Discrete.N)}
 	case *spherev1alpha.Space_MultiDiscrete:
-		shape = common.Int32SliceToInt(s.MultiDiscrete.DiscreteSpaces)
+		shape = num.I32SliceToI(s.MultiDiscrete.DiscreteSpaces)
 	case *spherev1alpha.Space_StructSpace:
 		log.Fatalf("struct space not supported")
 	default:

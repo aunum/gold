@@ -16,6 +16,7 @@ import (
 
 func TestSequential(t *testing.T) {
 	batchSize := 10
+
 	x := tensor.New(tensor.WithShape(batchSize, 5), tensor.WithBacking(tensor.Range(tensor.Float32, 0, 50)))
 	x0, err := x.Slice(dense.MakeRangedSlice(0, 1))
 	require.NoError(t, err)

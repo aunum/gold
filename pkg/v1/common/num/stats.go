@@ -1,6 +1,7 @@
-package common
+package num
 
 import (
+	"github.com/chewxy/math32"
 	"github.com/pbarker/log"
 )
 
@@ -23,4 +24,26 @@ func MeanNorm(x, min, max, average float32) float32 {
 // ZNorm uses z-score normalization.
 func ZNorm(x, mean, stdDev float32) float32 {
 	return (x - mean) / stdDev
+}
+
+// Mean of the values.
+func Mean(vals []float32) float32 {
+	l := float32(len(vals))
+	var sum float32
+	for _, val := range vals {
+		sum += val
+	}
+	return sum / l
+}
+
+// StdDev returns the standard deviation of x.
+func StdDev(x []float32) float32 {
+	mu := Mean(x)
+	var distance float32
+	for _, z := range x {
+		diff := z - mu
+		p := math32.Pow(diff, 2)
+		distance += p
+	}
+	return math32.Sqrt(distance / float32(len(x)))
 }

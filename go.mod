@@ -3,6 +3,7 @@ module github.com/pbarker/go-rl
 go 1.13
 
 require (
+	github.com/chewxy/math32 v1.0.4
 	github.com/gammazero/deque v0.0.0-20200124200322-7e84b94275b8
 	github.com/golang/protobuf v1.3.3 // indirect
 	github.com/k0kubun/pp v3.0.1+incompatible

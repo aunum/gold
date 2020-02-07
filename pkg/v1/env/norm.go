@@ -39,8 +39,7 @@ func (m *MinMaxNormalizer) Init(e *Env) (err error) {
 
 // Norm normalizes the input.
 func (m *MinMaxNormalizer) Norm(input *tensor.Dense) (*tensor.Dense, error) {
-	ret := dense.MinMaxNorm(input, m.min, m.max)
-	return ret, nil
+	return dense.MinMaxNorm(input, m.min, m.max)
 }
 
 // EqWidthBinNormalizer is an EqWidthBinner applied using tensors.

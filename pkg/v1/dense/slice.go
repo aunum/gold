@@ -1,5 +1,7 @@
 package dense
 
+// Note: these are taken from gorgonias core, because they aren't currently exported.
+
 // RangedSlice is a ranged slice that implements the Slice interface.
 type RangedSlice struct {
 	start, end, step int

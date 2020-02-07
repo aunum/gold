@@ -26,15 +26,15 @@ func NewEqWidthBinner(intervals, low, high *tensor.Dense) (*EqWidthBinner, error
 	var err error
 
 	// make types homogenous
-	low, err = ToFloat32(low)
+	low, err = ToF32(low)
 	if err != nil {
 		return nil, err
 	}
-	high, err = ToFloat32(high)
+	high, err = ToF32(high)
 	if err != nil {
 		return nil, err
 	}
-	intervals, err = ToFloat32(intervals)
+	intervals, err = ToF32(intervals)
 	if err != nil {
 		return nil, err
 	}

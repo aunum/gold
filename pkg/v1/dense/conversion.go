@@ -6,8 +6,8 @@ import (
 	"gorgonia.org/tensor"
 )
 
-// ToFloat32 will attempt to cast the given tensor int values to float32 vals.
-func ToFloat32(t *tensor.Dense) (*tensor.Dense, error) {
+// ToF32 will attempt to cast the given tensor int values to float32 vals.
+func ToF32(t *tensor.Dense) (*tensor.Dense, error) {
 	new := tensor.New(tensor.WithShape(t.Shape()...), tensor.Of(tensor.Float32))
 	iterator := t.Iterator()
 	for i, err := iterator.Next(); err == nil; i, err = iterator.Next() {
