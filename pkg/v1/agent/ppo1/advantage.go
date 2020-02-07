@@ -10,7 +10,6 @@ func GAE(values, masks, rewards []*t.Dense, gamma, lambda float32, numEvents int
 	gammaT := t.New(t.WithBacking(gamma))
 	lambdaT := t.New(t.WithBacking(lambda))
 
-	var returns *t.Dense
 	gae := t.New(t.WithBacking(float32(0)))
 	for i := numEvents; i >= 0; i-- {
 		delta, err := gammaT.Mul(values[i+1])
@@ -62,14 +61,14 @@ func GAE(values, masks, rewards []*t.Dense, gamma, lambda float32, numEvents int
 	if err != nil {
 		return nil, nil, err
 	}
-	advantage, err := returns.Sub(v)
+	advantage, err = returns.Sub(v)
 	if err != nil {
 		return nil, nil, err
 	}
 	// normalize the advantage.
-	advantageNorm, err := dense.ZNorm(advantage)
+	advantage, err = dense.ZNorm(advantage)
 	if err != nil {
 		return nil, nil, err
 	}
-	return returns, advantageNorm, nil
+	return
 }

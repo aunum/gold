@@ -5,6 +5,7 @@ import (
 
 	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
 	"github.com/pbarker/go-rl/pkg/v1/common"
+	"github.com/pbarker/go-rl/pkg/v1/common/num"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
 	modelv1 "github.com/pbarker/go-rl/pkg/v1/model"
 	"gorgonia.org/tensor"
@@ -121,6 +122,7 @@ func (a *Agent) Learn(event *Event) error {
 		return nil
 	}
 	events := a.Memory.Pop()
+	fmt.Println(events)
 
 	return nil
 }
@@ -129,7 +131,7 @@ func (a *Agent) Learn(event *Event) error {
 func (a *Agent) Action(state *tensor.Dense) (action int, err error) {
 	a.steps++
 	a.Tracker.TrackValue("epsilon", a.epsilon)
-	if common.RandFloat32(float32(0.0), float32(1.0)) < a.epsilon {
+	if num.RandF32(0.0, 1.0) < a.epsilon {
 		// explore
 		action, err = a.env.SampleAction()
 		if err != nil {

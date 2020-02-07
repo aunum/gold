@@ -124,18 +124,6 @@ func (p *PPOLoss) Compute(yHat, y *g.Node) (loss *g.Node, err error) {
 		return nil, err
 	}
 
-	totalLoss, err := g.Sub(criticDiscount, criticLoss)
-	if err != nil {
-		return nil, err
-	}
-	totalLoss, err = g.Add(totalLoss, actorLoss)
-	if err != nil {
-		return nil, err
-	}
-	totalLoss, err = g.Sub(totalLoss, entropyBeta)
-	if err != nil {
-		return nil, err
-	}
 	totalLossProbs, err := g.Mul(yHat, newLogProbs)
 	if err != nil {
 		return nil, err
@@ -148,7 +136,20 @@ func (p *PPOLoss) Compute(yHat, y *g.Node) (loss *g.Node, err error) {
 	if err != nil {
 		return nil, err
 	}
-	totalLoss, err = g.Mul(totalLoss, totalLossProbs)
+
+	totalLoss, err := g.Mul(criticDiscount, criticLoss)
+	if err != nil {
+		return nil, err
+	}
+	totalLossEnt, err := g.Mul(entropyBeta, totalLossProbs)
+	if err != nil {
+		return nil, err
+	}
+	totalLoss, err = g.Add(totalLoss, actorLoss)
+	if err != nil {
+		return nil, err
+	}
+	totalLoss, err = g.Sub(totalLoss, totalLossEnt)
 	if err != nil {
 		return nil, err
 	}
