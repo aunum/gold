@@ -1,6 +1,8 @@
 package ppo1
 
 import (
+	"fmt"
+
 	"github.com/pbarker/go-rl/pkg/v1/common/op"
 	modelv1 "github.com/pbarker/go-rl/pkg/v1/model"
 	g "gorgonia.org/gorgonia"
@@ -57,103 +59,36 @@ func (p *PPOLoss) Compute(yHat, y *g.Node) (loss *g.Node, err error) {
 	entropyBeta := g.NewScalar(yHat.Graph(), g.Float32, g.WithValue(p.entropyBeta))
 
 	// Find the ratio between the old policy and new policy. Using log for this is computationally cheaper.
-	newProbs, err := g.Add(yHat, g.NewScalar(yHat.Graph(), g.Float32, g.WithValue(1e-10)))
-	if err != nil {
-		return nil, err
-	}
-	newLogProbs, err := g.Log(newProbs)
-	if err != nil {
-		return nil, err
-	}
+	newProbs := g.Must(g.Add(yHat, g.NewScalar(yHat.Graph(), g.Float32, g.WithValue(float32(1e-10)))))
+	newLogProbs := g.Must(g.Log(newProbs))
 
-	oldProbs, err := g.Add(p.oldProbs.Node(), g.NewScalar(p.oldProbs.Node().Graph(), g.Float32, g.WithValue(1e-10)))
-	if err != nil {
-		return nil, err
-	}
-	oldLogProbs, err := g.Log(oldProbs)
-	if err != nil {
-		return nil, err
-	}
+	oldProbs := g.Must(g.Add(p.oldProbs.Node(), g.NewScalar(p.oldProbs.Node().Graph(), g.Float32, g.WithValue(float32(1e-10)))))
+	oldLogProbs := g.Must(g.Log(oldProbs))
 
-	probs, err := g.Sub(newLogProbs, oldLogProbs)
-	if err != nil {
-		return nil, err
-	}
+	probs := g.Must(g.Sub(newLogProbs, oldLogProbs))
+	ratio := g.Must(g.Exp(probs))
+	p1 := g.Must(g.Mul(ratio, p.advantages.Node()))
 
-	ratio, err := g.Exp(probs)
-	if err != nil {
-		return nil, err
-	}
-	p1, err := g.Mul(ratio, p.advantages.Node())
-	if err != nil {
-		return nil, err
-	}
+	clipped := g.Must(op.Clip(ratio, 1-p.clippingValue, 1+p.clippingValue))
+	p2 := g.Must(g.Mul(clipped, p.advantages.Node()))
 
-	clipped, err := op.Clip(ratio, 1-p.clippingValue, 1+p.clippingValue)
-	if err != nil {
-		return nil, err
-	}
-	p2, err := g.Mul(clipped, p.advantages.Node())
-	if err != nil {
-		return nil, err
-	}
+	actorLoss := g.Must(op.Min(p1, p2))
+	actorLoss = g.Must(g.Mean(actorLoss))
+	actorLoss = g.Must(g.Neg(actorLoss))
 
-	actorLoss, err := op.Min(p1, p2)
-	if err != nil {
-		return nil, err
-	}
-	actorLoss, err = g.Mean(actorLoss)
-	if err != nil {
-		return nil, err
-	}
-	actorLoss, err = g.Neg(actorLoss)
-	if err != nil {
-		return nil, err
-	}
+	criticLoss := g.Must(g.Sub(p.rewards.Node(), p.values.Node()))
+	criticLoss = g.Must(g.Square(criticLoss))
+	criticLoss = g.Must(g.Mean(criticLoss))
 
-	criticLoss, err := g.Sub(p.rewards.Node(), p.values.Node())
-	if err != nil {
-		return nil, err
-	}
-	criticLoss, err = g.Square(criticLoss)
-	if err != nil {
-		return nil, err
-	}
-	criticLoss, err = g.Mean(criticLoss)
-	if err != nil {
-		return nil, err
-	}
+	totalLossProbs := g.Must(g.Mul(yHat, newLogProbs))
+	totalLossProbs = g.Must(g.Neg(totalLossProbs))
+	totalLossProbs = g.Must(g.Mean(totalLossProbs))
 
-	totalLossProbs, err := g.Mul(yHat, newLogProbs)
-	if err != nil {
-		return nil, err
-	}
-	totalLossProbs, err = g.Neg(totalLossProbs)
-	if err != nil {
-		return nil, err
-	}
-	totalLossProbs, err = g.Mean(totalLossProbs)
-	if err != nil {
-		return nil, err
-	}
-
-	totalLoss, err := g.Mul(criticDiscount, criticLoss)
-	if err != nil {
-		return nil, err
-	}
-	totalLossEnt, err := g.Mul(entropyBeta, totalLossProbs)
-	if err != nil {
-		return nil, err
-	}
-	totalLoss, err = g.Add(totalLoss, actorLoss)
-	if err != nil {
-		return nil, err
-	}
-	totalLoss, err = g.Sub(totalLoss, totalLossEnt)
-	if err != nil {
-		return nil, err
-	}
-
+	totalLoss := g.Must(g.Mul(criticDiscount, criticLoss))
+	totalLossEnt := g.Must(g.Mul(entropyBeta, totalLossProbs))
+	totalLoss = g.Must(g.Add(totalLoss, actorLoss))
+	totalLoss = g.Must(g.Sub(totalLoss, totalLossEnt))
+	fmt.Println("hello")
 	return totalLoss, nil
 }
 

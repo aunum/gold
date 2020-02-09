@@ -2,12 +2,16 @@ package ppo1
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/pbarker/go-rl/pkg/v1/dense"
 
 	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
-	"github.com/pbarker/go-rl/pkg/v1/common"
 	"github.com/pbarker/go-rl/pkg/v1/common/num"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
 	modelv1 "github.com/pbarker/go-rl/pkg/v1/model"
+	"golang.org/x/exp/rand"
+	"gonum.org/v1/gonum/stat/distuv"
 	"gorgonia.org/tensor"
 )
 
@@ -28,7 +32,6 @@ type Agent struct {
 	// Memory of the agent.
 	Memory *Memory
 
-	Epsilon common.Schedule
 	env     *envv1.Env
 	epsilon float32
 
@@ -43,14 +46,14 @@ type Hyperparameters struct {
 	// a discount factor of 0 makes our agent consider only immediate reward, hence making it greedy.
 	Gamma float32
 
-	// Epsilon is the rate at which the agent should exploit vs explore.
-	Epsilon common.Schedule
+	// Lambda is the smoothing factor which is used to reduce variance and stablilize training.
+	Lambda float32
 }
 
 // DefaultHyperparameters are the default hyperparameters.
 var DefaultHyperparameters = &Hyperparameters{
-	Epsilon: common.DefaultDecaySchedule(),
-	Gamma:   0.95,
+	Gamma:  0.99,
+	Lambda: 0.95,
 }
 
 // AgentConfig is the config for a dqn agent.
@@ -87,10 +90,6 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 	if env == nil {
 		return nil, fmt.Errorf("environment cannot be nil")
 	}
-	if c.Epsilon == nil {
-		c.Epsilon = common.DefaultDecaySchedule()
-	}
-	c.Base.Tracker.TrackValue("epsilon", c.Epsilon.Initial())
 
 	actor, err := MakeActor(c.ActorConfig, c.Base, env)
 	if err != nil {
@@ -106,8 +105,6 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 		Hyperparameters: c.Hyperparameters,
 		Actor:           actor,
 		Critic:          critic,
-		Epsilon:         c.Epsilon,
-		epsilon:         c.Epsilon.Initial(),
 		env:             env,
 	}, nil
 }
@@ -122,22 +119,70 @@ func (a *Agent) Learn(event *Event) error {
 		return nil
 	}
 	events := a.Memory.Pop()
-	fmt.Println(events)
+
+	eventsBatch, err := events.Batch()
+	if err != nil {
+		return err
+	}
+
+	// Need one extra qValue for the GAE formula.
+	qValue, err := a.Critic.Predict(event.State)
+	if err != nil {
+		return err
+	}
+	events.QValues = append(events.QValues, qValue.(*tensor.Dense))
+
+	// calculate the advantages.
+	returns, advantages, err := GAE(events.QValues, events.Masks, events.Rewards, a.Gamma, a.Lambda)
+	if err != nil {
+		return err
+	}
+
+	err = a.Actor.Fit(modelv1.Values{
+		eventsBatch.States,
+		eventsBatch.ActionProbs,
+		advantages,
+		eventsBatch.Rewards,
+		eventsBatch.QValues,
+	}, eventsBatch.ActionOneHots)
+	if err != nil {
+		return err
+	}
+
+	err = a.Critic.Fit(eventsBatch.States, returns)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
 
 // Action selects the best known action for the given state.
-func (a *Agent) Action(state *tensor.Dense) (action int, err error) {
+func (a *Agent) Action(state *tensor.Dense) (action int, event *Event, err error) {
 	a.steps++
-	a.Tracker.TrackValue("epsilon", a.epsilon)
-	if num.RandF32(0.0, 1.0) < a.epsilon {
-		// explore
-		action, err = a.env.SampleAction()
-		if err != nil {
-			return
-		}
-		return
+
+	actionProbsVal, err := a.Actor.Predict(state)
+	if err != nil {
+		return action, event, err
 	}
+	actionProbs := actionProbsVal.(*tensor.Dense)
+
+	// Get action as a random value of the probability distribution.
+	wieghts := num.F32SliceToF64(actionProbs.Data().([]float32))
+	dist := distuv.NewCategorical(wieghts, rand.NewSource(uint64(time.Now().UnixNano())))
+	action = int(dist.Rand())
+
+	qv, err := a.Critic.Predict(state)
+	if err != nil {
+		return action, event, err
+	}
+	qValue := qv.(*tensor.Dense)
+
+	actionOneHot, err := dense.OneHotVector(action, actionProbs.Shape()[0], tensor.Float32)
+	if err != nil {
+		return action, event, err
+	}
+
+	event = NewEvent(state, actionProbs, actionOneHot, qValue)
 	return
 }

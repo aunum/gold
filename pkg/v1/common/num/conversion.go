@@ -37,3 +37,11 @@ func ToF64(i interface{}) (float64, error) {
 		return 0, fmt.Errorf("could not cast type to float64: %v", a)
 	}
 }
+
+// BoolToInt converts a boolean to an int, with 1=true 0=false.
+func BoolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}

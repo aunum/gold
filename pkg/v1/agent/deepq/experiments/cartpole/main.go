@@ -14,7 +14,6 @@ func main() {
 	require.NoError(err)
 	defer s.Resource.Close()
 
-	// envv1.WithNormalizer(envv1.NewMinMaxNormalizer())
 	env, err := s.Make("CartPole-v1", envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
 	require.NoError(err)
 
@@ -35,7 +34,6 @@ func main() {
 			action, err := agent.Action(state)
 			require.NoError(err)
 
-			// log.Infov("action", action)
 			outcome, err := env.Step(action)
 			require.NoError(err)
 
@@ -57,7 +55,6 @@ func main() {
 				break
 			}
 			state = outcome.Observation
-			// log.Infov("state", state)
 		}
 	}
 	agent.Wait()

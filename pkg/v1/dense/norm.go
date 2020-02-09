@@ -80,8 +80,10 @@ func Mean(x *t.Dense, along ...int) (*t.Dense, error) {
 		return nil, fmt.Errorf("tensor shape %v does not contain the axis %v", x.Shape(), along)
 	}
 
-	// TODO: how to not cast this?
-	size := t.New(t.WithBacking([]float32{float32(x.Shape()[axis])}))
+	size, err := SizeAsDType(x, along...)
+	if err != nil {
+		return nil, err
+	}
 	mean, err := sum.Div(size)
 	if err != nil {
 		return nil, err
@@ -118,8 +120,10 @@ func StdDev(x *t.Dense, along ...int) (*t.Dense, error) {
 		return nil, err
 	}
 
-	// TODO: how to not cast this? or just standardize on f32?
-	size := t.New(t.WithBacking([]float32{float32(x.Shape()[axis])}))
+	size, err := SizeAsDType(x, along...)
+	if err != nil {
+		return nil, err
+	}
 	inner, err := sum.Div(size)
 	if err != nil {
 		return nil, err

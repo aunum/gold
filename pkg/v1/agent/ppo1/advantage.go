@@ -6,16 +6,19 @@ import (
 )
 
 // GAE is generalized advantage estimation.
-func GAE(values, masks, rewards []*t.Dense, gamma, lambda float32, numEvents int) (returns, advantage *t.Dense, err error) {
+func GAE(values, masks, rewards []*t.Dense, gamma, lambda float32) (returns, advantage *t.Dense, err error) {
 	gammaT := t.New(t.WithBacking(gamma))
 	lambdaT := t.New(t.WithBacking(lambda))
 
 	gae := t.New(t.WithBacking(float32(0)))
-	for i := numEvents; i >= 0; i-- {
+	for i := len(rewards); i >= 0; i-- {
 		delta, err := gammaT.Mul(values[i+1])
 		if err != nil {
 			return nil, nil, err
 		}
+
+		// The mask prevents terminal states from being taken into account as they would be applying the
+		// start state of the next episode.
 		delta, err = delta.Mul(masks[i])
 		if err != nil {
 			return nil, nil, err

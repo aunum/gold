@@ -136,16 +136,3 @@ func MakeCritic(config *ModelConfig, base *agentv1.Base, env *envv1.Env) (modelv
 	}
 	return model, nil
 }
-
-/*
-def get_advantages(values, masks, rewards):
-    returns = []
-    gae = 0
-    for i in reversed(range(len(rewards))):
-        delta = rewards[i] + gamma * values[i + 1] * masks[i] - values[i]
-        gae = delta + gamma * lmbda * masks[i] * gae
-        returns.insert(0, gae + values[i])
-
-    adv = np.array(returns) - values[:-1]
-	return returns, (adv - np.mean(adv)) / (np.std(adv) + 1e-10)
-*/

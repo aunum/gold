@@ -39,3 +39,12 @@ func I32SliceToI(s []int32) []int {
 	}
 	return ret
 }
+
+// F32SliceToF64 converts a float32 slice to a float64 slice.
+func F32SliceToF64(s []float32) []float64 {
+	ret := []float64{}
+	for _, i := range s {
+		ret = append(ret, float64(i))
+	}
+	return ret
+}
