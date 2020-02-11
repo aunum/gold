@@ -6,8 +6,15 @@ import (
 
 // Clip the node value.
 func Clip(value *g.Node, min, max float64) (retVal *g.Node, err error) {
-	minNode := g.NewScalar(value.Graph(), g.Float64, g.WithValue(min), g.WithName("clip_min"))
-	maxNode := g.NewScalar(value.Graph(), g.Float64, g.WithValue(max), g.WithName("clip_max"))
+	var minNode, maxNode *g.Node
+	switch value.Dtype() {
+	case g.Float32:
+		minNode = g.NewScalar(value.Graph(), g.Float32, g.WithValue(float32(min)), g.WithName("clip_min"))
+		maxNode = g.NewScalar(value.Graph(), g.Float32, g.WithValue(float32(max)), g.WithName("clip_max"))
+	case g.Float64:
+		minNode = g.NewScalar(value.Graph(), g.Float64, g.WithValue(min), g.WithName("clip_min"))
+		maxNode = g.NewScalar(value.Graph(), g.Float64, g.WithValue(max), g.WithName("clip_max"))
+	}
 
 	// check if its the min value.
 	minMask, err := g.Lt(value, minNode, true)
@@ -46,7 +53,6 @@ func Clip(value *g.Node, min, max float64) (retVal *g.Node, err error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return g.ReduceAdd(g.Nodes{minVal, isVal, maxVal})
 }
 

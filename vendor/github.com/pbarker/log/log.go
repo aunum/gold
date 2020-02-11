@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -68,6 +69,7 @@ func Fatalf(format string, a ...interface{}) {
 		}
 		s := fmt.Sprintf(label(format, l), a...)
 		fmt.Fprintf(w, s)
+		debug.PrintStack()
 		os.Exit(1)
 	}
 }
@@ -154,7 +156,7 @@ func Infov(name string, value interface{}) {
 
 // Infovb prints value in a k:v fromat with the value on a new line.
 func Infovb(name string, value interface{}) {
-	Infof("%s: \n%v", keyf(name), value)
+	Infof("%s: \n%v\n", keyf(name), value)
 }
 
 // Infoy prints the YAML represtation of an object at Info level.

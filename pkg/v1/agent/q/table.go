@@ -5,7 +5,7 @@ import (
 	"hash/fnv"
 
 	"github.com/k0kubun/pp"
-	"github.com/pbarker/go-rl/pkg/v1/common"
+	"github.com/pbarker/go-rl/pkg/v1/common/num"
 	"gorgonia.org/tensor"
 )
 
@@ -51,7 +51,7 @@ func (m *MemTable) GetMax(state uint32) (action int, qValue float32, err error) 
 		return 0, 0.0, nil
 	}
 	// fmt.Println("state exists! ", state)
-	action, qValue = common.MaxFloat32(qv)
+	action, qValue = num.MaxF32(qv)
 	return
 }
 

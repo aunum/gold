@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/pbarker/go-rl/pkg/v1/common"
+	"github.com/pbarker/go-rl/pkg/v1/common/num"
 
 	"github.com/pbarker/go-rl/pkg/v1/dense"
 
@@ -94,7 +94,7 @@ func main() {
 	require.NoError(err)
 
 	exampleSize = x.Shape()[0]
-	losses := []float64{}
+	losses := []float32{}
 	for epoch := 0; epoch < epochs; epoch++ {
 		for batch := 0; batch < batches; batch++ {
 			start := batch * batchSize
@@ -116,11 +116,11 @@ func main() {
 
 			loss, err := model.Tracker.GetValue("mnist_train_batch_loss")
 			require.NoError(err)
-			losses = append(losses, loss.Scalar())
+			losses = append(losses, float32(loss.Scalar()))
 		}
 		loss, err := model.Tracker.GetValue("mnist_train_batch_loss")
 		require.NoError(err)
 		log.Infof("completed eval epoch %v with loss of %v", epoch, loss.Scalar())
 	}
-	log.Infov("mean eval loss", common.Mean(losses))
+	log.Infov("mean eval loss", num.Mean(losses))
 }

@@ -166,11 +166,12 @@ func SoftMax(a *Node, axes ...int) (retVal *Node, err error) {
 	}
 
 	if len(axes) > 0 {
-		if axes[0] >= axis || axes[0] < 0 {
+		if axes[0] >= axis+1 || axes[0] < 0 {
 			return nil, errors.Errorf("Cannot perform SoftMax on axis %d. Input has shape %v", axes[0], a.Shape())
 		}
 		axis = axes[0]
 	}
+
 	var exp, sum *Node
 	if exp, err = Exp(a); err != nil {
 		return nil, errors.Wrap(err, operationError)
@@ -691,6 +692,20 @@ func Tensordot(aAxes []int, bAxes []int, a, b *Node) (retVal *Node, err error) {
 	op := tensordotOp{aAxes: aAxes, bAxes: bAxes, aDims: aDims, bDims: bDims, retDims: retDims}
 
 	return ApplyOp(op, a, b)
+}
+
+// Mish is a novel activation function that is self regularizing.
+//
+// https://arxiv.org/abs/1908.08681
+func Mish(a *Node) (retVal *Node, err error) {
+	var sp, tsp *Node
+	if sp, err = Softplus(a); err != nil {
+		return nil, errors.Wrap(err, "Mish() - SoftPlus failed")
+	}
+	if tsp, err = Tanh(sp); err != nil {
+		return nil, errors.Wrap(err, "Mish() - Tanh failed")
+	}
+	return HadamardProd(a, tsp)
 }
 
 // Private functions

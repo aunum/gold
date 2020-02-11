@@ -114,6 +114,8 @@ github.com/opencontainers/runc v0.1.1 h1:GlxAyO6x8rfZYN9Tt0Kti5a/cP41iuiO2yYT0IJ
 github.com/opencontainers/runc v0.1.1/go.mod h1:qT5XzbpPznkRYVz/mWwUaVBUv2rmF59PVA73FjuZG0U=
 github.com/ory/dockertest v3.3.5+incompatible h1:iLLK6SQwIhcbrG783Dghaaa3WPzGc+4Emza6EbVUUGA=
 github.com/ory/dockertest v3.3.5+incompatible/go.mod h1:1vX4m9wsvi00u5bseYwXaSnhNrne+V0E6LAcBILJdPs=
+github.com/pbarker/gorgonia v0.0.0-20200209225806-37febf40acbc h1:TMIccAxnTjt5PgfMn5BBr7Kvr2W4TTkOw3Eupp9cdvA=
+github.com/pbarker/gorgonia v0.0.0-20200209225806-37febf40acbc/go.mod h1:9MCLQcNogyci6yODZcj5i+dH0G5CkNlQ0w/Yr+HKSJc=
 github.com/pbarker/log v0.0.0-20200129164756-c1fff5571d12 h1:gd0TA+PcJXafIYh9Ke2ggmaeJUmYKA3Bol0n7BNEihA=
 github.com/pbarker/log v0.0.0-20200129164756-c1fff5571d12/go.mod h1:CK0TColIVvtHR705mUvnZ6JZQYBZud2bjA3OKZUyP/0=
 github.com/pbarker/log v0.0.0-20200129204005-5a4e2d10433e h1:biQj8cMp4GXV9H2hXcJtxLQSGLHPpDMgVQKZQnKEkpE=

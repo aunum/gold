@@ -1,6 +1,8 @@
 package ppo1
 
 import (
+	"fmt"
+
 	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
 	modelv1 "github.com/pbarker/go-rl/pkg/v1/model"
@@ -98,15 +100,16 @@ var DefaultCriticLayerBuilder = func(env *envv1.Env) []l.Layer {
 
 // DefaultCriticConfig are the default hyperparameters for a policy.
 var DefaultCriticConfig = &ModelConfig{
+	Loss:         modelv1.MSE,
 	Optimizer:    g.NewAdamSolver(),
-	LayerBuilder: DefaultActorLayerBuilder,
+	LayerBuilder: DefaultCriticLayerBuilder,
 	BatchSize:    20,
 }
 
 // MakeCritic makes the critic which creats a qValue based on the outcome of the action taken.
 func MakeCritic(config *ModelConfig, base *agentv1.Base, env *envv1.Env) (modelv1.Model, error) {
 	x := modelv1.NewInput("x", []int{1, env.ObservationSpaceShape()[0]})
-	y := modelv1.NewInput("y", []int{1})
+	y := modelv1.NewInput("y", []int{1, 1})
 
 	log.Infov("xshape", x.Shape())
 	log.Infov("yshape", y.Shape())
@@ -116,13 +119,14 @@ func MakeCritic(config *ModelConfig, base *agentv1.Base, env *envv1.Env) (modelv
 		return nil, err
 	}
 	model.AddLayers(config.LayerBuilder(env)...)
+	fmt.Println("added layers")
 
 	opts := modelv1.NewOpts()
 	opts.Add(
 		modelv1.WithOptimizer(config.Optimizer),
 		modelv1.WithLoss(config.Loss),
 		modelv1.WithBatchSize(config.BatchSize),
-		modelv1.WithTracker(base.Tracker),
+		// modelv1.WithTracker(base.Tracker),
 	)
 
 	model.Fwd(x)
@@ -134,5 +138,6 @@ func MakeCritic(config *ModelConfig, base *agentv1.Base, env *envv1.Env) (modelv
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("compiled")
 	return model, nil
 }

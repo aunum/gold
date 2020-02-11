@@ -1,6 +1,8 @@
 package ppo1
 
 import (
+	"fmt"
+
 	"github.com/pbarker/go-rl/pkg/v1/dense"
 	t "gorgonia.org/tensor"
 )
@@ -12,6 +14,7 @@ func GAE(values, masks, rewards []*t.Dense, gamma, lambda float32) (returns, adv
 
 	gae := t.New(t.WithBacking(float32(0)))
 	for i := len(rewards); i >= 0; i-- {
+		fmt.Println("gae")
 		delta, err := gammaT.Mul(values[i+1])
 		if err != nil {
 			return nil, nil, err
@@ -73,5 +76,6 @@ func GAE(values, masks, rewards []*t.Dense, gamma, lambda float32) (returns, adv
 	if err != nil {
 		return nil, nil, err
 	}
+	fmt.Println("returning gae")
 	return
 }

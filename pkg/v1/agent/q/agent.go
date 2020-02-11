@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/pbarker/go-rl/pkg/v1/common"
+	"github.com/pbarker/go-rl/pkg/v1/common/num"
 	"github.com/pbarker/go-rl/pkg/v1/env/space"
 	"gorgonia.org/tensor"
 )
@@ -90,7 +90,7 @@ func adapt(timestep int, min float32, ada float32) float32 {
 func (a *Agent) Action(state *tensor.Dense) (int, error) {
 	stateHash := HashState(state)
 	var action int
-	if common.RandFloat32(float32(0.0), float32(1.0)) < a.Epsilon {
+	if num.RandF32(float32(0.0), float32(1.0)) < a.Epsilon {
 		// explore
 		action = a.actionSpace.Sample().(int)
 	} else {

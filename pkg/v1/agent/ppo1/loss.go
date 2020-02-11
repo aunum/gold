@@ -67,10 +67,10 @@ func (p *PPOLoss) Compute(yHat, y *g.Node) (loss *g.Node, err error) {
 
 	probs := g.Must(g.Sub(newLogProbs, oldLogProbs))
 	ratio := g.Must(g.Exp(probs))
-	p1 := g.Must(g.Mul(ratio, p.advantages.Node()))
+	p1 := g.Must(g.BroadcastHadamardProd(ratio, p.advantages.Node(), nil, []byte{1}))
 
 	clipped := g.Must(op.Clip(ratio, 1-p.clippingValue, 1+p.clippingValue))
-	p2 := g.Must(g.Mul(clipped, p.advantages.Node()))
+	p2 := g.Must(g.BroadcastHadamardProd(clipped, p.advantages.Node(), nil, []byte{1}))
 
 	actorLoss := g.Must(op.Min(p1, p2))
 	actorLoss = g.Must(g.Mean(actorLoss))
@@ -80,28 +80,34 @@ func (p *PPOLoss) Compute(yHat, y *g.Node) (loss *g.Node, err error) {
 	criticLoss = g.Must(g.Square(criticLoss))
 	criticLoss = g.Must(g.Mean(criticLoss))
 
-	totalLossProbs := g.Must(g.Mul(yHat, newLogProbs))
+	totalLossProbs := g.Must(g.HadamardProd(yHat, newLogProbs))
 	totalLossProbs = g.Must(g.Neg(totalLossProbs))
 	totalLossProbs = g.Must(g.Mean(totalLossProbs))
 
-	totalLoss := g.Must(g.Mul(criticDiscount, criticLoss))
-	totalLossEnt := g.Must(g.Mul(entropyBeta, totalLossProbs))
+	totalLoss := g.Must(g.HadamardProd(criticDiscount, criticLoss))
+	totalLossEnt := g.Must(g.HadamardProd(entropyBeta, totalLossProbs))
 	totalLoss = g.Must(g.Add(totalLoss, actorLoss))
 	totalLoss = g.Must(g.Sub(totalLoss, totalLossEnt))
-	fmt.Println("hello")
+
+	fmt.Println("returning from loss")
 	return totalLoss, nil
 }
 
 // CloneTo another graph.
-func (p *PPOLoss) CloneTo(graph *g.ExprGraph) modelv1.Loss {
+func (p *PPOLoss) CloneTo(graph *g.ExprGraph, opts ...modelv1.CloneOpt) modelv1.Loss {
 	l := &PPOLoss{
-		oldProbs:       p.oldProbs.CloneTo(graph),
-		advantages:     p.advantages.CloneTo(graph),
-		rewards:        p.advantages.CloneTo(graph),
-		values:         p.advantages.CloneTo(graph),
+		oldProbs:       p.oldProbs.CloneTo(graph, opts...),
+		advantages:     p.advantages.CloneTo(graph, opts...),
+		rewards:        p.advantages.CloneTo(graph, opts...),
+		values:         p.advantages.CloneTo(graph, opts...),
 		clippingValue:  p.clippingValue,
 		criticDiscount: p.criticDiscount,
 		entropyBeta:    p.entropyBeta,
 	}
 	return l
+}
+
+// Inputs returns any inputs the loss function utilizes.
+func (p *PPOLoss) Inputs() modelv1.Inputs {
+	return modelv1.Inputs{p.advantages, p.oldProbs, p.rewards, p.values}
 }

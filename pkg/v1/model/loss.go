@@ -10,7 +10,10 @@ type Loss interface {
 	Compute(yHat, y *g.Node) (loss *g.Node, err error)
 
 	// Clone the loss to another graph.
-	CloneTo(graph *g.ExprGraph) Loss
+	CloneTo(graph *g.ExprGraph, opts ...CloneOpt) Loss
+
+	// Inputs return any inputs the loss function utilizes.
+	Inputs() Inputs
 }
 
 // MSE is standard mean squared error loss.
@@ -37,8 +40,13 @@ func (m *MSELoss) Compute(yHat, y *g.Node) (loss *g.Node, err error) {
 }
 
 // CloneTo another graph.
-func (m *MSELoss) CloneTo(graph *g.ExprGraph) Loss {
+func (m *MSELoss) CloneTo(graph *g.ExprGraph, opts ...CloneOpt) Loss {
 	return m
+}
+
+// Inputs returns any inputs the loss function utilizes.
+func (m *MSELoss) Inputs() Inputs {
+	return Inputs{}
 }
 
 // CrossEntropy loss.
@@ -65,8 +73,13 @@ func (c *CrossEntropyLoss) Compute(yHat, y *g.Node) (loss *g.Node, err error) {
 }
 
 // CloneTo another graph.
-func (c *CrossEntropyLoss) CloneTo(graph *g.ExprGraph) Loss {
+func (c *CrossEntropyLoss) CloneTo(graph *g.ExprGraph, opts ...CloneOpt) Loss {
 	return c
+}
+
+// Inputs returns any inputs the loss function utilizes.
+func (c *CrossEntropyLoss) Inputs() Inputs {
+	return Inputs{}
 }
 
 // Huber loss function.

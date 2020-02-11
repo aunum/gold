@@ -44,7 +44,7 @@ github.com/gogo/protobuf/protoc-gen-gogo/descriptor
 # github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0
 github.com/golang/freetype/raster
 github.com/golang/freetype/truetype
-# github.com/golang/protobuf v1.3.2
+# github.com/golang/protobuf v1.3.3
 github.com/golang/protobuf/descriptor
 github.com/golang/protobuf/jsonpb
 github.com/golang/protobuf/proto
@@ -71,7 +71,7 @@ github.com/konsorten/go-windows-terminal-sequences
 github.com/leesper/go_rng
 # github.com/mattn/go-colorable v0.1.4
 github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.11
+# github.com/mattn/go-isatty v0.0.12
 github.com/mattn/go-isatty
 # github.com/opencontainers/go-digest v1.0.0-rc1
 github.com/opencontainers/go-digest
@@ -106,7 +106,7 @@ github.com/ory/dockertest/docker/types/network
 github.com/ory/dockertest/docker/types/registry
 github.com/ory/dockertest/docker/types/strslice
 github.com/ory/dockertest/docker/types/versions
-# github.com/pbarker/log v0.0.0-20200129164756-c1fff5571d12
+# github.com/pbarker/log v0.0.0-20200203210754-97f67228913d
 github.com/pbarker/log
 # github.com/pbarker/sphere v0.0.0-20200117211912-c3407250edb1
 github.com/pbarker/sphere/api/gen/go/v1alpha
@@ -127,7 +127,10 @@ github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/xtgo/set v1.0.0
 github.com/xtgo/set
-# golang.org/x/image v0.0.0-20190227222117-0694c2d4d067
+# golang.org/x/exp v0.0.0-20200207192155-f17229e696bd
+golang.org/x/exp/rand
+# golang.org/x/image v0.0.0-20190802002840-cff245a6509b
+golang.org/x/image/ccitt
 golang.org/x/image/draw
 golang.org/x/image/font
 golang.org/x/image/font/basicfont
@@ -143,7 +146,7 @@ golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 golang.org/x/net/trace
-# golang.org/x/sys v0.0.0-20191220220014-0732a990476f
+# golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 # golang.org/x/text v0.3.0
@@ -174,6 +177,13 @@ gonum.org/v1/gonum/lapack
 gonum.org/v1/gonum/lapack/gonum
 gonum.org/v1/gonum/lapack/lapack64
 gonum.org/v1/gonum/mat
+gonum.org/v1/gonum/mathext
+gonum.org/v1/gonum/mathext/internal/amos
+gonum.org/v1/gonum/mathext/internal/cephes
+gonum.org/v1/gonum/mathext/internal/gonum
+gonum.org/v1/gonum/stat
+gonum.org/v1/gonum/stat/combin
+gonum.org/v1/gonum/stat/distuv
 # gonum.org/v1/plot v0.0.0-20200111075622-4abb28f724d5
 gonum.org/v1/plot
 gonum.org/v1/plot/palette
@@ -228,7 +238,7 @@ google.golang.org/grpc/serviceconfig
 google.golang.org/grpc/stats
 google.golang.org/grpc/status
 google.golang.org/grpc/tap
-# gopkg.in/yaml.v2 v2.2.7
+# gopkg.in/yaml.v2 v2.2.8
 gopkg.in/yaml.v2
 # gorgonia.org/cu v0.9.1
 gorgonia.org/cu
@@ -236,7 +246,7 @@ gorgonia.org/cu/blas
 gorgonia.org/cu/dnn
 # gorgonia.org/dawson v1.2.0
 gorgonia.org/dawson
-# gorgonia.org/gorgonia v0.9.7
+# gorgonia.org/gorgonia v0.9.7 => github.com/pbarker/gorgonia v0.0.0-20200209225806-37febf40acbc
 gorgonia.org/gorgonia
 gorgonia.org/gorgonia/cuda
 gorgonia.org/gorgonia/examples/mnist

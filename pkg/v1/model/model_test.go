@@ -1,6 +1,7 @@
 package model_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/pbarker/go-rl/pkg/v1/dense"
@@ -18,16 +19,25 @@ func TestSequential(t *testing.T) {
 	batchSize := 10
 
 	x := tensor.New(tensor.WithShape(batchSize, 5), tensor.WithBacking(tensor.Range(tensor.Float32, 0, 50)))
-	x0, err := x.Slice(dense.MakeRangedSlice(0, 1))
+	xnot, err := x.Slice(dense.MakeRangedSlice(0, 1))
 	require.NoError(t, err)
 
+	x0 := xnot.Materialize().(*tensor.Dense)
+	err = dense.ExpandDims(x0, 0)
+	require.NoError(t, err)
 	xi := NewInput("x", x0.Shape())
+	fmt.Println("xi shape: ", xi.Shape())
 
-	y := tensor.New(tensor.WithShape(batchSize, 3), tensor.WithBacking(tensor.Range(tensor.Float32, 15, 45)))
+	y := tensor.New(tensor.WithShape(batchSize, 1), tensor.WithBacking(tensor.Range(tensor.Float32, 15, 25)))
 	y0, err := y.Slice(dense.MakeRangedSlice(0, 1))
 	require.NoError(t, err)
+	err = y0.Reshape(1, 1)
+	require.NoError(t, err)
 
+	fmt.Println("y0 data: ", y0.Data())
+	fmt.Println("y0 shape: ", y0.Shape())
 	yi := NewInput("y", y0.Shape())
+	fmt.Println("yi shape: ", yi.Shape())
 
 	log.Infovb("x", x)
 	log.Infovb("y", y)
@@ -42,10 +52,11 @@ func TestSequential(t *testing.T) {
 	model.AddLayers(
 		l.NewFC(5, 24, l.WithActivation(l.Sigmoid), l.WithName("w0")),
 		l.NewFC(24, 24, l.WithActivation(l.Sigmoid), l.WithName("w1")),
-		l.NewFC(24, 3, l.WithActivation(l.Linear), l.WithName("w2")),
+		l.NewFC(24, 1, l.WithActivation(l.Linear), l.WithName("w2")),
 	)
 
 	optimizer := g.NewAdamSolver()
+	model.Fwd(xi)
 	err = model.Compile(xi, yi,
 		WithOptimizer(optimizer),
 		WithLoss(MSE),

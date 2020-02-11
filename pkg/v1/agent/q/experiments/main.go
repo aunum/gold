@@ -8,7 +8,7 @@ import (
 
 	. "github.com/pbarker/go-rl/pkg/v1/agent/q"
 	. "github.com/pbarker/go-rl/pkg/v1/agent/q/experiments/envs"
-	"github.com/pbarker/go-rl/pkg/v1/common"
+	"github.com/pbarker/go-rl/pkg/v1/common/require"
 	sphere "github.com/pbarker/go-rl/pkg/v1/env"
 	"github.com/pbarker/log"
 	"github.com/schwarmco/go-cartesian-product"
@@ -16,7 +16,7 @@ import (
 
 func main() {
 	s, err := sphere.NewLocalServer(sphere.GymServerConfig)
-	common.RequireNoError(err)
+	require.NoError(err)
 	defer s.Resource.Close()
 
 	_, err = TestCartPole(s, CartPoleTestConfig{
@@ -24,13 +24,13 @@ func main() {
 		Buckets:         []int{1, 1, 6, 12},
 		NumEpisodes:     30,
 	})
-	common.RequireNoError(err)
+	require.NoError(err)
 
 }
 
 func gridSearch() {
 	s, err := sphere.NewLocalServer(sphere.GymServerConfig)
-	common.RequireNoError(err)
+	require.NoError(err)
 	defer s.Resource.Close()
 
 	alpha := []interface{}{0.1, 0.2, 0.3, 0.5}

@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/pbarker/go-rl/pkg/v1/common"
+	"github.com/pbarker/go-rl/pkg/v1/common/num"
 	"gorgonia.org/tensor"
 )
 
@@ -21,7 +21,7 @@ func NewDiscrete(n int) *Discrete {
 	r := rand.New(s)
 	return &Discrete{
 		n:      n,
-		values: common.MakeIntRange(0, n),
+		values: num.MakeIRange(0, n),
 		r:      r,
 	}
 }

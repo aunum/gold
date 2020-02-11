@@ -26,3 +26,5 @@ require (
 	gorgonia.org/gorgonia v0.9.7
 	gorgonia.org/tensor v0.9.4
 )
+
+replace gorgonia.org/gorgonia => github.com/pbarker/gorgonia v0.0.0-20200209225806-37febf40acbc

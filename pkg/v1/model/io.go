@@ -94,18 +94,32 @@ func (i *Input) Node() *g.Node {
 	return i.node
 }
 
+// CloneOpt are clone options.
+type CloneOpt func(*Input)
+
+// AsBatch adds a batch size to a clone opt
+func AsBatch(size int) func(*Input) {
+	return func(i *Input) {
+		*i = *i.AsBatch(size)
+	}
+}
+
 // Clone an input.
-func (i *Input) Clone() *Input {
-	return &Input{
+func (i *Input) Clone(opts ...CloneOpt) *Input {
+	ret := &Input{
 		name:  i.name,
 		shape: i.shape.Clone(),
 		dtype: i.dtype,
 	}
+	for _, opt := range opts {
+		opt(ret)
+	}
+	return ret
 }
 
 // CloneTo clones an input with the node value (if present) to another graph.
-func (i *Input) CloneTo(graph *g.ExprGraph) *Input {
-	ret := i.Clone()
+func (i *Input) CloneTo(graph *g.ExprGraph, opts ...CloneOpt) *Input {
+	ret := i.Clone(opts...)
 	if ret.node != nil {
 		ret.node = i.node.CloneTo(graph)
 	} else {
@@ -152,8 +166,16 @@ func (i *Input) AsBatch(size int) *Input {
 		}
 	}
 	ret.shape[0] = size
-	ret.name = fmt.Sprintf("%v_batch", ret.name)
+	ret.name = NameAsBatch(ret.Name())
 	return ret
+}
+
+// NameAsBatch takes an input name and converts it to its batch name.
+func NameAsBatch(name string) string {
+	if name == "" {
+		return ""
+	}
+	return fmt.Sprintf("%v_batch", name)
 }
 
 // Normalize the input. If the input is a scalar it will expand it to a matrix.
@@ -167,6 +189,9 @@ func (i *Input) Normalize() (err error) {
 				return err
 			}
 		}
+	}
+	if len(i.shape) == 0 {
+		fmt.Println("shape 0")
 	}
 	if i.shape[0] != 1 {
 		log.Fatalf("input shape %q %v must be a scalar or have the first dimension 1 e.g. [1, 4]", i.name, i.shape)
@@ -233,6 +258,16 @@ func (i Inputs) Set(values Values) error {
 		}
 	}
 	return nil
+}
+
+// Contains tests whether the given input set contains an input.
+func (i Inputs) Contains(name string) bool {
+	for _, input := range i {
+		if input.Name() == name {
+			return true
+		}
+	}
+	return false
 }
 
 // InputLayer is an input layer to be used in a chain.

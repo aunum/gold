@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	. "github.com/pbarker/go-rl/pkg/v1/agent/q"
-	"github.com/pbarker/go-rl/pkg/v1/common"
+	"github.com/pbarker/go-rl/pkg/v1/dense"
 	sphere "github.com/pbarker/go-rl/pkg/v1/env"
 	"github.com/pbarker/log"
 	"gorgonia.org/tensor"
@@ -44,7 +44,7 @@ func TestCartPole(s *sphere.Server, c CartPoleTestConfig) (*sphere.Results, erro
 	// fmt.Printf("box space: %v \n", box)
 	// per https://medium.com/@tuzzer/cart-pole-balancing-with-q-learning-b54c6068d947
 	intervals := tensor.New(tensor.WithShape(box.Shape...), tensor.WithBacking(c.Buckets))
-	obvBinner, err := common.NewDenseEqWidthBinner(intervals, box.Low, box.High)
+	obvBinner, err := dense.NewEqWidthBinner(intervals, box.Low, box.High)
 	if err != nil {
 		return nil, err
 	}

@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	golog "log"
 
 	"github.com/pbarker/go-rl/pkg/v1/common"
 	"github.com/pbarker/go-rl/pkg/v1/model/layers"
@@ -82,6 +83,7 @@ type Sequential struct {
 
 	trainVM, trainBatchVM   g.VM
 	onlineVM, onlineBatchVM g.VM
+	vmOpts                  []g.VMOpt
 }
 
 // NewSequential returns a new sequential model.
@@ -159,6 +161,19 @@ func WithBatchSize(size int) func(Model) {
 	}
 }
 
+// WithLogger adds a logger to the model which will print out the graph operations
+// as they occur.
+func WithLogger(log *golog.Logger) func(Model) {
+	return func(m Model) {
+		switch t := m.(type) {
+		case *Sequential:
+			t.vmOpts = append(t.vmOpts, g.WithLogger(log))
+		default:
+			log.Fatal("unknown model type")
+		}
+	}
+}
+
 // AddLayer adds a layer.
 func (s *Sequential) AddLayer(layer layers.Layer) {
 	s.Chain.Add(layer)
@@ -229,8 +244,15 @@ func (s *Sequential) Compile(x InputOr, y *Input, opts ...Opt) error {
 func (s *Sequential) buildTrainGraph(x Inputs, y *Input) (err error) {
 	s.trainGraph = g.NewGraph()
 
-	s.xTrain = x.Clone()
-	s.xTrain.Compile(s.trainGraph)
+	s.trainLoss = s.loss.CloneTo(s.trainGraph)
+	for _, input := range x {
+		if i, err := s.trainLoss.Inputs().Get(input.Name()); err == nil {
+			s.xTrain = append(s.xTrain, i)
+			continue
+		}
+		i := input.CloneTo(s.trainGraph)
+		s.xTrain = append(s.xTrain, i)
+	}
 
 	s.xTrainFwd, err = s.xTrain.Get(s.fwd.Name())
 	if err != nil {
@@ -264,28 +286,32 @@ func (s *Sequential) buildTrainGraph(x Inputs, y *Input) (err error) {
 		return err
 	}
 
-	s.trainVM = g.NewTapeMachine(s.trainGraph, g.BindDualValues(s.trainChain.Learnables()...))
+	vmOpts := []g.VMOpt{}
+	copy(vmOpts, s.vmOpts)
+	vmOpts = append(vmOpts, g.BindDualValues(s.trainChain.Learnables()...))
+	s.trainVM = g.NewTapeMachine(s.trainGraph, vmOpts...)
 	return nil
 }
 
 func (s *Sequential) buildTrainBatchGraph(x Inputs, y *Input) (err error) {
 	s.trainBatchGraph = g.NewGraph()
 
+	s.trainBatchLoss = s.loss.CloneTo(s.trainBatchGraph, AsBatch(s.batchSize))
 	for _, input := range x {
-		if input.Name() == s.fwd.Name() {
-			s.xTrainBatchFwd = input.AsBatch(s.batchSize)
-			s.xTrainBatchFwd.Compile(s.trainBatchGraph)
-			s.xTrainBatch = append(s.xTrainBatch, s.xTrainBatchFwd)
+		// TODO: need to validate input names for duplicates.
+		if i, err := s.trainBatchLoss.Inputs().Get(input.Name()); err == nil {
+			s.xTrainBatch = append(s.xTrainBatch, i)
 			continue
 		}
-		i := input.CloneTo(s.trainBatchGraph)
+		i := input.CloneTo(s.trainBatchGraph, AsBatch(s.batchSize))
 		s.xTrainBatch = append(s.xTrainBatch, i)
 	}
-
+	s.xTrainBatchFwd, err = s.xTrainBatch.Get(NameAsBatch(s.fwd.Name()))
+	if err != nil {
+		return err
+	}
 	s.yTrainBatch = s.y.AsBatch(s.batchSize)
 	s.yTrainBatch.Compile(s.trainBatchGraph)
-
-	s.trainBatchLoss = s.loss.CloneTo(s.trainBatchGraph)
 
 	s.trainBatchChain = s.Chain.Clone()
 	s.trainBatchChain.Compile(s.trainBatchGraph, layers.WithSharedChainLearnables(s.trainChain), layers.WithLayerOpts(layers.AsBatch()))
@@ -295,20 +321,28 @@ func (s *Sequential) buildTrainBatchGraph(x Inputs, y *Input) (err error) {
 		return err
 	}
 	g.Read(prediction, &s.trainBatchPredVal)
-
+	fmt.Println("prediction shape: ", prediction.Shape())
 	loss, err := s.trainBatchLoss.Compute(prediction, s.yTrainBatch.Node())
 	if err != nil {
 		return err
 	}
+	fmt.Println("loss shape: ", prediction.Shape())
 	if s.Tracker != nil {
 		s.Tracker.TrackValue("train_batch_loss", loss, track.WithNamespace(s.name))
+	}
+	for _, learnable := range s.trainBatchChain.Learnables() {
+		fmt.Printf("learnable: %#v\n", learnable)
 	}
 
 	_, err = g.Grad(loss, s.trainBatchChain.Learnables()...)
 	if err != nil {
 		return err
 	}
-	s.trainBatchVM = g.NewTapeMachine(s.trainBatchGraph, g.BindDualValues(s.trainBatchChain.Learnables()...))
+	vmOpts := []g.VMOpt{}
+	copy(vmOpts, s.vmOpts)
+	vmOpts = append(vmOpts, g.BindDualValues(s.trainBatchChain.Learnables()...))
+	s.trainBatchVM = g.NewTapeMachine(s.trainBatchGraph, vmOpts...)
+
 	return nil
 }
 
@@ -331,11 +365,14 @@ func (s *Sequential) buildOnlineGraph(x Inputs) (err error) {
 		return err
 	}
 	g.Read(prediction, &s.onlinePredVal)
-	s.onlineVM = g.NewTapeMachine(s.onlineGraph)
+
+	vmOpts := []g.VMOpt{}
+	copy(vmOpts, s.vmOpts)
+	s.onlineVM = g.NewTapeMachine(s.onlineGraph, vmOpts...)
 	return nil
 }
 
-func (s *Sequential) buildOnlineBatchGraph(x Inputs) error {
+func (s *Sequential) buildOnlineBatchGraph(x Inputs) (err error) {
 	s.onlineBatchGraph = g.NewGraph()
 
 	for _, input := range x {
@@ -349,6 +386,11 @@ func (s *Sequential) buildOnlineBatchGraph(x Inputs) error {
 		s.xOnlineBatch = append(s.xOnlineBatch, i)
 	}
 
+	s.xOnlineBatchFwd, err = s.xOnlineBatch.Get(NameAsBatch(s.fwd.Name()))
+	if err != nil {
+		return err
+	}
+
 	s.onlineBatchChain = s.Chain.Clone()
 	s.onlineBatchChain.Compile(s.onlineBatchGraph, layers.WithSharedChainLearnables(s.trainChain), layers.WithLayerOpts(layers.AsBatch()))
 
@@ -357,7 +399,10 @@ func (s *Sequential) buildOnlineBatchGraph(x Inputs) error {
 		return err
 	}
 	g.Read(prediction, &s.onlineBatchPredVal)
-	s.onlineBatchVM = g.NewTapeMachine(s.onlineBatchGraph)
+
+	vmOpts := []g.VMOpt{}
+	copy(vmOpts, s.vmOpts)
+	s.onlineBatchVM = g.NewTapeMachine(s.onlineBatchGraph, vmOpts...)
 	return nil
 }
 
