@@ -2,6 +2,8 @@ package model_test
 
 import (
 	"fmt"
+	golog "log"
+	"os"
 	"testing"
 
 	"github.com/pbarker/go-rl/pkg/v1/dense"
@@ -30,6 +32,7 @@ func TestSequential(t *testing.T) {
 
 	y := tensor.New(tensor.WithShape(batchSize, 1), tensor.WithBacking(tensor.Range(tensor.Float32, 15, 25)))
 	y0, err := y.Slice(dense.MakeRangedSlice(0, 1))
+	fmt.Println("y0 before reshape: ", y0.Shape())
 	require.NoError(t, err)
 	err = y0.Reshape(1, 1)
 	require.NoError(t, err)
@@ -57,10 +60,13 @@ func TestSequential(t *testing.T) {
 
 	optimizer := g.NewAdamSolver()
 	model.Fwd(xi)
+
+	logger := golog.New(os.Stdout, "", 0)
 	err = model.Compile(xi, yi,
 		WithOptimizer(optimizer),
 		WithLoss(MSE),
 		WithBatchSize(batchSize),
+		WithLogger(logger),
 	)
 	require.NoError(t, err)
 	log.Break()

@@ -330,9 +330,6 @@ func (s *Sequential) buildTrainBatchGraph(x Inputs, y *Input) (err error) {
 	if s.Tracker != nil {
 		s.Tracker.TrackValue("train_batch_loss", loss, track.WithNamespace(s.name))
 	}
-	for _, learnable := range s.trainBatchChain.Learnables() {
-		fmt.Printf("learnable: %#v\n", learnable)
-	}
 
 	_, err = g.Grad(loss, s.trainBatchChain.Learnables()...)
 	if err != nil {
