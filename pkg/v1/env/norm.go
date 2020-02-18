@@ -144,6 +144,8 @@ func SpaceMinMax(space *sphere.Space) (min, max *tensor.Dense, err error) {
 		}
 		min = tensor.New(tensor.WithBacking(minB))
 		max = tensor.New(tensor.WithBacking(maxB))
+	case *sphere.Space_MultiBinary:
+		err = fmt.Errorf("multi-binary space not supported")
 	case *sphere.Space_StructSpace:
 		err = fmt.Errorf("struct space not supported")
 	default:

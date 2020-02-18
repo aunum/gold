@@ -1,6 +1,7 @@
 package tensor
 
 import (
+	"fmt"
 	"reflect"
 	"sort"
 
@@ -205,6 +206,7 @@ func (e StdEng) reduce(
 			if ret, err = monotonicMethod(typ, hdr); err != nil {
 				return
 			}
+			fmt.Println("!!!! new from scalar")
 			return New(FromScalar(ret)), nil
 		}
 		var firstFn, lastFn, defaultFn interface{}
@@ -224,10 +226,11 @@ func (e StdEng) reduce(
 				err = errors.Errorf(dimMismatch, retVal.Dims(), axis)
 				return
 			}
-
+			fmt.Println("reducing! with retval: ", retVal)
 			if retVal, err = e.OptimizedReduce(retVal, axis, firstFn, lastFn, defaultFn, defaultVal); err != nil {
 				return
 			}
+			fmt.Println("### reduced: ", retVal)
 		}
 		return
 

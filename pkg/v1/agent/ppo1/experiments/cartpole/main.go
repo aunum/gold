@@ -23,8 +23,10 @@ func main() {
 
 	numEpisodes := 200
 	for _, episode := range agent.MakeEpisodes(numEpisodes) {
-		state, err := env.Reset()
+		init, err := env.Reset()
 		require.NoError(err)
+
+		state := init.Observation
 
 		score := episode.TrackScalar("score", 0, track.WithAggregator(track.MaxAggregator))
 

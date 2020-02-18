@@ -202,6 +202,16 @@ func (t *TrackedScalarValue) Aggregator() Aggregator {
 	return t.aggregator
 }
 
+// Set the value.
+func (t *TrackedScalarValue) Set(v interface{}) {
+	t.value = v
+}
+
+// Get the value.
+func (t *TrackedScalarValue) Get() interface{} {
+	return t.value
+}
+
 func toF64(data interface{}, index int) float64 {
 	var ret float64
 	switch val := data.(type) {

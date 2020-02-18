@@ -118,16 +118,18 @@ func (t *Tracker) Data() *History {
 }
 
 // TrackValue tracks a graph node or any other scalar value.
-func (t *Tracker) TrackValue(name string, value interface{}, opts ...TrackedValueOpt) {
+func (t *Tracker) TrackValue(name string, value interface{}, opts ...TrackedValueOpt) TrackedValue {
 	if n, ok := value.(*g.Node); ok {
 		tv := NewTrackedNodeValue(name, opts...)
 		t.values[tv.name] = tv
 		g.Read(n, &tv.value)
 		log.Infof("tracking node value %q", tv.name)
+		return tv
 	} else {
 		tv := NewTrackedScalarValue(name, value, opts...)
 		t.values[tv.name] = tv
 		log.Infof("tracking scalar value %q", tv.name)
+		return tv
 	}
 }
 

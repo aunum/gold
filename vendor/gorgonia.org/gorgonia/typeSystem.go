@@ -1,6 +1,8 @@
 package gorgonia
 
 import (
+	"fmt"
+
 	"github.com/chewxy/hm"
 	"github.com/pkg/errors"
 	"gorgonia.org/tensor"
@@ -45,6 +47,7 @@ func inferType(expr interface{}) (retVal hm.Type, err error) {
 func inferNodeType(op Op, children ...*Node) (retVal hm.Type, err error) {
 	fnType := op.Type()
 	if fnt, ok := fnType.(*hm.FunctionType); ok {
+		fmt.Println("defer fn type")
 		defer hm.ReturnFnType(fnt)
 	}
 
@@ -55,6 +58,7 @@ func inferNodeType(op Op, children ...*Node) (retVal hm.Type, err error) {
 			return nil, errors.Wrapf(err, "Failed to infer type of %v", child)
 		}
 	}
+	fmt.Printf("arg types: %#v\n", argTypes)
 
 	b := hm.TypeVariable('b')
 	argTypes[len(argTypes)-1] = b
@@ -67,11 +71,13 @@ func inferNodeType(op Op, children ...*Node) (retVal hm.Type, err error) {
 	if sub, err = hm.Unify(fn, fnType); err != nil {
 		return nil, errors.Wrapf(err, "Unable to unify while inferring type of %v", op)
 	}
+	fmt.Printf("sub: %#v\n", sub)
 
 	var ok bool
 	if retVal, ok = sub.Get(b); !ok {
 		return nil, errors.Errorf("Expected a replacement for %v", b)
 	}
+	fmt.Printf("ret val: %#v\n", retVal)
 
 	// return pruneReturn(t0.(*hm.FunctionType).ReturnType()), nil
 	return retVal, nil

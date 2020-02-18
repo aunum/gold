@@ -81,7 +81,7 @@ func (b *Base) Serve() {
 	b.Tracker.ApplyHandlers(mux)
 	b.ApplyHandlers(mux)
 	b.address = fmt.Sprintf("http://localhost:%s", b.Port)
-	log.Infof("serving on %s", b.address)
+	log.Infof("serving agent api/ui on %s", b.address)
 	go http.ListenAndServe(fmt.Sprintf(":%s", b.Port), mux)
 }
 

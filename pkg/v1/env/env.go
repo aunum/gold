@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"github.com/pbarker/go-rl/pkg/v1/common/require"
+
 	"github.com/pbarker/go-rl/pkg/v1/common/num"
 
 	"github.com/ory/dockertest"
@@ -118,11 +120,7 @@ func (s *Server) Make(model string, opts ...Opt) (*Env, error) {
 	}
 	env := resp.Environment
 	log.Successf("created env: %s", env.Id)
-	rresp, err := s.Client.StartRecordEnv(ctx, &spherev1alpha.StartRecordEnvRequest{Id: env.Id})
-	if err != nil {
-		return nil, err
-	}
-	log.Success(rresp.Message)
+
 	e := &Env{
 		Environment: env,
 		Client:      s.Client,
@@ -131,6 +129,16 @@ func (s *Server) Make(model string, opts ...Opt) (*Env, error) {
 		opt(e)
 	}
 	return e, nil
+}
+
+// WithRecorder adds a recorder to the environment
+func WithRecorder() func(*Env) {
+	return func(e *Env) {
+		ctx := context.Background()
+		resp, err := e.Client.StartRecordEnv(ctx, &spherev1alpha.StartRecordEnvRequest{Id: e.Environment.Id})
+		require.NoError(err)
+		log.Success(resp.Message)
+	}
 }
 
 // WithNormalizer adds a normalizer for observation data.
@@ -183,21 +191,38 @@ func (e *Env) SampleAction() (int, error) {
 	return int(resp.Value), nil
 }
 
+// InitialState of the environment.
+type InitialState struct {
+	// Observation of the environment.
+	Observation *tensor.Dense
+
+	// Goal if present.
+	Goal *tensor.Dense
+}
+
 // Reset the environment.
-func (e *Env) Reset() (observation *tensor.Dense, err error) {
+func (e *Env) Reset() (init *InitialState, err error) {
 	ctx := context.Background()
 	resp, err := e.Client.ResetEnv(ctx, &spherev1alpha.ResetEnvRequest{Id: e.Id})
 	if err != nil {
 		return nil, err
 	}
-	observation = resp.Observation.Dense()
+	observation := resp.Observation.Dense()
+	var goal *tensor.Dense
+	if resp.Goal != nil {
+		goal = resp.GetGoal().Dense()
+	}
 	if e.Normalizer != nil {
 		observation, err = e.Normalizer.Norm(observation)
 		if err != nil {
 			return nil, err
 		}
+		goal, err = e.Normalizer.Norm(goal)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return observation, nil
+	return &InitialState{observation, goal}, nil
 }
 
 // Close the environment.
@@ -376,6 +401,8 @@ func SpaceShape(space *spherev1alpha.Space) []int {
 		shape = []int{1}
 	case *spherev1alpha.Space_MultiDiscrete:
 		shape = []int{len(s.MultiDiscrete.DiscreteSpaces)}
+	case *spherev1alpha.Space_MultiBinary:
+		shape = []int{int(s.MultiBinary.GetN())}
 	case *spherev1alpha.Space_StructSpace:
 		log.Fatalf("struct space not supported")
 	default:
@@ -397,6 +424,8 @@ func PotentialsShape(space *spherev1alpha.Space) []int {
 		shape = []int{int(s.Discrete.N)}
 	case *spherev1alpha.Space_MultiDiscrete:
 		shape = num.I32SliceToI(s.MultiDiscrete.DiscreteSpaces)
+	case *spherev1alpha.Space_MultiBinary:
+		shape = []int{int(s.MultiBinary.N)}
 	case *spherev1alpha.Space_StructSpace:
 		log.Fatalf("struct space not supported")
 	default:
