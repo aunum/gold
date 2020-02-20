@@ -217,8 +217,9 @@ var visualizeTemplate = `
 				console.log("response")
 				console.log(response)
 			    // {{$name}}Chart.data.datasets[0].data.push(response);
-				{{$name}}Chart.data.datasets[0].data = response;
+				{{$name}}Chart.data.datasets[0].data = response.xys;
 				console.log({{$name}}Chart.data.datasets[0].data)
+				{{$name}}Chart.options.scales.xAxes[0].scaleLabel.labelString = response.xLabel;
 				
 				// re-render the chart
 				{{$name}}Chart.update();

@@ -96,7 +96,7 @@ func NewTrackedNodeValue(name string, opts ...TrackedValueOpt) *TrackedNodeValue
 		opt(tv)
 	}
 	if tv.aggregator == nil {
-		tv.aggregator = MeanAggregator
+		tv.aggregator = Mean
 	}
 	return tv
 }
@@ -160,7 +160,7 @@ func NewTrackedScalarValue(name string, value interface{}, opts ...TrackedValueO
 		opt(tv)
 	}
 	if tv.aggregator == nil {
-		tv.aggregator = MeanAggregator
+		tv.aggregator = Mean
 	}
 	return tv
 }
@@ -210,6 +210,57 @@ func (t *TrackedScalarValue) Set(v interface{}) {
 // Get the value.
 func (t *TrackedScalarValue) Get() interface{} {
 	return t.value
+}
+
+// HistoricalValue is a historical value.
+type HistoricalValue struct {
+	// Name of the value.
+	Name string `json:"name"`
+
+	// TrackedValue of the value.
+	TrackedValue float64 `json:"value"`
+
+	// Timestep at which the value occured.
+	Timestep int `json:"timestep"`
+
+	// Episode at which the value occured.
+	Episode int `json:"episode"`
+}
+
+// Scalar value.
+func (h *HistoricalValue) Scalar() float64 {
+	return h.TrackedValue
+}
+
+// Ep is the episode in which value occurred.
+func (h *HistoricalValue) Ep() int {
+	return h.Episode
+}
+
+// HistoricalValues is a slice of historical values.
+type HistoricalValues []*HistoricalValue
+
+// Scalar of the historical values.
+func (h HistoricalValues) Scalar() []float64 {
+	ret := []float64{}
+	for _, value := range h {
+		ret = append(ret, value.TrackedValue)
+	}
+	return ret
+}
+
+// Aggregables returns the values as aggregables.
+func (h HistoricalValues) Aggregables() Aggregables {
+	agg := Aggregables{}
+	for _, val := range h {
+		agg = append(agg, val)
+	}
+	return agg
+}
+
+// Aggregate the values.
+func (h HistoricalValues) Aggregate(aggregator Aggregator) *Aggregates {
+	return aggregator.Aggregate(h.Aggregables())
 }
 
 func toF64(data interface{}, index int) float64 {

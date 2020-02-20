@@ -57,16 +57,16 @@ func (t *Tracker) AggregateValuesHandler(w http.ResponseWriter, req *http.Reques
 			return
 		}
 	}
-	h, err := t.GetEpisodeHistories()
+	h, err := t.GetHistory(valueName)
 	if err != nil {
 		log.Error(err)
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
 		return
 	}
-	aggs := h.Aggregate(valueName, agg)
-	xys := aggs.ChartjsXYs()
-	b, err := json.Marshal(xys)
+	aggs := h.Aggregate(agg)
+	chartJS := aggs.Chartjs()
+	b, err := json.Marshal(chartJS)
 	if err != nil {
 		log.Error(err)
 		w.WriteHeader(500)

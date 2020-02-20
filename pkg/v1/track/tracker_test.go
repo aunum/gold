@@ -56,10 +56,10 @@ func TestTracker(t *testing.T) {
 			require.NoError(t, err)
 		}
 	}
-	eph, err := tracker.GetEpisodeHistories()
+	eph, err := tracker.GetHistory("prod")
 	require.NoError(t, err)
 
-	aggs := eph.Aggregate("prod", MeanAggregator)
+	aggs := eph.Aggregate(Mean)
 	fmt.Println("aggs: ", aggs)
 
 	xys := aggs.GonumXYs()

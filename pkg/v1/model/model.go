@@ -321,12 +321,10 @@ func (s *Sequential) buildTrainBatchGraph(x Inputs, y *Input) (err error) {
 		return err
 	}
 	g.Read(prediction, &s.trainBatchPredVal)
-	fmt.Println("prediction shape: ", prediction.Shape())
 	loss, err := s.trainBatchLoss.Compute(prediction, s.yTrainBatch.Node())
 	if err != nil {
 		return err
 	}
-	fmt.Println("loss shape: ", prediction.Shape())
 	if s.Tracker != nil {
 		s.Tracker.TrackValue("train_batch_loss", loss, track.WithNamespace(s.name))
 	}
@@ -529,13 +527,13 @@ func (s *Sequential) CloneLearnablesTo(to *Sequential) error {
 		"onlineBatch": to.onlineBatchChain,
 	}
 	for name, chain := range shared {
-		log.Info("chain: ", name)
+		log.Debugv("chain", name)
 		for i, learnable := range chain.Learnables() {
 			err := g.Let(learnable, new[i].Value())
 			if err != nil {
 				return err
 			}
-			log.Infovb(learnable.Name(), learnable.Value())
+			log.Debugvb(learnable.Name(), learnable.Value())
 		}
 	}
 	return nil

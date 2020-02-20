@@ -75,6 +75,9 @@ type History struct {
 // Histories are a slice of history.
 type Histories []*History
 
+// EpisodeHistories is a history of episodes
+type EpisodeHistories map[int]Histories
+
 // Get the value history with the given name.
 func (h *History) Get(name string) HistoricalValues {
 	history := HistoricalValues{}
@@ -85,24 +88,6 @@ func (h *History) Get(name string) HistoricalValues {
 	}
 	return history
 }
-
-// HistoricalValue is a historical value.
-type HistoricalValue struct {
-	// Name of the value.
-	Name string `json:"name"`
-
-	// TrackedValue of the value.
-	TrackedValue float64 `json:"value"`
-
-	// Timestep at which the value occured.
-	Timestep int `json:"timestep"`
-
-	// Episode at which the value occured.
-	Episode int `json:"episode"`
-}
-
-// HistoricalValues is a slice of historical values.
-type HistoricalValues []*HistoricalValue
 
 // Data yeilds the current tracked values into a historical structure.
 func (t *Tracker) Data() *History {
@@ -125,12 +110,11 @@ func (t *Tracker) TrackValue(name string, value interface{}, opts ...TrackedValu
 		g.Read(n, &tv.value)
 		log.Infof("tracking node value %q", tv.name)
 		return tv
-	} else {
-		tv := NewTrackedScalarValue(name, value, opts...)
-		t.values[tv.name] = tv
-		log.Infof("tracking scalar value %q", tv.name)
-		return tv
 	}
+	tv := NewTrackedScalarValue(name, value, opts...)
+	t.values[tv.name] = tv
+	log.Infof("tracking scalar value %q", tv.name)
+	return tv
 }
 
 // ValueNames is the name for all values.
@@ -300,8 +284,8 @@ func (t *Tracker) PrintHistoryAll() error {
 }
 
 // Print the tracked values.
-func (v HistoricalValues) Print() {
-	log.Infoy("history", v)
+func (h HistoricalValues) Print() {
+	log.Infoy("history", h)
 }
 
 // GetEpisodeHistories returns the episode history.

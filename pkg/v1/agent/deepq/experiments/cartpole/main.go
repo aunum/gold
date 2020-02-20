@@ -30,7 +30,7 @@ func main() {
 
 		state := init.Observation
 
-		score := episode.TrackScalar("score", 0, track.WithAggregator(track.MaxAggregator))
+		score := episode.TrackScalar("score", 0, track.WithAggregator(track.Max))
 
 		for _, timestep := range episode.Steps(env.MaxSteps()) {
 			action, err := agent.Action(state)

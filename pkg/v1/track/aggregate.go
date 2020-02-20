@@ -27,52 +27,153 @@ var AggregatorNames = []AggregatorName{MeanAggregatorName, ModeAggregatorName, M
 func AggregatorFromName(name string) (Aggregator, error) {
 	switch AggregatorName(name) {
 	case MeanAggregatorName:
-		return MeanAggregator, nil
+		return Mean, nil
 	case ModeAggregatorName:
-		return ModeAggregator, nil
+		return Mode, nil
 	case MaxAggregatorName:
-		return MaxAggregator, nil
+		return Max, nil
 	default:
 		return nil, fmt.Errorf("aggregator %q unknown", name)
 	}
 }
 
-// EpisodeHistories is a history of episodes
-type EpisodeHistories map[int]Histories
+// Aggregable is a value that can be aggregated.
+type Aggregable interface {
+	// Scalar value.
+	Scalar() float64
+
+	// Ep is the episode for this value.
+	// Note: this is shortened to deal with name conflicts.
+	Ep() int
+}
+
+// Aggregables are a slice of aggregable values.
+type Aggregables []Aggregable
+
+// AggregatedValue is an aggregated value.
+type AggregatedValue struct {
+	value   float64
+	episode int
+}
+
+// Scalar value
+func (a *AggregatedValue) Scalar() float64 {
+	return a.value
+}
+
+// Ep is the episode this value is linked to.
+func (a *AggregatedValue) Ep() int {
+	return a.episode
+}
+
+// AggregatedValues is a slice of aggregated value.
+type AggregatedValues []AggregatedValue
+
+// Scalar values.
+func (a Aggregables) Scalar() []float64 {
+	ret := []float64{}
+	for _, aggregable := range a {
+		ret = append(ret, aggregable.Scalar())
+	}
+	return ret
+}
 
 // Aggregator aggregates historical values into a single value.
-type Aggregator func(HistoricalValues) float64
+type Aggregator interface {
+	// Aggregate the values.
+	Aggregate(vals Aggregables) *Aggregates
+}
 
 // MeanAggregator returns the mean of the historical values.
-func MeanAggregator(vals HistoricalValues) float64 {
+type MeanAggregator struct{ Slicer }
+
+// NewMeanAggregator returns a new mode aggregator.
+func NewMeanAggregator(slicer Slicer) *MeanAggregator {
+	return &MeanAggregator{slicer}
+}
+
+// Aggregate the values.
+func (m *MeanAggregator) Aggregate(vals Aggregables) *Aggregates {
+	sliced := m.Slice(vals)
+	aggs := NewAggregates(m.Label(), "value")
+	for i, slice := range sliced {
+		aggs.values = append(aggs.values, &AggregatedValue{value: mean(slice.Scalar()), episode: i})
+	}
+	return aggs
+}
+
+func mean(vals []float64) float64 {
 	l := float64(len(vals))
 	var sum float64
 	for _, val := range vals {
-		sum += val.TrackedValue
+		sum += val
 	}
 	return sum / l
 }
 
+// Mean aggregator.
+var Mean = &MeanAggregator{SingleEpisodeSlicer}
+
 // MaxAggregator returns the max of the historical values.
-func MaxAggregator(vals HistoricalValues) float64 {
+type MaxAggregator struct{ Slicer }
+
+// NewMaxAggregator returns a new max aggregator.
+func NewMaxAggregator(slicer Slicer) *MaxAggregator {
+	return &MaxAggregator{slicer}
+}
+
+// Aggregate the values.
+func (m *MaxAggregator) Aggregate(vals Aggregables) *Aggregates {
+	sliced := m.Slice(vals)
+	aggs := NewAggregates(m.Label(), "value")
+	for i, slice := range sliced {
+		aggs.values = append(aggs.values, &AggregatedValue{value: max(slice.Scalar()), episode: i})
+	}
+	return aggs
+}
+
+func max(vals []float64) float64 {
 	var max float64
 	for _, val := range vals {
-		if val.TrackedValue > max {
-			max = val.TrackedValue
+		if val > max {
+			max = val
 		}
 	}
 	return max
 }
 
-// ModeAggregator returns the max of the historical values.
-func ModeAggregator(vals HistoricalValues) float64 {
+// Max aggregator.
+var Max = &MaxAggregator{SingleEpisodeSlicer}
+
+// ModeAggregator returns the most common of the historical values.
+type ModeAggregator struct{ Slicer }
+
+// NewModeAggregator returns a new mode aggregator.
+func NewModeAggregator(slicer Slicer) *ModeAggregator {
+	return &ModeAggregator{slicer}
+}
+
+// Aggregate the values.
+func (m *ModeAggregator) Aggregate(vals Aggregables) *Aggregates {
+	sliced := m.Slice(vals)
+	aggs := NewAggregates(m.Label(), "value")
+	for i, slice := range sliced {
+		aggs.values = append(aggs.values, &AggregatedValue{value: mode(slice.Scalar()), episode: i})
+	}
+	return aggs
+}
+
+// Mode aggregator.
+var Mode = &ModeAggregator{SingleEpisodeSlicer}
+
+func mode(vals []float64) float64 {
 	modes := map[float64]int{}
 	for _, val := range vals {
-		v, ok := modes[val.TrackedValue]
+		v, ok := modes[val]
 		if !ok {
 			v = 0
 		}
-		modes[val.TrackedValue] = v + 1
+		modes[val] = v + 1
 	}
 	var maxI int
 	var maxV float64
@@ -84,56 +185,102 @@ func ModeAggregator(vals HistoricalValues) float64 {
 	return maxV
 }
 
-// EpisodeAggregates is a map of episode to aggregated values.
-type EpisodeAggregates map[int]float64
+// ChainAggregator is a chain of aggregators.
+type ChainAggregator struct {
+	aggregators []Aggregator
+}
 
-// Aggregate histories returning a map of episode to aggregated values.
-func (e EpisodeHistories) Aggregate(name string, aggregator Aggregator) EpisodeAggregates {
-	epAggs := EpisodeAggregates{}
-	for episode, histories := range e {
-		epVals := HistoricalValues{}
-		for _, history := range histories {
-			for _, value := range history.Values {
-				if value.Name == name {
-					epVals = append(epVals, value)
-				}
-			}
-		}
-		aggregated := aggregator(epVals)
-		epAggs[episode] = aggregated
+// NewChainAggregator returns a new chain aggregator.
+func NewChainAggregator(aggregators ...Aggregator) *ChainAggregator {
+	return &ChainAggregator{
+		aggregators: aggregators,
 	}
-	return epAggs
+}
+
+// Aggregate the values.
+func (c *ChainAggregator) Aggregate(vals Aggregables) (retVal *Aggregates) {
+	for _, aggregator := range c.aggregators {
+		retVal := aggregator.Aggregate(vals)
+		vals = retVal.values
+	}
+	return
+}
+
+// Aggregates are generic aggregated values.
+type Aggregates struct {
+	values Aggregables
+	xLabel string
+	yLabel string
+}
+
+// NewAggregates returns a new aggregates.
+func NewAggregates(xLabel, yLabel string) *Aggregates {
+	return &Aggregates{
+		values: []Aggregable{},
+		xLabel: xLabel,
+		yLabel: yLabel,
+	}
+}
+
+// Sort the episodes into a slice.
+func (a Aggregates) Sort() []float64 {
+	sorted := make([]float64, len(a.values))
+	for i, v := range a.values {
+		sorted[i] = v.Scalar()
+	}
+	return sorted
 }
 
 // GonumXYs returns the episode aggregates as gonum xy pairs.
-func (e EpisodeAggregates) GonumXYs() plotter.XYs {
+func (a Aggregates) GonumXYs() plotter.XYs {
 	xys := plotter.XYs{}
-	for episode, value := range e {
+	for _, value := range a.values {
 		xy := plotter.XY{
-			X: float64(episode),
-			Y: value,
+			X: float64(value.Ep()),
+			Y: value.Scalar(),
 		}
 		xys = append(xys, xy)
 	}
 	return xys
 }
 
+// Chartjs is a ChartJS chart.
+type Chartjs struct {
+	// XLabel is the label for the x values.
+	XLabel string `json:"xLabel"`
+	// YLabel is the label for the y values.
+	YLabel string `json:"yLabel"`
+	// XYS are the xy values.
+	XYs ChartjsXYs `json:"xys"`
+}
+
 // ChartjsXY conforms to the expected point data structure for chartjs charts.
 type ChartjsXY struct {
+	// X value.
 	X float64 `json:"x"`
+	// Y value.
 	Y float64 `json:"y"`
 }
 
 // ChartjsXYs conforms to the expected set of point data structure for chartjs charts.
 type ChartjsXYs []ChartjsXY
 
+// Chartjs returns the data for a ChartJS chart.
+func (a Aggregates) Chartjs() *Chartjs {
+	return &Chartjs{
+		XLabel: a.xLabel,
+		YLabel: a.yLabel,
+		XYs:    a.ChartjsXYs(),
+	}
+}
+
 // ChartjsXYs returns the episode aggregates as gonum xy pairs.
-func (e EpisodeAggregates) ChartjsXYs() ChartjsXYs {
+func (a Aggregates) ChartjsXYs() ChartjsXYs {
 	xys := ChartjsXYs{}
-	for episode, value := range e {
+	for _, value := range a.values {
 		xy := ChartjsXY{
-			X: float64(episode),
-			Y: value,
+			X: float64(value.Ep()),
+			Y: value.Scalar(),
 		}
 		xys = append(xys, xy)
 	}

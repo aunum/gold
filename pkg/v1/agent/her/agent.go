@@ -54,7 +54,7 @@ type Hyperparameters struct {
 var DefaultHyperparameters = &Hyperparameters{
 	Epsilon:           common.DefaultDecaySchedule(),
 	Gamma:             0.95,
-	UpdateTargetSteps: 100,
+	UpdateTargetSteps: 1000,
 }
 
 // AgentConfig is the config for a dqn+her agent.
@@ -133,7 +133,11 @@ func (a *Agent) Learn() error {
 	for _, event := range batch {
 		qUpdate := float32(event.Reward)
 		if !event.Done {
-			prediction, err := a.TargetPolicy.Predict(event.Observation)
+			stateGoal, err := event.Observation.Concat(1, event.Goal)
+			if err != nil {
+				return err
+			}
+			prediction, err := a.TargetPolicy.Predict(stateGoal)
 			if err != nil {
 				return err
 			}
@@ -144,21 +148,23 @@ func (a *Agent) Learn() error {
 			}
 			qUpdate = event.Reward + a.Gamma*nextMax
 		}
-		prediction, err := a.Policy.Predict(event.State)
+		stateGoal, err := event.State.Concat(1, event.Goal)
+		if err != nil {
+			return err
+		}
+		prediction, err := a.Policy.Predict(stateGoal)
 		if err != nil {
 			return err
 		}
 		qValues := prediction.(*tensor.Dense)
 		qValues.Set(event.Action, qUpdate)
-		batchStates = append(batchStates, event.State)
+		batchStates = append(batchStates, stateGoal)
 		batchQValues = append(batchQValues, qValues)
 	}
-	fmt.Println("concatting states")
 	states, err := dense.Concat(0, batchStates...)
 	if err != nil {
 		return err
 	}
-	fmt.Println("concatting qvalues")
 	qValues, err := dense.Concat(0, batchQValues...)
 	if err != nil {
 		return err

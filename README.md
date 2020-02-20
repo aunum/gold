@@ -6,7 +6,7 @@ Reinforcement learning in Go!
 
 All of the agent implementations can be found in `pkg/v1/agents` each agent has an experiment folder providing demos across various environments.
 
-## Roadmap
+## Agents
 
 - [x] Q
 - [ ] A2C
@@ -16,7 +16,7 @@ All of the agent implementations can be found in `pkg/v1/agents` each agent has 
 - [x] DQN
 - [ ] GAIL
 - [ ] HER
-- [ ] PPO1
+- [!] PPO1
 - [ ] PPO2
 - [ ] SAC
 - [ ] TD3
@@ -24,7 +24,7 @@ All of the agent implementations can be found in `pkg/v1/agents` each agent has 
 
 ## Inspiration
 - OpenAI Baselines https://github.com/openai/baselines
-- The Gorgonia Project https://github.com/gorgonia/gorgonia
+- The Gorgonia Project https://github.com/gorgonia
 - RL Overview by Lilian Weng https://lilianweng.github.io/lil-log/2018/02/19/a-long-peek-into-reinforcement-learning.html
 - Open Endedness https://www.oreilly.com/radar/open-endedness-the-last-grand-challenge-youve-never-heard-of/
 - AI-GAs http://www.evolvingai.org/files/1905.10985.pdf 
@@ -56,3 +56,4 @@ All of the agent implementations can be found in `pkg/v1/agents` each agent has 
 - Automatic goal generation - https://arxiv.org/pdf/1705.06366.pdf
 - Graph neural networks - https://arxiv.org/abs/1810.09202
 - Dynamic HER - https://openreview.net/pdf?id=Byf5-30qFX
+- Energy based HER - https://arxiv.org/pdf/1810.01363.pdf
