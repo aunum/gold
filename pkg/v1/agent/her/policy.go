@@ -31,9 +31,9 @@ type PolicyConfig struct {
 // DefaultPolicyConfig are the default hyperparameters for a policy.
 var DefaultPolicyConfig = &PolicyConfig{
 	Loss:         modelv1.MSE,
-	Optimizer:    g.NewAdamSolver(),
+	Optimizer:    g.NewAdamSolver(g.WithBatchSize(128), g.WithLearnRate(0.0001)),
 	LayerBuilder: DefaultFCLayerBuilder,
-	BatchSize:    20,
+	BatchSize:    128,
 	Track:        true,
 }
 
@@ -43,9 +43,8 @@ type LayerBuilder func(x, y *modelv1.Input) []l.Layer
 // DefaultFCLayerBuilder is a default fully connected layer builder.
 var DefaultFCLayerBuilder = func(x, y *modelv1.Input) []l.Layer {
 	return []l.Layer{
-		l.NewFC(x.Squeeze()[0], 24, l.WithActivation(l.ReLU), l.WithName("fc1")),
-		l.NewFC(24, 24, l.WithActivation(l.ReLU), l.WithName("fc2")),
-		l.NewFC(24, y.Squeeze()[0], l.WithActivation(l.Linear), l.WithName("qvalues")),
+		l.NewFC(x.Squeeze()[0], 512, l.WithActivation(l.ReLU), l.WithName("fc1")),
+		l.NewFC(512, y.Squeeze()[0], l.WithActivation(l.Linear), l.WithName("qvalues")),
 	}
 }
 

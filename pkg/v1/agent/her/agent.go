@@ -33,6 +33,7 @@ type Agent struct {
 
 	memory           *Memory
 	steps            int
+	episodes         int
 	successfulReward float32
 }
 
@@ -46,15 +47,15 @@ type Hyperparameters struct {
 	// Epsilon is the rate at which the agent should exploit vs explore.
 	Epsilon common.Schedule
 
-	// UpdateTargetSteps determins how often the target network updates its parameters.
-	UpdateTargetSteps int
+	// UpdateTargetEpisodes determins how often the target network updates its parameters.
+	UpdateTargetEpisodes int
 }
 
 // DefaultHyperparameters are the default hyperparameters.
 var DefaultHyperparameters = &Hyperparameters{
-	Epsilon:           common.DefaultDecaySchedule(),
-	Gamma:             0.95,
-	UpdateTargetSteps: 1000,
+	Epsilon:              common.DefaultDecaySchedule(),
+	Gamma:                0.9,
+	UpdateTargetEpisodes: 50,
 }
 
 // AgentConfig is the config for a dqn+her agent.
@@ -70,6 +71,9 @@ type AgentConfig struct {
 
 	// SuccessfulReward is the reward for reaching the goal.
 	SuccessfulReward float32
+
+	// MemorySize is the size of the memory.
+	MemorySize int
 }
 
 // DefaultAgentConfig is the default config for a dqn+her agent.
@@ -78,6 +82,7 @@ var DefaultAgentConfig = &AgentConfig{
 	PolicyConfig:     DefaultPolicyConfig,
 	Base:             agentv1.NewBase(),
 	SuccessfulReward: 0,
+	MemorySize:       1e4,
 }
 
 // NewAgent returns a new dqn+her agent.
@@ -107,13 +112,13 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 	return &Agent{
 		Base:              c.Base,
 		Hyperparameters:   c.Hyperparameters,
-		memory:            NewMemory(),
+		memory:            NewMemory(c.MemorySize),
 		Policy:            policy,
 		TargetPolicy:      targetPolicy,
 		Epsilon:           c.Epsilon,
 		epsilon:           epsilon.(*track.TrackedScalarValue),
 		env:               env,
-		updateTargetSteps: c.UpdateTargetSteps,
+		updateTargetSteps: c.UpdateTargetEpisodes,
 		batchSize:         c.PolicyConfig.BatchSize,
 		successfulReward:  c.SuccessfulReward,
 	}, nil
@@ -131,33 +136,39 @@ func (a *Agent) Learn() error {
 	batchStates := []*tensor.Dense{}
 	batchQValues := []*tensor.Dense{}
 	for _, event := range batch {
+		// log.Info("learning event")
+		// event.Print()
 		qUpdate := float32(event.Reward)
 		if !event.Done {
-			stateGoal, err := event.Observation.Concat(1, event.Goal)
+			obvGoal, err := event.Observation.Concat(1, event.Goal)
 			if err != nil {
 				return err
 			}
-			prediction, err := a.TargetPolicy.Predict(stateGoal)
+			targetPred, err := a.TargetPolicy.Predict(obvGoal)
 			if err != nil {
 				return err
 			}
-			qValues := prediction.(*tensor.Dense)
+			qValues := targetPred.(*tensor.Dense)
 			nextMax, err := dense.AMaxF32(qValues, 1)
 			if err != nil {
 				return err
 			}
-			qUpdate = event.Reward + a.Gamma*nextMax
+			qUpdate = event.Reward + (a.Gamma * nextMax)
 		}
+
 		stateGoal, err := event.State.Concat(1, event.Goal)
 		if err != nil {
 			return err
 		}
+		// log.Infov("predict stategoal", stateGoal.Data())
 		prediction, err := a.Policy.Predict(stateGoal)
 		if err != nil {
 			return err
 		}
 		qValues := prediction.(*tensor.Dense)
+		// log.Infov("qValues", qValues.Data())
 		qValues.Set(event.Action, qUpdate)
+		// log.Infov("qUpdate", qValues.Data())
 		batchStates = append(batchStates, stateGoal)
 		batchQValues = append(batchQValues, qValues)
 	}
@@ -169,12 +180,13 @@ func (a *Agent) Learn() error {
 	if err != nil {
 		return err
 	}
+	// log.Infovb("batch states", states)
+	// log.Infovb("batch qvalues", qValues)
 	err = a.Policy.FitBatch(states, qValues)
 	if err != nil {
 		return err
 	}
-	a.epsilon.Set(a.Epsilon.Value())
-
+	a.episodes++
 	err = a.updateTarget()
 	if err != nil {
 		return err
@@ -184,7 +196,7 @@ func (a *Agent) Learn() error {
 
 // updateTarget copies the weights from the online network to the target network on the provided interval.
 func (a *Agent) updateTarget() error {
-	if a.steps%a.updateTargetSteps == 0 {
+	if a.episodes%a.UpdateTargetEpisodes == 0 {
 		log.BreakPound()
 		log.Infof("updating target model - current steps %v target update %v", a.steps, a.updateTargetSteps)
 		err := a.Policy.(*model.Sequential).CloneLearnablesTo(a.TargetPolicy.(*model.Sequential))
@@ -198,15 +210,18 @@ func (a *Agent) updateTarget() error {
 // Action selects the best known action for the given state.
 func (a *Agent) Action(state, goal *tensor.Dense) (action int, err error) {
 	a.steps++
+	defer func() { a.epsilon.Set(a.Epsilon.Value()) }()
 	if rand.Float64() < a.epsilon.Scalar() {
 		// explore
 		action, err = a.env.SampleAction()
 		if err != nil {
 			return
 		}
+		log.Infov("taking random action", action)
 		return
 	}
 	action, err = a.action(state, goal)
+	log.Infov("taking action", action)
 	return
 }
 
@@ -220,6 +235,7 @@ func (a *Agent) action(state, goal *tensor.Dense) (action int, err error) {
 		return
 	}
 	qValues := prediction.(*tensor.Dense)
+	log.Infov("action qvalues", qValues.Data())
 	actionIndex, err := qValues.Argmax(1)
 	if err != nil {
 		return action, err
@@ -234,14 +250,26 @@ func (a *Agent) Remember(event ...*Event) {
 }
 
 // Hindsight applies hindsight to the memory.
-func (a *Agent) Hindsight(episodeEvents Events) {
+func (a *Agent) Hindsight(episodeEvents Events) error {
+	log.BreakHard()
+	log.Info("running hindsight")
 	altBatch := episodeEvents.Copy()
 	finalEvent := altBatch[len(altBatch)-1]
 	for i, event := range altBatch {
+		log.Info("old event: ")
+		event.Print()
 		event.Goal = finalEvent.Outcome.Observation
 		if i == len(altBatch)-1 {
 			event.Reward = a.successfulReward
+			event.Done = true
 		}
+		log.Info("new event: ")
+		event.Print()
 		a.memory.Remember(event)
+		err := a.Learn()
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }

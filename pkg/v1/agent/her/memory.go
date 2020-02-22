@@ -6,6 +6,7 @@ import (
 	"time"
 
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
+	"github.com/pbarker/log"
 	"gorgonia.org/tensor"
 )
 
@@ -18,6 +19,8 @@ type Event struct {
 
 	// Goal the agent is trying to reach.
 	Goal *tensor.Dense
+
+	i int
 }
 
 // Events that occurred.
@@ -30,6 +33,19 @@ func NewEvent(state, goal *tensor.Dense, outcome *envv1.Outcome) *Event {
 		State:   state,
 		Goal:    goal,
 	}
+}
+
+// Print the event.
+func (e *Event) Print() {
+	log.Break()
+	log.Infov("state", e.State.Data())
+	log.Infov("goal", e.Goal.Data())
+	log.Infov("action", e.Outcome.Action)
+	log.Infov("reward", e.Outcome.Reward)
+	log.Infov("observation", e.Outcome.Observation.Data())
+	log.Infov("done", e.Outcome.Done)
+	log.Infov("index", e.i)
+	log.Break()
 }
 
 // Copy the event.
@@ -58,18 +74,23 @@ func (e Events) Copy() Events {
 // Memory for the dqn agent.
 type Memory struct {
 	events []*Event
+	size   int
 }
 
 // NewMemory returns a new Memory store.
-func NewMemory() *Memory {
+func NewMemory(size int) *Memory {
 	return &Memory{
 		events: []*Event{},
+		size:   size,
 	}
 }
 
 // Remember events.
-func (m *Memory) Remember(event ...*Event) {
-	m.events = append(m.events, event...)
+func (m *Memory) Remember(events ...*Event) {
+	m.events = append(m.events, events...)
+	if len(m.events) > m.size {
+		m.events = m.events[len(events):]
+	}
 }
 
 // Sample a batch size from memory.
@@ -84,6 +105,7 @@ func (m *Memory) Sample(batchsize int) (ret []*Event, err error) {
 			break
 		}
 		event := m.events[value]
+		event.i = value
 		events = append(events, event)
 	}
 	return events, nil

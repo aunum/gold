@@ -206,6 +206,10 @@ func (c *ChainAggregator) Aggregate(vals Aggregables) (retVal *Aggregates) {
 	return
 }
 
+// DefaultRateAggregator is a default aggregator to take the rate of a value, uses the
+// mean of the last 100 episodes.
+var DefaultRateAggregator = NewMeanAggregator(DefaultCummulativeSlicer)
+
 // Aggregates are generic aggregated values.
 type Aggregates struct {
 	values Aggregables
