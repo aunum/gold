@@ -59,7 +59,7 @@ func ZNorm(x *t.Dense, along ...int) (*t.Dense, error) {
 	if err != nil {
 		return nil, err
 	}
-	ret, err = ret.Div(sigmas.(*t.Dense))
+	ret, err = Div(ret, sigmas.(*t.Dense))
 	if err != nil {
 		return nil, err
 	}

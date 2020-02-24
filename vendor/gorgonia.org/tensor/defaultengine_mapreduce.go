@@ -224,6 +224,7 @@ func (e StdEng) reduce(
 				err = errors.Errorf(dimMismatch, retVal.Dims(), axis)
 				return
 			}
+
 			if retVal, err = e.OptimizedReduce(retVal, axis, firstFn, lastFn, defaultFn, defaultVal); err != nil {
 				return
 			}

@@ -170,9 +170,6 @@ func ApplyOp(op Op, children ...*Node) (retVal *Node, err error) {
 			break
 		}
 	}
-	for _, child := range children {
-		fmt.Printf("child: %#v\n---\n", child)
-	}
 
 	if g == nil {
 		return nil, errors.New("No Graph Supplied")
@@ -191,22 +188,17 @@ func ApplyOp(op Op, children ...*Node) (retVal *Node, err error) {
 		return nil, errors.Wrapf(err, "Type inference error. Op: %v. Children: %#Y, OpType:%v", op, Nodes(children), op.Type())
 	}
 	typeSysLogf("Done inferring. Return type is: %#v(%T)", retType, retType)
-	fmt.Printf("Done inferring. Return type is: %#v(%T)\n", retType, retType)
 
 	// infer shapes, but print errors instead of returning
 	shapeLogf("op: %v(%T) inferring shape", op, op)
-	fmt.Printf("op: %v(%T) inferring shape\n", op, op)
 	if err = checkArity(op, len(children)); err != nil {
 		return
 	}
 
 	ds := Nodes(children).dimSizers()
 	var s tensor.Shape
-	fmt.Printf("ds: %#v\n", ds)
 	if s, err = op.InferShape(ds...); err == nil {
 		shapeLogf("inferred shape %v", s)
-		fmt.Printf("inferred shape %v\n", s)
-		fmt.Printf("@@@\ntype: %v \nop: %v \nchildren: %v \nshape: %v \n@@@\n", retType, op, children, s)
 		retVal = NewUniqueNode(WithType(retType), WithOp(op), WithChildren(children), In(g), WithShape(s...))
 	} else {
 		err = errors.Wrapf(err, "Failed to infer shape. Op: %v", op)

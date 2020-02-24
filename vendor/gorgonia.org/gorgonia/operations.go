@@ -317,8 +317,6 @@ func Mean(a *Node, along ...int) (retVal *Node, err error) {
 
 // Sum performs a sum() on the input and the provided axes.
 func Sum(a *Node, along ...int) (retVal *Node, err error) {
-	fmt.Printf("=======\n\n")
-	fmt.Println("sum node shape: ", a.Shape())
 	if a.IsScalar() {
 		retVal = a // or error?
 		return
@@ -338,9 +336,7 @@ func Sum(a *Node, along ...int) (retVal *Node, err error) {
 		}
 	}
 
-	fmt.Printf("along: %v, shape: %v, dims: %v\n", along, a.shape, dims)
 	op := newSumOp(along, a.shape, dims)
-	fmt.Printf("op: %#v\n", op)
 	return ApplyOp(op, a)
 }
 

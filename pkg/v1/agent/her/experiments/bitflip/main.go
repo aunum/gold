@@ -5,6 +5,7 @@ import (
 	"github.com/pbarker/go-rl/pkg/v1/common"
 	"github.com/pbarker/go-rl/pkg/v1/common/require"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
+	modelv1 "github.com/pbarker/go-rl/pkg/v1/model"
 	"github.com/pbarker/go-rl/pkg/v1/track"
 	"github.com/pbarker/log"
 
@@ -18,6 +19,7 @@ type Test struct {
 	numEpisodes int
 	decayRate   float32
 	batchSize   int
+	loss        modelv1.Loss
 }
 
 var (
@@ -27,6 +29,7 @@ var (
 		numEpisodes: 10000,
 		decayRate:   0.99995,
 		batchSize:   128,
+		loss:        modelv1.MSE,
 	}
 	test15 = &Test{
 		env:         "BitFlipper15-v0",
@@ -34,37 +37,44 @@ var (
 		numEpisodes: 10000,
 		decayRate:   0.99997,
 		batchSize:   128,
+		loss:        modelv1.MSE,
 	}
 	test20 = &Test{
 		env:         "BitFlipper20-v0",
-		learnRate:   0.00005,
-		numEpisodes: 15000,
-		decayRate:   0.99997,
+		learnRate:   0.00008,
+		numEpisodes: 20000,
+		decayRate:   0.99998,
 		batchSize:   128,
+		loss:        modelv1.MSE,
 	}
 )
 
 func main() {
+	test(test20)
+}
+
+func test(test *Test) {
 	s, err := envv1.NewLocalServer(envv1.GymServerConfig)
 	require.NoError(err)
 	defer s.Resource.Close()
 
-	env, err := s.Make(test20.env, envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
+	env, err := s.Make(test.env, envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
 	require.NoError(err)
 
 	agentConfig := her.DefaultAgentConfig
-	agentConfig.PolicyConfig.BatchSize = test20.batchSize
+	agentConfig.PolicyConfig.BatchSize = test.batchSize
 	agentConfig.PolicyConfig.Optimizer = g.NewAdamSolver(
-		g.WithLearnRate(test20.learnRate),
-		g.WithBatchSize(float64(test20.batchSize)),
+		g.WithLearnRate(test.learnRate),
+		g.WithBatchSize(float64(test.batchSize)),
 	)
+	agentConfig.PolicyConfig.Loss = test.loss
 	agent, err := her.NewAgent(agentConfig, env)
 	require.NoError(err)
 
 	agent.View()
 
-	numEpisodes := test20.numEpisodes
-	agent.Epsilon = common.DefaultDecaySchedule(common.WithDecayRate(test20.decayRate))
+	numEpisodes := test.numEpisodes
+	agent.Epsilon = common.DefaultDecaySchedule(common.WithDecayRate(test.decayRate))
 	for _, episode := range agent.MakeEpisodes(numEpisodes) {
 		init, err := env.Reset()
 		require.NoError(err)

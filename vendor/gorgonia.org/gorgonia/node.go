@@ -64,7 +64,6 @@ type NodeConsOpt func(*Node)
 // a check will be made to see if the both types are the same. If it isn't, it will panic.
 func WithType(t hm.Type) NodeConsOpt {
 	f := func(n *Node) {
-		fmt.Printf("adding type: %v to node: %v\n", t, n)
 		if n.t == nil {
 			n.t = t
 		} else if !n.t.Eq(t) {
@@ -197,11 +196,9 @@ func WithInit(fn InitWFn) NodeConsOpt {
 // This function panics if the shape's dimensions do not match the specified dimensions of the *Node.
 func WithShape(shp ...int) NodeConsOpt {
 	s := tensor.Shape(tensor.BorrowInts(len(shp)))
-	fmt.Println("s: ", s)
 	copy(s, shp)
 	f := func(n *Node) {
 		nd := n.Dims()
-		fmt.Println("nd: ", nd)
 		// if nd == 1 && s.IsVector() {
 		// 	goto safe
 		// }
@@ -210,7 +207,6 @@ func WithShape(shp ...int) NodeConsOpt {
 		sameDims := nd == s.Dims()
 		acceptScalar := nd == 0 && scalarEquiv(s)
 
-		fmt.Printf("\nisVec: %v \nacceptVec: %v \nsameDims: %v\nacceptScalar: %v\n\n", isVec, acceptVec, sameDims, acceptScalar)
 		if !acceptVec && !sameDims && !acceptScalar {
 			panic(fmt.Sprintf("Node %v, has %d dimensions(Shape: %v). Input shape is %v, which has %d dimensions", n, n.Dims(), n.shape, s, s.Dims()))
 		}
@@ -264,17 +260,8 @@ func newNode(opts ...NodeConsOpt) *Node {
 	n.dataOn = CPU
 	n.id = -1
 
-	fmt.Printf("node: %#v\n", n)
-
-	for i, opt := range opts {
-		fmt.Println("------")
-		fmt.Printf("opt: %#v\ni: %v\n", opt, i)
-		fmt.Printf("node before: %#v\n", n)
+	for _, opt := range opts {
 		opt(n)
-		if n != nil {
-			fmt.Printf("node after: %#v\n", n)
-		}
-		fmt.Println("------")
 	}
 	n.fix()
 

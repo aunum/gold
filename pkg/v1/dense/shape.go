@@ -18,3 +18,28 @@ func ExpandDims(t *tensor.Dense, axis int) error {
 	err := t.Reshape(dims...)
 	return err
 }
+
+// OneOfMany ensures the given tensor starts with a shape of 1.
+func OneOfMany(t *tensor.Dense) error {
+	if t.Shape()[0] != 1 {
+		return ExpandDims(t, 0)
+	}
+	return nil
+}
+
+// ManyOfOne ensures the given tensor ends with a shape of 1.
+func ManyOfOne(t *tensor.Dense) error {
+	if t.Shape()[len(t.Shape())-1] != 1 {
+		return ExpandDims(t, 1)
+	}
+	return nil
+}
+
+// Repeat the value along the axis for the given number of repeats.
+func Repeat(t *tensor.Dense, axis int, repeats ...int) (*tensor.Dense, error) {
+	v, err := t.Repeat(axis, repeats...)
+	if err != nil {
+		return nil, err
+	}
+	return v.(*tensor.Dense), nil
+}

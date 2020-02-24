@@ -14,6 +14,11 @@ in which the agent is able to learn from smaller goals before reaching the large
 ## Examples
 See the [experiments](./experiments) folder for example implementations.
 
+## Roadmap
+- [ ] n>15
+- [ ] More hindsight types
+- [ ] More environments
+
 ## References
 - paper: https://arxiv.org/pdf/1707.01495.pdf
 - tutorial: https://deeprobotics.wordpress.com/2018/03/07/bitflipper-herdqn 

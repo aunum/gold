@@ -15,3 +15,11 @@ func Concat(axis int, tensors ...*t.Dense) (retVal *t.Dense, err error) {
 	retVal, err = retVal.Concat(axis, tensors[1:]...)
 	return
 }
+
+// ConcatOr return b if a is nil.
+func ConcatOr(axis int, a, b *t.Dense) (retVal *t.Dense, err error) {
+	if a == nil {
+		return b, nil
+	}
+	return a.Concat(axis, b)
+}

@@ -1,4 +1,4 @@
-package her
+package nes
 
 import (
 	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
@@ -21,7 +21,7 @@ type PolicyConfig struct {
 	// LayerBuilder is a builder of layer.
 	LayerBuilder LayerBuilder
 
-	// Batch size to train on.
+	// BatchSize of the updates.
 	BatchSize int
 
 	// Track is whether to track the model.
@@ -31,9 +31,9 @@ type PolicyConfig struct {
 // DefaultPolicyConfig are the default hyperparameters for a policy.
 var DefaultPolicyConfig = &PolicyConfig{
 	Loss:         modelv1.MSE,
-	Optimizer:    g.NewAdamSolver(g.WithBatchSize(128), g.WithLearnRate(0.0005)),
+	Optimizer:    g.NewAdamSolver(g.WithLearnRate(0.001)),
 	LayerBuilder: DefaultFCLayerBuilder,
-	BatchSize:    128,
+	BatchSize:    20,
 	Track:        true,
 }
 
@@ -43,16 +43,15 @@ type LayerBuilder func(x, y *modelv1.Input) []l.Layer
 // DefaultFCLayerBuilder is a default fully connected layer builder.
 var DefaultFCLayerBuilder = func(x, y *modelv1.Input) []l.Layer {
 	return []l.Layer{
-		l.NewFC(x.Squeeze()[0], 512, l.WithActivation(l.ReLU), l.WithName("fc1")),
-		l.NewFC(512, 512, l.WithActivation(l.ReLU), l.WithName("fc2")),
-		l.NewFC(512, y.Squeeze()[0], l.WithActivation(l.Linear), l.WithName("qvalues")),
+		l.NewFC(x.Squeeze()[0], 24, l.WithActivation(l.ReLU), l.WithName("fc1")),
+		l.NewFC(24, 24, l.WithActivation(l.ReLU), l.WithName("fc2")),
+		l.NewFC(24, y.Squeeze()[0], l.WithActivation(l.Linear), l.WithName("qvalues")),
 	}
 }
 
 // MakePolicy makes a model.
 func MakePolicy(name string, config *PolicyConfig, base *agentv1.Base, env *envv1.Env) (modelv1.Model, error) {
-	stateGoalShape := env.ObservationSpaceShape()[0] * 2
-	x := modelv1.NewInput("state_goal", []int{1, stateGoalShape})
+	x := modelv1.NewInput("state", []int{1, env.ObservationSpaceShape()[0]})
 	y := modelv1.NewInput("actionPotentials", []int{1, envv1.PotentialsShape(env.ActionSpace)[0]})
 
 	log.Infov("xshape", x.Shape())

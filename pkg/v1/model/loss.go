@@ -139,6 +139,11 @@ func (h *PseudoHuberLoss) Compute(yHat, y *g.Node) (loss *g.Node, err error) {
 	if err != nil {
 		return nil, err
 	}
+	/// JOawo;eijgfo;qiwhjet o;iq3wjhgoi2q3jaeoi;j WTF!!!!!
+	loss, err = g.Sum(loss, 1)
+	if err != nil {
+		return nil, err
+	}
 	return
 }
 

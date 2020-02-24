@@ -119,6 +119,16 @@ func Errorf(format string, a ...interface{}) {
 	}
 }
 
+// Errorv prints value in a k:v fromat.
+func Errorv(name string, value interface{}) {
+	Errorf("%s: %v", keyf(name), value)
+}
+
+// Errorvb prints value in a k:v fromat with the value on a new line.
+func Errorvb(name string, value interface{}) {
+	Errorf("%s: \n%v\n", keyf(name), value)
+}
+
 // Errory prints the YAML represtation of an object at Error level.
 func Errory(name string, obj interface{}) {
 	yam, err := SPrintYAML(obj)
@@ -189,6 +199,16 @@ func Successf(format string, a ...interface{}) {
 	}
 }
 
+// Successv prints value in a k:v fromat.
+func Successv(name string, value interface{}) {
+	Successf("%s: %v", keyf(name), value)
+}
+
+// Successvb prints value in a k:v fromat with the value on a new line.
+func Successvb(name string, value interface{}) {
+	Successf("%s: \n%v\n", keyf(name), value)
+}
+
 // Successy prints the YAML represtation of an object at Success level.
 func Successy(name string, obj interface{}) {
 	yam, err := SPrintYAML(obj)
@@ -217,6 +237,16 @@ func Debugf(format string, a ...interface{}) {
 		s := fmt.Sprintf(label(format, l), a...)
 		fmt.Fprintf(w, s)
 	}
+}
+
+// Debugv prints value in a k:v fromat.
+func Debugv(name string, value interface{}) {
+	Debugf("%s: %v", keyf(name), value)
+}
+
+// Debugvb prints value in a k:v fromat with the value on a new line.
+func Debugvb(name string, value interface{}) {
+	Debugf("%s: \n%v\n", keyf(name), value)
 }
 
 // Debugy prints the YAML represtation of an object at Debug level.
@@ -249,6 +279,16 @@ func Dumpf(format string, a ...interface{}) {
 	}
 }
 
+// Dumpv prints value in a k:v fromat.
+func Dumpv(name string, value interface{}) {
+	Debugf("%s: %v", keyf(name), value)
+}
+
+// Dumpvb prints value in a k:v fromat with the value on a new line.
+func Dumpvb(name string, value interface{}) {
+	Dumpf("%s: \n%v\n", keyf(name), value)
+}
+
 // Dumpy prints the YAML represtation of an object at Dump level.
 func Dumpy(name string, obj interface{}) {
 	yam, err := SPrintYAML(obj)
@@ -276,6 +316,16 @@ func Warningf(format string, a ...interface{}) {
 		s := fmt.Sprintf(label(format, l), a...)
 		fmt.Fprintf(w, s)
 	}
+}
+
+// Warningv prints value in a k:v fromat.
+func Warningv(name string, value interface{}) {
+	Warningf("%s: %v", keyf(name), value)
+}
+
+// Warningvb prints value in a k:v fromat with the value on a new line.
+func Warningvb(name string, value interface{}) {
+	Warningf("%s: \n%v\n", keyf(name), value)
 }
 
 // Warningy prints the YAML represtation of an object at Warning level.

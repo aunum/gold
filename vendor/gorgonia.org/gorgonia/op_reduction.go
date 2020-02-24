@@ -44,7 +44,6 @@ func reductionType(d int, along []int) hm.Type {
 }
 
 func reductionInferShape(along []int, in tensor.Shape) (tensor.Shape, error) {
-	fmt.Printf("inferring shape along: %v in: %v\n", along, in)
 	if len(along) == 0 {
 		return tensor.ScalarShape(), nil
 	}
@@ -55,10 +54,12 @@ func reductionInferShape(along []int, in tensor.Shape) (tensor.Shape, error) {
 		}
 		shape[d] = 1
 	}
-	fmt.Println("shape dim norm: ", shape)
 	// special cases: if all dimensions are 1 -> ScalarShape, if exactly one dimension is != 1 -> vector
 	vecD := 0
 	numNot1 := 0
+	if shape.Eq(tensor.Shape{1, 1}) {
+		return tensor.Shape{1}, nil
+	}
 	for _, d := range shape {
 		if d != 1 {
 			vecD = d
@@ -69,7 +70,6 @@ func reductionInferShape(along []int, in tensor.Shape) (tensor.Shape, error) {
 		}
 	}
 	if numNot1 == 0 {
-		fmt.Println("num not one")
 		return tensor.ScalarShape(), nil
 	}
 	return tensor.Shape{vecD}, nil

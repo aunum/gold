@@ -33,6 +33,7 @@ All of the agent implementations can be found in `pkg/v1/agents` each agent has 
 
 ## Ideas
 - Neural Logic - paper: https://arxiv.org/pdf/1904.10729.pdf
+- Neural Episodic Control - paper: https://arxiv.org/pdf/1703.01988.pdf
 - Imagination-Augmented Agents - paper: https://arxiv.org/pdf/1707.06203.pdf code: https://github.com/clvrai/i2a-tf release: https://deepmind.com/blog/article/agents-imagine-and-plan
 - World Models - paper: https://github.com/clvrai/i2a-tf code: https://github.com/hardmaru/WorldModelsExperiments
 - HER - paper: https://arxiv.org/abs/1707.01495 tutorial: 
@@ -50,10 +51,12 @@ All of the agent implementations can be found in `pkg/v1/agents` each agent has 
 - Minimal criterion coevolution - http://eplex.cs.ucf.edu/papers/brant_gecco17.pdf
 - Environment / Ciriculum generation- https://dl.acm.org/doi/abs/10.1145/3205455.3205517
     - Procedural content generation - https://arxiv.org/abs/1911.13071
-    - Progressive PGC - https://arxiv.org/abs/1806.10729
+    - Progressive PCG - https://arxiv.org/abs/1806.10729
+    - PCG via ML https://arxiv.org/abs/1702.00539
 - Neuromodulation - http://www.evolvingai.org/miconi-t-rawal-clune-stanley-2019-backpropamine-training-self
 - Coevolutionary Temporal Difference Learning - http://www.cs.put.poznan.pl/mszubert/pub/mscthesis.pdf
 - Automatic goal generation - https://arxiv.org/pdf/1705.06366.pdf
 - Graph neural networks - https://arxiv.org/abs/1810.09202
 - Dynamic HER - https://openreview.net/pdf?id=Byf5-30qFX
 - Energy based HER - https://arxiv.org/pdf/1810.01363.pdf
+- Wieght Agnostic Neural Networks - https://arxiv.org/abs/1906.04358
