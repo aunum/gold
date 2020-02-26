@@ -13,7 +13,7 @@ func ToF32(t *tensor.Dense) (*tensor.Dense, error) {
 	for i, err := iterator.Next(); err == nil; i, err = iterator.Next() {
 		v := t.Get(i)
 
-		// TODO: make more efficient.
+		// TODO: make more efficient, support all types
 		switch a := v.(type) {
 		case float32:
 			return t, nil
@@ -42,7 +42,6 @@ func SizeAsDType(x *tensor.Dense, along ...int) (size *tensor.Dense, err error) 
 		along = []int{0}
 	}
 	axis := along[0]
-	// generics plz
 	switch x.Dtype() {
 	case tensor.Float32:
 		size = tensor.New(tensor.WithBacking([]float32{float32(x.Shape()[axis])}))

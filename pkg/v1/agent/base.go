@@ -25,7 +25,8 @@ type Base struct {
 	Tracker *track.Tracker
 
 	// address to the agent.
-	address string
+	address   string
+	noTracker bool
 }
 
 // Opt is an option for the base agent.
@@ -45,13 +46,20 @@ func WithTracker(tracker *track.Tracker) func(*Base) {
 	}
 }
 
+// WithNoTracker prevents tracker from being created.
+func WithNoTracker() func(*Base) {
+	return func(b *Base) {
+		b.noTracker = true
+	}
+}
+
 // NewBase returns a new base agent. Any errors will be fatal.
 func NewBase(opts ...Opt) *Base {
 	b := &Base{}
 	for _, opt := range opts {
 		opt(b)
 	}
-	if b.Tracker == nil {
+	if b.Tracker == nil && !b.noTracker {
 		tracker, err := track.NewTracker()
 		if err != nil {
 			log.Fatal(err)

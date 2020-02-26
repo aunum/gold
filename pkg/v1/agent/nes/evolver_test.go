@@ -40,11 +40,11 @@ func (t *testBlackBox) Run(weights *tensor.Dense) (reward float32, err error) {
 
 // Init the weights for the test.
 func (t *testBlackBox) InitWeights() *tensor.Dense {
-	return dense.RandN(tensor.Float32, 3)
+	return dense.RandN(tensor.Float32, 3, 2)
 }
 
 func TestEvolver(t *testing.T) {
-	solution := tensor.New(tensor.WithBacking([]float32{0.1, 0.8, -0.5}))
+	solution := tensor.New(tensor.WithBacking([]float32{0.1, 0.8, -0.5, 4.0, 6.3, -2.5}), tensor.WithShape(3, 2))
 	blackBox := &testBlackBox{solution: solution}
 	config := &EvolverConfig{
 		EvolverHyperparameters: DefaultEvolverHyperparameters,

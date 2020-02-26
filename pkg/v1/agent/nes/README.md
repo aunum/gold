@@ -1,6 +1,13 @@
 # Natural Evolution Strategies
+An implementation of Natural Evolution Strategies for black box optimization.
 
+## How it works
 
+## Examples
+See the [experiments](./experiments) folder for example implementations.
+
+## Roadmap
+- [ ] 
 
 ## References
 - Paper - http://www.jmlr.org/papers/volume15/wierstra14a/wierstra14a.pdf

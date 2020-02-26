@@ -76,23 +76,27 @@ func (e *Evolver) Evolve() (weights *tensor.Dense, err error) {
 	weights = e.blackBox.InitWeights()
 
 	// Normalize static values to weight shape.
-	sigmaR, err := dense.Repeat(e.sigma, 0, weights.Shape()...)
-	if err != nil {
-		return nil, err
-	}
-	alphaR, err := dense.Repeat(e.alpha, 0, weights.Shape()...)
-	if err != nil {
-		return nil, err
-	}
-	npopR, err := dense.Repeat(e.npop, 0, weights.Shape()...)
-	if err != nil {
-		return nil, err
-	}
-	err = dense.OneOfMany(weights)
-	if err != nil {
-		return nil, err
-	}
+	// sigmaR, err := dense.Repeat(e.sigma, 0, weights.Shape()...)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	sigmaR := dense.Fill(e.Sigma, weights.Shape()...)
+	// alphaR, err := dense.Repeat(e.alpha, 0, weights.Shape()...)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	alphaR := dense.Fill(e.Alpha, weights.Shape()...)
+	// npopR, err := dense.Repeat(e.npop, 0, weights.Shape()...)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	npopR := dense.Fill(e.NPop, weights.Shape()...)
+	// err = dense.OneOfMany(weights)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
+	// evolve
 	for gen := 0; gen <= e.NGen; gen++ {
 		var noise *t.Dense
 		rewards := t.Ones(t.Float32, e.NPop, 1)
@@ -128,7 +132,9 @@ func (e *Evolver) Evolve() (weights *tensor.Dense, err error) {
 		if err != nil {
 			return nil, err
 		}
+
 		// perform update to wieghts.
+		// weights = weights + alpha/(npop*sigma) * dot(noise, rewards)
 		rn, err := noise.MatMul(rewards)
 		if err != nil {
 			return nil, err

@@ -49,7 +49,7 @@ type AgentConfig struct {
 var DefaultAgentConfig = &AgentConfig{
 	Hyperparameters: DefaultHyperparameters,
 	PolicyConfig:    DefaultPolicyConfig,
-	Base:            agentv1.NewBase(),
+	Base:            agentv1.NewBase(agentv1.WithNoTracker()),
 }
 
 // NewAgent returns a new dqn agent.
@@ -70,8 +70,8 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 	}, nil
 }
 
-// Action selects the best known action for the given state.
-func (a *Agent) Action(state *tensor.Dense) (action int, err error) {
-	return
+// Action selects the best known action for the given state and weights.
+func (a *Agent) Action(state, weights *tensor.Dense) (action int, err error) {
 
+	return
 }

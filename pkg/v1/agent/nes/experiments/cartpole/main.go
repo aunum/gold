@@ -1,30 +1,59 @@
 package main
 
 import (
-	"github.com/pbarker/go-rl/pkg/v1/agent/es"
-	"github.com/pbarker/go-rl/pkg/v1/common"
+	"github.com/pbarker/go-rl/pkg/v1/agent/deepq"
+	"github.com/pbarker/go-rl/pkg/v1/agent/nes"
 	"github.com/pbarker/go-rl/pkg/v1/common/require"
+	"github.com/pbarker/go-rl/pkg/v1/dense"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
 	"github.com/pbarker/go-rl/pkg/v1/track"
 	"github.com/pbarker/log"
+	"gorgonia.org/tensor"
 )
 
 func main() {
-	s, err := envv1.NewLocalServer(envv1.GymServerConfig)
+	server, err := envv1.NewLocalServer(envv1.GymServerConfig)
 	require.NoError(err)
-	defer s.Resource.Close()
+	defer server.Resource.Close()
 
-	env, err := s.Make("CartPole-v0", envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
-	require.NoError(err)
-
-	agent, err := es.NewAgent(es.DefaultAgentConfig, env)
+	env, err := server.Make("CartPole-v0", envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
 	require.NoError(err)
 
-	agent.View()
+	blackBox := NewSphereBlackBox()
+	config := &nes.EvolverConfig{
+		EvolverHyperparameters: nes.DefaultEvolverHyperparameters,
+		BlackBox:               blackBox,
+	}
+	evolver := nes.NewEvolver(config)
+	require.NoError(err)
 
-	numEpisodes := 200
-	agent.Epsilon = common.DefaultDecaySchedule(common.WithDecayRate(0.9995))
-	for _, episode := range agent.MakeEpisodes(numEpisodes) {
+}
+
+// SphereBlackBox is a sphere environment runner.
+type SphereBlackBox struct {
+	numEpisodes int
+	server      *envv1.Server
+	envName     string
+}
+
+// NewSphereBlackBox returns a new sphere black box.
+func NewSphereBlackBox() *SphereBlackBox {
+	return &SphereBlackBox{}
+}
+
+// Run env.
+func (s *SphereBlackBox) Run(weights *tensor.Dense) (reward float32, err error) {
+	env, err := s.server.Make(s.envName, envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
+	if err != nil {
+		return reward, err
+	}
+	defer env.Close()
+
+	agent, err := nes.NewAgent(nes.DefaultAgentConfig, env)
+	if err != nil {
+		return reward, err
+	}
+	for _, episode := range agent.MakeEpisodes(s.numEpisodes) {
 		init, err := env.Reset()
 		require.NoError(err)
 
@@ -44,7 +73,7 @@ func main() {
 			}
 			score.Inc(outcome.Reward)
 
-			event := es.NewEvent(state, action, outcome)
+			event := deepq.NewEvent(state, action, outcome)
 			agent.Remember(event)
 
 			err = agent.Learn()
@@ -59,6 +88,10 @@ func main() {
 			state = outcome.Observation
 		}
 	}
-	agent.Wait()
-	env.End()
+	return
+}
+
+// InitWeights for the test.
+func (s *SphereBlackBox) InitWeights() *tensor.Dense {
+	return dense.RandN(tensor.Float32, 3)
 }
