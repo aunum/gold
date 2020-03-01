@@ -66,7 +66,7 @@ func TestSequential(t *testing.T) {
 		WithOptimizer(optimizer),
 		WithLoss(MSE),
 		WithBatchSize(batchSize),
-		WithLogger(logger),
+		WithGraphLogger(logger),
 	)
 	require.NoError(t, err)
 	log.Break()

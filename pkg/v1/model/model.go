@@ -52,6 +52,7 @@ type Sequential struct {
 	// Tracker of values.
 	Tracker   *track.Tracker
 	noTracker bool
+	logger    *log.Logger
 
 	name string
 
@@ -136,8 +137,8 @@ func WithTracker(tracker *track.Tracker) func(Model) {
 	}
 }
 
-// WithNoTracker uses no tracking with the model.
-func WithNoTracker() func(Model) {
+// WithoutTracker uses no tracking with the model.
+func WithoutTracker() func(Model) {
 	return func(m Model) {
 		switch t := m.(type) {
 		case *Sequential:
@@ -161,13 +162,25 @@ func WithBatchSize(size int) func(Model) {
 	}
 }
 
-// WithLogger adds a logger to the model which will print out the graph operations
+// WithGraphLogger adds a logger to the model which will print out the graph operations
 // as they occur.
-func WithLogger(log *golog.Logger) func(Model) {
+func WithGraphLogger(log *golog.Logger) func(Model) {
 	return func(m Model) {
 		switch t := m.(type) {
 		case *Sequential:
 			t.vmOpts = append(t.vmOpts, g.WithLogger(log))
+		default:
+			log.Fatal("unknown model type")
+		}
+	}
+}
+
+// WithLogger adds a logger to the model.
+func WithLogger(logger *log.Logger) func(Model) {
+	return func(m Model) {
+		switch t := m.(type) {
+		case *Sequential:
+			t.logger = logger
 		default:
 			log.Fatal("unknown model type")
 		}
@@ -205,6 +218,9 @@ func (s *Sequential) Compile(x InputOr, y *Input, opts ...Opt) error {
 	for _, opt := range opts {
 		opt(s)
 	}
+	if s.logger == nil {
+		s.logger = log.DefaultLogger
+	}
 	if s.loss == nil {
 		s.loss = MSE
 	}
@@ -212,7 +228,7 @@ func (s *Sequential) Compile(x InputOr, y *Input, opts ...Opt) error {
 		s.optimizer = g.NewAdamSolver()
 	}
 	if s.Tracker == nil && !s.noTracker {
-		tracker, err := track.NewTracker()
+		tracker, err := track.NewTracker(track.WithLogger(s.logger))
 		if err != nil {
 			return err
 		}
@@ -220,7 +236,7 @@ func (s *Sequential) Compile(x InputOr, y *Input, opts ...Opt) error {
 	}
 	if s.fwd == nil {
 		s.fwd = x.Inputs()[0]
-		log.Infof("setting foward for layers to input %q", s.fwd.Name())
+		s.logger.Infof("setting foward for layers to input %q", s.fwd.Name())
 	}
 	err = s.buildTrainGraph(s.x, y)
 	if err != nil {
@@ -527,13 +543,13 @@ func (s *Sequential) CloneLearnablesTo(to *Sequential) error {
 		"onlineBatch": to.onlineBatchChain,
 	}
 	for name, chain := range shared {
-		log.Debugv("chain", name)
+		s.logger.Debugv("chain", name)
 		for i, learnable := range chain.Learnables() {
 			err := g.Let(learnable, new[i].Value())
 			if err != nil {
 				return err
 			}
-			log.Debugvb(learnable.Name(), learnable.Value())
+			s.logger.Debugvb(learnable.Name(), learnable.Value())
 		}
 	}
 	return nil

@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
-
-	"github.com/pbarker/log"
 )
 
 // ApplyHandlers applies tracker handlers to a mux.
@@ -19,7 +17,7 @@ func (t *Tracker) ApplyHandlers(mux *http.ServeMux) {
 func (t *Tracker) AggregatorsHandler(w http.ResponseWriter, req *http.Request) {
 	b, err := json.Marshal(AggregatorNames)
 	if err != nil {
-		log.Error(err)
+		t.logger.Error(err)
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
 		return
@@ -32,7 +30,7 @@ func (t *Tracker) AggregatorsHandler(w http.ResponseWriter, req *http.Request) {
 func (t *Tracker) AggregateValuesHandler(w http.ResponseWriter, req *http.Request) {
 	valueName := strings.TrimPrefix(req.URL.Path, "/api/values/")
 	if valueName == "" {
-		log.Error("value name blank")
+		t.logger.Error("value name blank")
 		w.WriteHeader(500)
 		w.Write([]byte(`request must include /values/:name, 
 		to find value names use the /values endpoint`))
@@ -40,7 +38,7 @@ func (t *Tracker) AggregateValuesHandler(w http.ResponseWriter, req *http.Reques
 	}
 	v, err := t.GetValue(valueName)
 	if err != nil {
-		log.Error(err)
+		t.logger.Error(err)
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
 		return
@@ -51,7 +49,7 @@ func (t *Tracker) AggregateValuesHandler(w http.ResponseWriter, req *http.Reques
 	if aggName != "" {
 		agg, err = AggregatorFromName(aggName)
 		if err != nil {
-			log.Error(err)
+			t.logger.Error(err)
 			w.WriteHeader(500)
 			w.Write([]byte(err.Error()))
 			return
@@ -59,7 +57,7 @@ func (t *Tracker) AggregateValuesHandler(w http.ResponseWriter, req *http.Reques
 	}
 	h, err := t.GetHistory(valueName)
 	if err != nil {
-		log.Error(err)
+		t.logger.Error(err)
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
 		return
@@ -68,7 +66,7 @@ func (t *Tracker) AggregateValuesHandler(w http.ResponseWriter, req *http.Reques
 	chartJS := aggs.Chartjs()
 	b, err := json.Marshal(chartJS)
 	if err != nil {
-		log.Error(err)
+		t.logger.Error(err)
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
 		return
@@ -82,7 +80,7 @@ func (t *Tracker) ValuesHandler(w http.ResponseWriter, req *http.Request) {
 	valueNames := t.ValueNames()
 	b, err := json.Marshal(valueNames)
 	if err != nil {
-		log.Error(err)
+		t.logger.Error(err)
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))
 		return

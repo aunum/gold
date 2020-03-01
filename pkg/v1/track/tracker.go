@@ -23,6 +23,8 @@ type Tracker struct {
 	f        *os.File
 	scanner  *bufio.Scanner
 	filePath string
+
+	logger *log.Logger
 }
 
 // TrackerOpt is a tracker option.
@@ -30,20 +32,26 @@ type TrackerOpt func(*Tracker)
 
 // NewTracker returns a new tracker for a graph.
 func NewTracker(opts ...TrackerOpt) (*Tracker, error) {
-	f, err := ioutil.TempFile("", "stats.*.json")
-	if err != nil {
-		return nil, err
-	}
-	log.Infof("tracking data in %s", f.Name())
-	encoder := json.NewEncoder(f)
-	scanner := bufio.NewScanner(f)
 	t := &Tracker{
-		values:   map[string]TrackedValue{},
-		encoder:  encoder,
-		f:        f,
-		scanner:  scanner,
-		filePath: f.Name(),
+		values: map[string]TrackedValue{},
 	}
+	for _, opt := range opts {
+		opt(t)
+	}
+	if t.f == nil {
+		f, err := ioutil.TempFile("", "stats.*.json")
+		if err != nil {
+			return nil, err
+		}
+		t.encoder = json.NewEncoder(f)
+		t.scanner = bufio.NewScanner(f)
+		t.filePath = f.Name()
+		t.f = f
+	}
+	if t.logger == nil {
+		t.logger = log.DefaultLogger
+	}
+	t.logger.Infof("tracking data in %s", t.f.Name())
 	return t, nil
 }
 
@@ -52,11 +60,19 @@ func WithDir(dir string) func(*Tracker) {
 	return func(t *Tracker) {
 		f, err := ioutil.TempFile(dir, "stats")
 		if err != nil {
-			log.Fatal(err)
+			t.logger.Fatal(err)
 		}
-		encoder := json.NewEncoder(f)
-		t.encoder = encoder
+		t.scanner = bufio.NewScanner(f)
+		t.encoder = json.NewEncoder(f)
 		t.filePath = f.Name()
+		t.f = f
+	}
+}
+
+// WithLogger adds a logger to the tracker.
+func WithLogger(logger *log.Logger) func(*Tracker) {
+	return func(t *Tracker) {
+		t.logger = logger
 	}
 }
 
@@ -93,7 +109,7 @@ func (h *History) Get(name string) HistoricalValues {
 func (t *Tracker) Data() *History {
 	vals := []*HistoricalValue{}
 	for _, v := range t.values {
-		vals = append(vals, v.Data(t.timestep, t.episode))
+		vals = append(vals, v.Data(t.episode, t.timestep))
 	}
 	return &History{
 		Values:   vals,
@@ -108,12 +124,12 @@ func (t *Tracker) TrackValue(name string, value interface{}, opts ...TrackedValu
 		tv := NewTrackedNodeValue(name, opts...)
 		t.values[tv.name] = tv
 		g.Read(n, &tv.value)
-		log.Infof("tracking node value %q", tv.name)
+		t.logger.Infof("tracking node value %q", tv.name)
 		return tv
 	}
 	tv := NewTrackedScalarValue(name, value, opts...)
 	t.values[tv.name] = tv
-	log.Infof("tracking scalar value %q", tv.name)
+	t.logger.Infof("tracking scalar value %q", tv.name)
 	return tv
 }
 
@@ -181,7 +197,7 @@ func (t *Tracker) Clear() error {
 func (t *Tracker) checkName(name string) {
 	for _, val := range t.values {
 		if val.Name() == name {
-			log.Fatal("cannot track duplicate name: ", name)
+			t.logger.Fatal("cannot track duplicate name: ", name)
 		}
 	}
 }
@@ -246,7 +262,7 @@ func (t *Tracker) GetHistoryAll() ([]HistoricalValues, error) {
 func (t *Tracker) PrintValue(name string) {
 	v, err := t.GetValue(name)
 	if err != nil {
-		log.Error(err)
+		t.logger.Error(err)
 	}
 	v.Print()
 }

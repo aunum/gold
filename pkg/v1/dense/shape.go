@@ -19,6 +19,22 @@ func ExpandDims(t *tensor.Dense, axis int) error {
 	return err
 }
 
+// Squeeze the tensor removing any dimensions of size 1.
+func Squeeze(t *tensor.Dense) error {
+	return t.Reshape(SqueezeShape(t.Shape())...)
+}
+
+// SqueezeShape removes any dimensions of size 1.
+func SqueezeShape(shape tensor.Shape) tensor.Shape {
+	newShape := []int{}
+	for _, size := range shape {
+		if size != 1 {
+			newShape = append(newShape, size)
+		}
+	}
+	return newShape
+}
+
 // OneOfMany ensures the given tensor starts with a shape of 1.
 func OneOfMany(t *tensor.Dense) error {
 	if t.Shape()[0] != 1 {

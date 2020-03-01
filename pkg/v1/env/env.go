@@ -30,6 +30,8 @@ type Server struct {
 
 	// Client to connect to the Sphere server.
 	Client spherev1alpha.EnvironmentAPIClient
+
+	logger *log.Logger
 }
 
 // ServerConfig is the environment server config.
@@ -42,6 +44,9 @@ type ServerConfig struct {
 
 	// Port the environment is exposed on.
 	Port string
+
+	// Logger for the server.
+	Logger *log.Logger
 }
 
 // GymServerConfig is a configuration for a OpenAI Gym server environment.
@@ -49,7 +54,10 @@ var GymServerConfig = &ServerConfig{Image: "sphereproject/gym", Version: "latest
 
 // NewLocalServer creates a new environment server by launching a docker container and connecting to it.
 func NewLocalServer(config *ServerConfig) (*Server, error) {
-	log.Info("creating local server")
+	if config.Logger == nil {
+		config.Logger = log.DefaultLogger
+	}
+	config.Logger.Info("creating local server")
 	pool, err := dockertest.NewPool("")
 	if err != nil {
 		return nil, fmt.Errorf("Could not connect to docker: %s", err)
@@ -73,7 +81,7 @@ func NewLocalServer(config *ServerConfig) (*Server, error) {
 		}
 		sphereClient = spherev1alpha.NewEnvironmentAPIClient(conn)
 		resp, err := sphereClient.Info(context.Background(), &spherev1alpha.Empty{})
-		log.Successf("connected to server %q", resp.ServerName)
+		config.Logger.Successf("connected to server %q", resp.ServerName)
 		return err
 	}); err != nil {
 		return nil, fmt.Errorf("Could not connect to docker: %s", err)
@@ -83,7 +91,7 @@ func NewLocalServer(config *ServerConfig) (*Server, error) {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		sig := <-sigs
-		log.Warningf("closing env on sig %s", sig.String())
+		config.Logger.Warningf("closing env on sig %s", sig.String())
 		resource.Close()
 		os.Exit(1)
 	}()
@@ -91,6 +99,7 @@ func NewLocalServer(config *ServerConfig) (*Server, error) {
 	return &Server{
 		Resource: resource,
 		Client:   sphereClient,
+		logger:   config.Logger,
 	}, nil
 }
 
@@ -106,6 +115,8 @@ type Env struct {
 
 	// Normalizer normalizes observation data.
 	Normalizer Normalizer
+
+	logger *log.Logger
 }
 
 // Opt is an environment option.
@@ -119,11 +130,12 @@ func (s *Server) Make(model string, opts ...Opt) (*Env, error) {
 		return nil, err
 	}
 	env := resp.Environment
-	log.Successf("created env: %s", env.Id)
+	s.logger.Successf("created env: %s", env.Id)
 
 	e := &Env{
 		Environment: env,
 		Client:      s.Client,
+		logger:      s.logger,
 	}
 	for _, opt := range opts {
 		opt(e)
@@ -137,7 +149,7 @@ func WithRecorder() func(*Env) {
 		ctx := context.Background()
 		resp, err := e.Client.StartRecordEnv(ctx, &spherev1alpha.StartRecordEnvRequest{Id: e.Environment.Id})
 		require.NoError(err)
-		log.Success(resp.Message)
+		e.logger.Success(resp.Message)
 	}
 }
 
@@ -146,6 +158,13 @@ func WithNormalizer(normalizer Normalizer) func(*Env) {
 	return func(e *Env) {
 		normalizer.Init(e)
 		e.Normalizer = normalizer
+	}
+}
+
+// WithLogger adds a logger to the env.
+func WithLogger(logger *log.Logger) func(*Env) {
+	return func(e *Env) {
+		e.logger = logger
 	}
 }
 
@@ -232,7 +251,7 @@ func (e *Env) Close() error {
 	if err != nil {
 		return err
 	}
-	log.Success(resp.Message)
+	e.logger.Success(resp.Message)
 	return nil
 }
 
@@ -274,8 +293,8 @@ func (e *Env) PrintResults() error {
 	if err != nil {
 		return err
 	}
-	log.Infoy("results", results)
-	log.Infov("avg reward", results.AverageReward)
+	e.logger.Infoy("results", results)
+	e.logger.Infov("avg reward", results.AverageReward)
 	return nil
 }
 
@@ -331,30 +350,30 @@ func (e *Env) Videos(path string) ([]string, error) {
 func (e *Env) End() {
 	err := e.PrintResults()
 	if err != nil {
-		log.Fatal(err)
+		e.logger.Fatal(err)
 	}
 	dir, err := ioutil.TempDir("", "sphere")
 	if err != nil {
-		log.Fatal(err)
+		e.logger.Fatal(err)
 	}
 	videoPaths, err := e.Videos(dir)
 	if err != nil {
-		log.Fatal(err)
+		e.logger.Fatal(err)
 	}
-	log.Successy("saved videos", videoPaths)
+	e.logger.Successy("saved videos", videoPaths)
 	err = e.Close()
 	if err != nil {
-		log.Fatal(err)
+		e.logger.Fatal(err)
 	}
 }
 
 // PlayAll videos stored locally.
 func (e *Env) PlayAll() {
 	for _, video := range e.VideoPaths {
-		log.Debugf("playing video: %s", video)
+		e.logger.Debugf("playing video: %s", video)
 		err := open.Run(video)
 		if err != nil {
-			log.Fatal(err)
+			e.logger.Fatal(err)
 		}
 	}
 	fmt.Print("\npress any key to remove videos or ctrl+c to exit and keep\n")
@@ -368,11 +387,11 @@ func (e *Env) Clean() {
 	for _, videoPath := range e.VideoPaths {
 		err := os.Remove(videoPath)
 		if err != nil {
-			log.Fatal(err)
+			e.logger.Fatal(err)
 		}
-		log.Debugf("removed video: %s", videoPath)
+		e.logger.Debugf("removed video: %s", videoPath)
 	}
-	log.Success("removed all local videos")
+	e.logger.Success("removed all local videos")
 }
 
 // MaxSteps that can be taken per episode.
@@ -471,5 +490,5 @@ func (e *Env) BoxSpace() (*BoxSpace, error) {
 
 // Print a YAML representation of the environment.
 func (e *Env) Print() {
-	log.Infoy("environment", e.Environment)
+	e.logger.Infoy("environment", e.Environment)
 }

@@ -8,9 +8,11 @@ import (
 	"os"
 	"strconv"
 	"text/template"
+	"time"
 
 	"github.com/phayes/freeport"
 
+	"github.com/pbarker/go-rl/pkg/v1/common"
 	"github.com/pbarker/go-rl/pkg/v1/track"
 	"github.com/pbarker/log"
 	"github.com/skratchdot/open-golang/open"
@@ -24,9 +26,13 @@ type Base struct {
 	// Tracker for the agent.
 	Tracker *track.Tracker
 
+	// Logger for the agent.
+	Logger *log.Logger
+
 	// address to the agent.
 	address   string
 	noTracker bool
+	noServer  bool
 }
 
 // Opt is an option for the base agent.
@@ -46,10 +52,24 @@ func WithTracker(tracker *track.Tracker) func(*Base) {
 	}
 }
 
-// WithNoTracker prevents tracker from being created.
-func WithNoTracker() func(*Base) {
+// WithoutTracker prevents tracker from being created.
+func WithoutTracker() func(*Base) {
 	return func(b *Base) {
 		b.noTracker = true
+	}
+}
+
+// WithLogger adds a logger to the base.
+func WithLogger(logger *log.Logger) func(*Base) {
+	return func(b *Base) {
+		b.Logger = logger
+	}
+}
+
+// WithoutServer will prevent the provisioning of a server for the agent.
+func WithoutServer() func(*Base) {
+	return func(b *Base) {
+		b.noServer = true
 	}
 }
 
@@ -59,37 +79,56 @@ func NewBase(opts ...Opt) *Base {
 	for _, opt := range opts {
 		opt(b)
 	}
+	if b.Logger == nil {
+		b.Logger = log.DefaultLogger
+	}
 	if b.Tracker == nil && !b.noTracker {
-		tracker, err := track.NewTracker()
+		tracker, err := track.NewTracker(track.WithLogger(b.Logger))
 		if err != nil {
 			log.Fatal(err)
 		}
 		b.Tracker = tracker
 	}
-	if b.Port == "" {
-		port, err := freeport.GetFreePort()
-		if err != nil {
-			log.Fatal(err)
+	if !b.noServer {
+		if b.Port == "" {
+			var port int
+
+			// Note: this can panic https://github.com/phayes/freeport/issues/5
+			err := common.Retry(10, time.Millisecond*1, func() (err error) {
+				defer func() {
+					if r := recover(); r != nil {
+						err = fmt.Errorf("caught freeport panic: %v", err)
+					}
+				}()
+				port, err = freeport.GetFreePort()
+				return err
+			})
+			if err != nil {
+				log.Fatal(err)
+			}
+			b.Port = strconv.Itoa(port)
 		}
-		b.Port = strconv.Itoa(port)
 	}
 	return b
 }
 
 // MakeEpisodes creates a set of episodes for training and stores the number for configuration.
 func (b *Base) MakeEpisodes(num int) track.Episodes {
-	log.Infof("running for %d episodes", num)
+	b.Logger.Infof("running for %d episodes", num)
 	eps := b.Tracker.MakeEpisodes(num)
 	return eps
 }
 
 // Serve the agent api/ui.
 func (b *Base) Serve() {
+	if b.noServer {
+		b.Logger.Fatal("trying to serve an agent that was created with WithoutServer option")
+	}
 	mux := http.NewServeMux()
 	b.Tracker.ApplyHandlers(mux)
 	b.ApplyHandlers(mux)
 	b.address = fmt.Sprintf("http://localhost:%s", b.Port)
-	log.Infof("serving agent api/ui on %s", b.address)
+	b.Logger.Infof("serving agent api/ui on %s", b.address)
 	go http.ListenAndServe(fmt.Sprintf(":%s", b.Port), mux)
 }
 
@@ -98,7 +137,7 @@ func (b *Base) View() {
 	b.Serve()
 	err := open.Run(b.address)
 	if err != nil {
-		log.Fatal(err)
+		b.Logger.Fatal(err)
 	}
 }
 
@@ -132,7 +171,7 @@ func (b *Base) execTmpl() ([]byte, error) {
 		return nil, err
 	}
 	valueNames := b.Tracker.ValueNames()
-	log.Info("value names: ", valueNames)
+	b.Logger.Debugv("value names", valueNames)
 	templHelper := struct {
 		ValueNames []string
 		Port       string

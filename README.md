@@ -61,3 +61,5 @@ All of the agent implementations can be found in `pkg/v1/agents` each agent has 
 - Energy Based HER - https://arxiv.org/pdf/1810.01363.pdf
 - Wieght Agnostic Neural Networks - https://arxiv.org/abs/1906.04358
 - Improving Evolution Strategies with Generative Neural Networks - https://arxiv.org/pdf/1901.11271.pdf
+- ANML neuromodulation - https://arxiv.org/abs/2002.09571
+- CMA-ES - https://en.wikipedia.org/wiki/CMA-ES

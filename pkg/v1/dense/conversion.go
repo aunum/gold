@@ -15,8 +15,6 @@ func ToF32(t *tensor.Dense) (*tensor.Dense, error) {
 
 		// TODO: make more efficient, support all types
 		switch a := v.(type) {
-		case float32:
-			return t, nil
 		case int:
 			f := float32(a)
 			new.Set(i, f)
@@ -26,6 +24,8 @@ func ToF32(t *tensor.Dense) (*tensor.Dense, error) {
 		case int64:
 			f := float32(a)
 			new.Set(i, f)
+		case float32:
+			return t, nil
 		case float64:
 			f := float32(a)
 			new.Set(i, f)

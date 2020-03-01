@@ -8,6 +8,8 @@ import (
 
 // MinMaxNorm normalizes the input x using pointwise min-max normalization along the axis.
 // This is a pointwise operation and requires the shape of the min/max tensors be equal to x.
+//
+// y=(x-min)/(max-min)
 func MinMaxNorm(x, min, max *t.Dense) (*t.Dense, error) {
 	if !min.Shape().Eq(x.Shape()) {
 		return nil, fmt.Errorf("min shape %v must match x shape %v", min.Shape(), x.Shape())
@@ -16,7 +18,6 @@ func MinMaxNorm(x, min, max *t.Dense) (*t.Dense, error) {
 		return nil, fmt.Errorf("max shape %v must match x shape %v", max.Shape(), x.Shape())
 	}
 
-	// y=(x-min)/(max-min)
 	ret, err := x.Sub(min)
 	if err != nil {
 		return nil, err
@@ -33,7 +34,8 @@ func MinMaxNorm(x, min, max *t.Dense) (*t.Dense, error) {
 }
 
 // ZNorm normalizes x using z-score normalization along the axis.
-// y=x-mean/stddev
+//
+// y=x-μ/σ
 func ZNorm(x *t.Dense, along ...int) (*t.Dense, error) {
 	if len(along) == 0 {
 		along = []int{0}
@@ -67,6 +69,8 @@ func ZNorm(x *t.Dense, along ...int) (*t.Dense, error) {
 }
 
 // Mean of the tensor along the axis.
+//
+// y=Σx/n
 func Mean(x *t.Dense, along ...int) (*t.Dense, error) {
 	if len(along) == 0 {
 		along = []int{0}
@@ -92,7 +96,8 @@ func Mean(x *t.Dense, along ...int) (*t.Dense, error) {
 }
 
 // StdDev is the standard deviation of the tensor along the axis.
-// y=sqrt(sum((x-mu)^2)/n)
+//
+// y=√(Σ((x-μ)^2)/n)
 func StdDev(x *t.Dense, along ...int) (*t.Dense, error) {
 	if len(along) == 0 {
 		along = []int{0}

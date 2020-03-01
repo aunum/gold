@@ -48,10 +48,11 @@ func BroadcastMul(a, b *tensor.Dense) (retVal *tensor.Dense, err error) {
 	if err != nil {
 		return
 	}
-	return a.Add(b)
+	return a.Mul(b)
 }
 
-// BroadcastDiv divides 'a' to 'b' element-wise using broadcasting rules.
+// BroadcastDiv safely divides 'a' to 'b' element-wise using broadcasting rules.
+// Any zero values in 'b' will be slightly augmented.
 //
 // Shapes are compared element-wise starting with trailing dimensions and working its
 // way forward.
@@ -63,10 +64,10 @@ func BroadcastDiv(a, b *tensor.Dense) (retVal *tensor.Dense, err error) {
 	if err != nil {
 		return
 	}
-	return a.Div(b)
+	return Div(a, b)
 }
 
-// matchShape matches the shape using broadcast rules.
+// matches the shape using broadcast rules.
 func matchShape(a, b *tensor.Dense) error {
 	err := normalizeShape(a, b)
 	if err != nil {
@@ -97,7 +98,7 @@ func matchShape(a, b *tensor.Dense) error {
 	return nil
 }
 
-// normalizeShape normalizes the shape to be of equal dimensions.
+// normalizes the shapes to be of equal dimensions.
 func normalizeShape(a, b *tensor.Dense) (err error) {
 	if a.Dims() == b.Dims() {
 		return
@@ -110,7 +111,7 @@ func normalizeShape(a, b *tensor.Dense) (err error) {
 	return
 }
 
-// expand 'a' dims to 'b' dims.
+// expand dims of 'a' to 'b'.
 func expandDimsTo(a, b *tensor.Dense) error {
 	diff := b.Dims() - a.Dims()
 	shape := []int{}

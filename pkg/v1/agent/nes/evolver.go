@@ -1,6 +1,12 @@
 package nes
 
 import (
+	"sync"
+
+	"github.com/pbarker/go-rl/pkg/v1/track"
+
+	"github.com/pbarker/go-rl/pkg/v1/agent"
+	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
 	"github.com/pbarker/go-rl/pkg/v1/dense"
 	"gorgonia.org/tensor"
 	t "gorgonia.org/tensor"
@@ -31,76 +37,64 @@ var DefaultEvolverHyperparameters = &EvolverHyperparameters{
 
 // EvolverConfig is the config for the evolver.
 type EvolverConfig struct {
+	// Hyperparameters for the evolver.
 	*EvolverHyperparameters
 
 	// BlackBox function to be optimized.
 	BlackBox BlackBox
+
+	// Base agent.
+	Base *agent.Base
 }
 
 // Evolver of agents.
 type Evolver struct {
 	*EvolverHyperparameters
+	*agent.Base
 
-	blackBox BlackBox
-	sigma    *t.Dense
-	npop     *t.Dense
-	alpha    *t.Dense
-}
-
-// BlackBox function we wish to optimize.
-type BlackBox interface {
-	// Run the black box.
-	Run(wieghts *t.Dense) (reward float32, err error)
-
-	// Initialize the weights.
-	InitWeights() *t.Dense
+	blackBox  BlackBox
+	rewardVal *track.TrackedScalarValue
 }
 
 // NewEvolver returns a new evolver.
 func NewEvolver(c *EvolverConfig) *Evolver {
-	sigma := t.New(t.FromScalar(c.Sigma))
-	nPop := t.New(t.FromScalar(float32(c.NPop)))
-	alpha := t.New(t.FromScalar(c.Alpha))
+	if c.Base == nil {
+		c.Base = agentv1.NewBase()
+	}
+	rewardVal := c.Base.Tracker.TrackValue("reward", 0)
 	return &Evolver{
+		Base:                   c.Base,
 		EvolverHyperparameters: c.EvolverHyperparameters,
 		blackBox:               c.BlackBox,
-		sigma:                  sigma,
-		npop:                   nPop,
-		alpha:                  alpha,
+		rewardVal:              rewardVal.(*track.TrackedScalarValue),
 	}
 }
 
 // Evolve the agents.
 func (e *Evolver) Evolve() (weights *tensor.Dense, err error) {
-	// initialize random weights
+	// initialize random weights.
 	weights = e.blackBox.InitWeights()
 
+	// ensure weights are shaped to be one of many.
+	err = dense.OneOfMany(weights)
+	if err != nil {
+		return nil, err
+	}
+
 	// Normalize static values to weight shape.
-	// sigmaR, err := dense.Repeat(e.sigma, 0, weights.Shape()...)
-	// if err != nil {
-	// 	return nil, err
-	// }
 	sigmaR := dense.Fill(e.Sigma, weights.Shape()...)
-	// alphaR, err := dense.Repeat(e.alpha, 0, weights.Shape()...)
-	// if err != nil {
-	// 	return nil, err
-	// }
 	alphaR := dense.Fill(e.Alpha, weights.Shape()...)
-	// npopR, err := dense.Repeat(e.npop, 0, weights.Shape()...)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	npopR := dense.Fill(e.NPop, weights.Shape()...)
-	// err = dense.OneOfMany(weights)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	npopR := dense.Fill(float32(e.NPop), weights.Shape()...)
 
 	// evolve
+	e.Logger.Infof("running for %v generations", e.NGen)
 	for gen := 0; gen <= e.NGen; gen++ {
+		e.Logger.Infof("running generation %v with %v populations", gen, e.NPop)
 		var noise *t.Dense
 		rewards := t.Ones(t.Float32, e.NPop, 1)
 
+		results := make(chan BlackBoxResult)
+		var wg sync.WaitGroup
 		for pop := 0; pop < e.NPop; pop++ {
 			// mutate
 			noisePop := dense.RandN(t.Float32, weights.Shape()...)
@@ -117,25 +111,56 @@ func (e *Evolver) Evolve() (weights *tensor.Dense, err error) {
 				return nil, err
 			}
 			// test
-			reward, err := e.blackBox.Run(mutated)
-			if err != nil {
-				return nil, err
-			}
-			rewards.Set(pop, float32(reward))
+			wg.Add(1)
+			go e.blackBox.RunAsync(pop, mutated, results, &wg)
+
 		}
+		// collect results
+		var solved bool
+		go func() {
+			for result := range results {
+				if result.Err != nil {
+					e.Logger.Fatal(result.Err)
+				}
+				rewards.Set(result.PopulationID, float32(result.Reward))
+				if result.Solved {
+					weights = result.Weights
+					solved = true
+				}
+			}
+		}()
+		wg.Wait()
+		close(results)
+		if solved {
+			e.Logger.Successf("solved!")
+			return
+		}
+
+		avgReward, err := dense.Mean(rewards)
+		if err != nil {
+			return nil, err
+		}
+		e.Logger.Infof("average reward for generation %v was %v", gen, avgReward)
+		e.rewardVal.Set(avgReward.Data().(float32))
+		e.Tracker.LogStep(gen, 0)
+
 		// standardize rewards
 		rewards, err = dense.ZNorm(rewards, 0)
 		if err != nil {
 			return nil, err
 		}
-		err := noise.T()
+		err = noise.T()
 		if err != nil {
 			return nil, err
 		}
 
 		// perform update to wieghts.
 		// weights = weights + alpha/(npop*sigma) * dot(noise, rewards)
-		rn, err := noise.MatMul(rewards)
+		rn, err := noise.TensorMul(rewards, []int{noise.Dims() - 1}, []int{0})
+		if err != nil {
+			return nil, err
+		}
+		err = rn.T()
 		if err != nil {
 			return nil, err
 		}

@@ -122,6 +122,7 @@ func (f *FC) Fwd(x *g.Node) (*g.Node, error) {
 		x, err = g.Reshape(x, s)
 		log.Debugf("normalizing dimensions of x to %v", s)
 	}
+	// Note: parts of this are borrowed from golgi.
 	if xw, err = g.Mul(x, f.weights); err != nil {
 		return nil, err
 	}

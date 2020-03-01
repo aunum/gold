@@ -73,7 +73,7 @@ func MakePolicy(name string, config *PolicyConfig, base *agentv1.Base, env *envv
 	if config.Track {
 		opts.Add(modelv1.WithTracker(base.Tracker))
 	} else {
-		opts.Add(modelv1.WithNoTracker())
+		opts.Add(modelv1.WithoutTracker())
 	}
 
 	err = model.Compile(x, y, opts.Values()...)

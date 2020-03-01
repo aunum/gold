@@ -67,17 +67,20 @@ func ZeroValue(dt t.Dtype) interface{} {
 	}
 }
 
+// FauxZero is the faux zero value used to prevent divde by zero errors.
+const FauxZero = float64(1e-6)
+
 // FauxZeroValue is a faux zero value for the given datatype.
 func FauxZeroValue(dt t.Dtype) interface{} {
 	switch dt.Kind() {
 	case reflect.Float32:
-		return float32(1e-6)
+		return float32(FauxZero)
 	case reflect.Float64:
-		return float64(1e-6)
+		return float64(FauxZero)
 	case reflect.Complex64:
-		return complex64(1e-6)
+		return complex64(FauxZero)
 	case reflect.Complex128:
-		return complex128(1e-6)
+		return complex128(FauxZero)
 	default:
 		panic(fmt.Sprintf("type not supported: %#v", dt))
 	}

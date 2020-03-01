@@ -28,12 +28,23 @@ func ZNorm(x, mean, stdDev float32) float32 {
 
 // Mean of the values.
 func Mean(vals []float32) float32 {
-	l := float32(len(vals))
+	n := float32(len(vals))
 	var sum float32
 	for _, val := range vals {
 		sum += val
 	}
-	return sum / l
+	return sum / n
+}
+
+// Variance is the average distance from the mean.
+func Variance(vals []float32) float32 {
+	mu := Mean(vals)
+	var distance float32
+	for _, val := range vals {
+		diff := val - mu
+		distance += math32.Pow(diff, 2)
+	}
+	return distance / float32((len(vals) - 1))
 }
 
 // StdDev returns the standard deviation of x.
