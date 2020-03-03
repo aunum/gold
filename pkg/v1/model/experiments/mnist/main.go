@@ -1,21 +1,25 @@
 package main
 
 import (
-	"github.com/pbarker/go-rl/pkg/v1/common/num"
-
 	"github.com/pbarker/go-rl/pkg/v1/dense"
 
 	"github.com/pbarker/go-rl/pkg/v1/common/require"
 
+	"github.com/pbarker/go-rl/pkg/v1/common/num"
 	. "github.com/pbarker/go-rl/pkg/v1/model"
 	l "github.com/pbarker/go-rl/pkg/v1/model/layers"
 	"github.com/pbarker/log"
 	g "gorgonia.org/gorgonia"
 	"gorgonia.org/gorgonia/examples/mnist"
+	"gorgonia.org/tensor"
 )
 
 func main() {
 	x, y, err := mnist.Load("train", "./testdata", g.Float32)
+	require.NoError(err)
+
+	// load our test set
+	testX, testY, err := mnist.Load("test", "./testdata", g.Float32)
 	require.NoError(err)
 
 	log.Infov("x batch shape", x.Shape())
@@ -56,10 +60,11 @@ func main() {
 	)
 	require.NoError(err)
 
-	epochs := 50
+	epochs := 20
 
 	log.Infov("epochs", epochs)
 	for epoch := 0; epoch < epochs; epoch++ {
+
 		for batch := 0; batch < batches; batch++ {
 			start := batch * batchSize
 			end := start + batchSize
@@ -79,48 +84,65 @@ func main() {
 			require.NoError(err)
 			model.Tracker.LogStep(epoch, batch)
 		}
-		loss, err := model.Tracker.GetValue("mnist_train_batch_loss")
+		accuracy, loss, err := evaluate(testX.(*tensor.Dense), testY.(*tensor.Dense), model)
 		require.NoError(err)
-		log.Infof("completed train epoch %v with loss %v", epoch, loss.Scalar())
-
+		log.Infof("completed train epoch %v with accuracy %v and loss %v", epoch, accuracy, loss)
 	}
 	err = model.Tracker.Clear()
 	require.NoError(err)
+}
 
-	// load our test set
-	log.Break()
-	log.Info("loading test set")
-	x, y, err = mnist.Load("train", "./testdata", g.Float32)
+func evaluate(x, y *tensor.Dense, model *Sequential) (acc, loss float32, err error) {
+	batchSize := 100
+	exampleSize := x.Shape()[0]
+	batches := exampleSize / batchSize
+
+	accuracies := []float32{}
+	for batch := 0; batch < batches; batch++ {
+		start := batch * batchSize
+		end := start + batchSize
+		if start >= exampleSize {
+			break
+		}
+		if end > exampleSize {
+			end = exampleSize
+		}
+
+		xi, err := x.Slice(dense.MakeRangedSlice(start, end))
+		require.NoError(err)
+		yi, err := y.Slice(dense.MakeRangedSlice(start, end))
+		require.NoError(err)
+
+		yHat, err := model.PredictBatch(xi)
+		require.NoError(err)
+
+		acc, err := accuracy(yHat.(*tensor.Dense), yi.(*tensor.Dense), model)
+		require.NoError(err)
+		accuracies = append(accuracies, acc)
+	}
+	lossVal, err := model.Tracker.GetValue("mnist_train_batch_loss")
+	require.NoError(err)
+	loss = float32(lossVal.Scalar())
+	acc = num.Mean(accuracies)
+	return
+}
+
+func accuracy(yHat, y *tensor.Dense, model Model) (float32, error) {
+	yMax, err := y.Argmax(1)
 	require.NoError(err)
 
-	exampleSize = x.Shape()[0]
-	losses := []float32{}
-	for epoch := 0; epoch < epochs; epoch++ {
-		for batch := 0; batch < batches; batch++ {
-			start := batch * batchSize
-			end := start + batchSize
-			if start >= exampleSize {
-				break
-			}
-			if end > exampleSize {
-				end = exampleSize
-			}
+	yHatMax, err := yHat.Argmax(1)
+	require.NoError(err)
 
-			xi, err := x.Slice(dense.MakeRangedSlice(start, end))
-			require.NoError(err)
-			yi, err := y.Slice(dense.MakeRangedSlice(start, end))
-			require.NoError(err)
+	eq, err := tensor.ElEq(yMax, yHatMax, tensor.AsSameType())
+	require.NoError(err)
+	eqd := eq.(*tensor.Dense)
+	len := eqd.Len()
 
-			err = model.FitBatch(xi, yi)
-			require.NoError(err)
-
-			loss, err := model.Tracker.GetValue("mnist_train_batch_loss")
-			require.NoError(err)
-			losses = append(losses, float32(loss.Scalar()))
-		}
-		loss, err := model.Tracker.GetValue("mnist_train_batch_loss")
-		require.NoError(err)
-		log.Infof("completed eval epoch %v with loss of %v", epoch, loss.Scalar())
+	numTrue, err := eqd.Sum()
+	if err != nil {
+		return 0, err
 	}
-	log.Infov("mean eval loss", num.Mean(losses))
+
+	return float32(numTrue.Data().(int)) / float32(len), nil
 }

@@ -7,6 +7,7 @@ import (
 )
 
 // AMax returns the maximum value in a tensor along an axis.
+// TODO: support returning slice.
 func AMax(d *tensor.Dense, axis int) (interface{}, error) {
 	maxIndex, err := d.Argmax(axis)
 	if err != nil {

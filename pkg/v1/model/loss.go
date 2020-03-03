@@ -60,15 +60,19 @@ type CrossEntropyLoss struct{}
 
 // Compute the loss.
 func (c *CrossEntropyLoss) Compute(yHat, y *g.Node) (loss *g.Node, err error) {
-	loss, err = g.HadamardProd(yHat, y)
+	loss, err = g.Log(yHat)
 	if err != nil {
 		return nil, err
 	}
-	loss, err = g.Mean(loss)
+	loss, err = g.HadamardProd(y, loss)
 	if err != nil {
 		return nil, err
 	}
 	loss, err = g.Neg(loss)
+	if err != nil {
+		return nil, err
+	}
+	loss, err = g.Mean(loss)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +143,7 @@ func (h *PseudoHuberLoss) Compute(yHat, y *g.Node) (loss *g.Node, err error) {
 	if err != nil {
 		return nil, err
 	}
-	/// JOawo;eijgfo;qiwhjet o;iq3wjhgoi2q3jaeoi;j WTF!!!!!
+	/// arg! https://github.com/gorgonia/gorgonia/issues/373
 	loss, err = g.Sum(loss, 1)
 	if err != nil {
 		return nil, err
