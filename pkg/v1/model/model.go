@@ -28,6 +28,9 @@ type Model interface {
 	// PredictBatch predicts x as a batch
 	PredictBatch(x g.Value) (prediction g.Value, err error)
 
+	// Backward runs optimization with the given loss value.
+	Backward(loss g.Value) error
+
 	// Visualize the model by graph name.
 	Visualize(name string)
 
@@ -62,14 +65,17 @@ type Sequential struct {
 
 	trainChain, trainBatchChain   *layers.Chain
 	onlineChain, onlineBatchChain *layers.Chain
+	backwardChain                 *layers.Chain
 
 	trainGraph, trainBatchGraph   *g.ExprGraph
 	onlineGraph, onlineBatchGraph *g.ExprGraph
+	backwardGraph                 *g.ExprGraph
 
 	xTrain, xTrainBatch         Inputs
 	xTrainFwd, xTrainBatchFwd   *Input
 	xOnline, xOnlineBatch       Inputs
 	xOnlineFwd, xOnlineBatchFwd *Input
+	lossInput                   *Input
 
 	yTrain, yTrainBatch *Input
 
@@ -84,6 +90,7 @@ type Sequential struct {
 
 	trainVM, trainBatchVM   g.VM
 	onlineVM, onlineBatchVM g.VM
+	backwardVM              g.VM
 	vmOpts                  []g.VMOpt
 }
 
@@ -106,6 +113,18 @@ func WithLoss(loss Loss) func(Model) {
 		switch t := m.(type) {
 		case *Sequential:
 			t.loss = loss
+		default:
+			log.Fatal("unknown model type")
+		}
+	}
+}
+
+// WithLossInput sets a loss input to use with the Backward method.
+func WithLossInput(loss *Input) func(Model) {
+	return func(m Model) {
+		switch t := m.(type) {
+		case *Sequential:
+			t.lossInput = loss
 		default:
 			log.Fatal("unknown model type")
 		}
@@ -251,6 +270,10 @@ func (s *Sequential) Compile(x InputOr, y *Input, opts ...Opt) error {
 		return err
 	}
 	err = s.buildOnlineBatchGraph(s.x)
+	if err != nil {
+		return err
+	}
+	err = s.buildBackwardGraph(s.lossInput)
 	if err != nil {
 		return err
 	}
@@ -417,6 +440,26 @@ func (s *Sequential) buildOnlineBatchGraph(x Inputs) (err error) {
 	return nil
 }
 
+func (s *Sequential) buildBackwardGraph(loss *Input) (err error) {
+	s.backwardGraph = g.NewGraph()
+
+	loss.Compile(s.backwardGraph)
+
+	s.backwardChain = s.Chain.Clone()
+	s.backwardChain.Compile(s.backwardGraph, layers.WithSharedChainLearnables(s.trainChain))
+
+	_, err = g.Grad(loss.Node(), s.backwardChain.Learnables()...)
+	if err != nil {
+		return err
+	}
+
+	vmOpts := []g.VMOpt{}
+	copy(vmOpts, s.vmOpts)
+	vmOpts = append(vmOpts, g.BindDualValues(s.backwardChain.Learnables()...))
+	s.backwardVM = g.NewTapeMachine(s.backwardGraph, vmOpts...)
+	return nil
+}
+
 // Predict x.
 func (s *Sequential) Predict(x g.Value) (prediction g.Value, err error) {
 	err = s.xOnlineFwd.Set(x)
@@ -489,6 +532,24 @@ func (s *Sequential) FitBatch(x ValueOr, y g.Value) error {
 	grads := g.NodesToValueGrads(s.trainBatchChain.Learnables())
 	s.optimizer.Step(grads)
 	s.trainBatchVM.Reset()
+	return nil
+}
+
+// Backward runs optimization with the given loss value.
+func (s *Sequential) Backward(loss g.Value) error {
+	err := s.lossInput.Set(loss)
+	if err != nil {
+		return err
+	}
+
+	err = s.backwardVM.RunAll()
+	if err != nil {
+		return err
+	}
+
+	grads := g.NodesToValueGrads(s.backwardChain.Learnables())
+	s.optimizer.Step(grads)
+	s.backwardVM.Reset()
 	return nil
 }
 

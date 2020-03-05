@@ -54,8 +54,8 @@ func MakePolicy(name string, config *PolicyConfig, base *agentv1.Base, env *envv
 	x := modelv1.NewInput("state", []int{1, env.ObservationSpaceShape()[0]})
 	y := modelv1.NewInput("actionPotentials", []int{1, envv1.PotentialsShape(env.ActionSpace)[0]})
 
-	log.Infov("xshape", x.Shape())
-	log.Infov("yshape", y.Shape())
+	log.Infov("x shape", x.Shape())
+	log.Infov("y shape", y.Shape())
 
 	model, err := modelv1.NewSequential(name)
 	if err != nil {
