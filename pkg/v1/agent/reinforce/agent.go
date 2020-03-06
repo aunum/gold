@@ -77,6 +77,7 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 	if env == nil {
 		return nil, fmt.Errorf("environment cannot be nil")
 	}
+	fmt.Println("making policy")
 	policy, err := MakePolicy(c.PolicyConfig, c.Base, env)
 	if err != nil {
 		return nil, err
@@ -92,7 +93,11 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 
 // Learn the agent.
 func (a *Agent) Learn() error {
-	actions, rewards := a.Memory.Pop()
+	states, actions, rewards := a.Memory.Pop()
+	err := a.Policy.ResizeBatch(len(states))
+	if err != nil {
+		return err
+	}
 
 	// discount future rewards
 	discounted := make([]float32, len(rewards))
@@ -109,23 +114,20 @@ func (a *Agent) Learn() error {
 		return err
 	}
 
-	actionsT := tensor.New(tensor.WithBacking(actions))
+	// make advantage
+	advShape := []int{len(states)}
+	advShape = append(advShape, a.Policy.Y().Shape()...)
+	advantages := dense.Zeros(tensor.Float32, advShape...)
+	for i := 0; i <= len(states); i++ {
+		advantages.SetAt(rewardsNorm.Get(i), i, int(actions[i]))
+	}
 
-	// calulate loss
-	loss, err := actionsT.Mul(rewardsNorm)
-	if err != nil {
-		return err
-	}
-	loss, err = dense.Neg(loss)
-	if err != nil {
-		return err
-	}
-	loss, err = loss.Sum()
+	statesT, err := dense.Concat(0, states...)
 	if err != nil {
 		return err
 	}
 
-	err = a.Policy.Backward(loss)
+	err = a.Policy.Fit(statesT, advantages)
 	if err != nil {
 		return err
 	}

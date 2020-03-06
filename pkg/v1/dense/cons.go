@@ -100,7 +100,7 @@ func Fill(val interface{}, shape ...int) *t.Dense {
 }
 
 // Zeros inits a tensor with the given shape and type with zeros.
-func Zeros(dt *t.Dtype, shape ...int) *t.Dense {
+func Zeros(dt t.Dtype, shape ...int) *t.Dense {
 	size := t.Shape(shape).TotalSize()
 	switch dt.Kind() {
 	case reflect.Int:

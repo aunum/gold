@@ -28,8 +28,8 @@ type Model interface {
 	// PredictBatch predicts x as a batch
 	PredictBatch(x g.Value) (prediction g.Value, err error)
 
-	// Backward runs optimization with the given loss value.
-	Backward(loss g.Value) error
+	// ResizeBatch resizes the batch graphs.
+	ResizeBatch(n int) error
 
 	// Visualize the model by graph name.
 	Visualize(name string)
@@ -273,10 +273,6 @@ func (s *Sequential) Compile(x InputOr, y *Input, opts ...Opt) error {
 	if err != nil {
 		return err
 	}
-	err = s.buildBackwardGraph(s.lossInput)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -440,24 +436,15 @@ func (s *Sequential) buildOnlineBatchGraph(x Inputs) (err error) {
 	return nil
 }
 
-func (s *Sequential) buildBackwardGraph(loss *Input) (err error) {
-	s.backwardGraph = g.NewGraph()
-
-	loss.Compile(s.backwardGraph)
-
-	s.backwardChain = s.Chain.Clone()
-	s.backwardChain.Compile(s.backwardGraph, layers.WithSharedChainLearnables(s.trainChain))
-
-	_, err = g.Grad(loss.Node(), s.backwardChain.Learnables()...)
+// ResizeBatch will resize the batch graph.
+// Note: this is expensive and recompiles the graph.
+func (s *Sequential) ResizeBatch(n int) (err error) {
+	s.batchSize = n
+	err = s.buildTrainBatchGraph(s.x, s.y)
 	if err != nil {
-		return err
+		return
 	}
-
-	vmOpts := []g.VMOpt{}
-	copy(vmOpts, s.vmOpts)
-	vmOpts = append(vmOpts, g.BindDualValues(s.backwardChain.Learnables()...))
-	s.backwardVM = g.NewTapeMachine(s.backwardGraph, vmOpts...)
-	return nil
+	return s.buildOnlineBatchGraph(s.x)
 }
 
 // Predict x.
@@ -532,24 +519,6 @@ func (s *Sequential) FitBatch(x ValueOr, y g.Value) error {
 	grads := g.NodesToValueGrads(s.trainBatchChain.Learnables())
 	s.optimizer.Step(grads)
 	s.trainBatchVM.Reset()
-	return nil
-}
-
-// Backward runs optimization with the given loss value.
-func (s *Sequential) Backward(loss g.Value) error {
-	err := s.lossInput.Set(loss)
-	if err != nil {
-		return err
-	}
-
-	err = s.backwardVM.RunAll()
-	if err != nil {
-		return err
-	}
-
-	grads := g.NodesToValueGrads(s.backwardChain.Learnables())
-	s.optimizer.Step(grads)
-	s.backwardVM.Reset()
 	return nil
 }
 

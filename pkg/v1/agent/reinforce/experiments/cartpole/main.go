@@ -13,7 +13,7 @@ func main() {
 	require.NoError(err)
 	defer s.Resource.Close()
 
-	env, err := s.Make("CartPole-v1", envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
+	env, err := s.Make("CartPole-v0", envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
 	require.NoError(err)
 
 	agent, err := reinforce.NewAgent(reinforce.DefaultAgentConfig, env)
@@ -42,7 +42,7 @@ func main() {
 			}
 			score.Inc(outcome.Reward)
 
-			agent.Memory.Store(action, outcome.Reward)
+			agent.Memory.Store(state, action, outcome.Reward)
 
 			if outcome.Done {
 				log.Successf("Episode %d finished after %d timesteps", episode.I, timestep.I+1)

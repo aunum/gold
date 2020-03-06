@@ -69,7 +69,12 @@ func (i *Input) Compile(graph *g.ExprGraph, opts ...InputOpt) *g.Node {
 	for _, opt := range opts {
 		opt(i)
 	}
-	n := g.NewTensor(graph, i.dtype, len(i.shape), g.WithShape(i.shape...), g.WithName(i.name))
+	var n *g.Node
+	if i.shape.IsScalar() {
+		n = g.NewScalar(graph, i.dtype, g.WithName(i.name))
+	} else {
+		n = g.NewTensor(graph, i.dtype, len(i.shape), g.WithShape(i.shape...), g.WithName(i.name))
+	}
 	i.node = n
 	return n
 }

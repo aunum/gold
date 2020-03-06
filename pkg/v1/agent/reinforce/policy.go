@@ -61,7 +61,7 @@ func MakePolicy(config *PolicyConfig, base *agentv1.Base, env *envv1.Env) (model
 	opts := modelv1.NewOpts()
 	opts.Add(
 		modelv1.WithOptimizer(config.Optimizer),
-		modelv1.WithLossInput(loss),
+		modelv1.WithLoss(modelv1.CrossEntropy),
 	)
 	if config.Track {
 		opts.Add(modelv1.WithTracker(base.Tracker))
