@@ -8,7 +8,6 @@ import (
 
 	"github.com/pbarker/log"
 	g "gorgonia.org/gorgonia"
-	"gorgonia.org/tensor"
 )
 
 // PolicyConfig are the hyperparameters for a policy.
@@ -38,7 +37,7 @@ var DefaultFCLayerBuilder = func(x, y *modelv1.Input) []l.Layer {
 	return []l.Layer{
 		l.NewFC(x.Squeeze()[0], 24, l.WithActivation(l.ReLU), l.WithName("fc1")),
 		l.NewFC(24, 24, l.WithActivation(l.ReLU), l.WithName("fc2")),
-		l.NewFC(24, y.Squeeze()[0], l.WithActivation(l.Softmax), l.WithName("dist")),
+		l.NewFC(24, y.Squeeze()[0], l.WithActivation(l.NewSoftmax()), l.WithName("dist")),
 	}
 }
 
@@ -46,11 +45,9 @@ var DefaultFCLayerBuilder = func(x, y *modelv1.Input) []l.Layer {
 func MakePolicy(config *PolicyConfig, base *agentv1.Base, env *envv1.Env) (modelv1.Model, error) {
 	x := modelv1.NewInput("state", []int{1, env.ObservationSpaceShape()[0]})
 	y := modelv1.NewInput("actionPotentials", []int{1, envv1.PotentialsShape(env.ActionSpace)[0]})
-	loss := modelv1.NewInput("loss", tensor.ScalarShape())
 
 	log.Infov("x shape", x.Shape())
 	log.Infov("y shape", y.Shape())
-	log.Infov("loss shape", loss.Shape())
 
 	model, err := modelv1.NewSequential("reinforce")
 	if err != nil {

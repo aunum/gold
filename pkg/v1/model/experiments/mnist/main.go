@@ -52,10 +52,10 @@ func main() {
 		l.NewFC(100, 10, l.WithActivation(l.Softmax), l.WithInit(g.GlorotN(1)), l.WithName("w2")),
 	)
 
-	optimizer := g.NewRMSPropSolver(g.WithBatchSize(float64(batchSize)))
+	optimizer := g.NewRMSPropSolver()
 	err = model.Compile(xi, yi,
 		WithOptimizer(optimizer),
-		WithLoss(CrossEntropy),
+		WithLoss(PseudoCrossEntropy),
 		WithBatchSize(batchSize),
 	)
 	require.NoError(err)
@@ -65,6 +65,8 @@ func main() {
 	log.Infov("epochs", epochs)
 	for epoch := 0; epoch < epochs; epoch++ {
 
+		var xi tensor.View
+		var yi tensor.View
 		for batch := 0; batch < batches; batch++ {
 			start := batch * batchSize
 			end := start + batchSize
@@ -75,16 +77,28 @@ func main() {
 				end = exampleSize
 			}
 
-			xi, err := x.Slice(dense.MakeRangedSlice(start, end))
+			xi, err = x.Slice(dense.MakeRangedSlice(start, end))
 			require.NoError(err)
-			yi, err := y.Slice(dense.MakeRangedSlice(start, end))
+			yi, err = y.Slice(dense.MakeRangedSlice(start, end))
 			require.NoError(err)
+
+			// yi, err = y.Slice(dense.MakeRangedSlice(0, 2))
+			// require.NoError(err)
 
 			err = model.FitBatch(xi, yi)
 			require.NoError(err)
 			model.Tracker.LogStep(epoch, batch)
 		}
-		accuracy, loss, err := evaluate(testX.(*tensor.Dense), testY.(*tensor.Dense), model)
+		// xi, err := x.Slice(dense.MakeRangedSlice(epoch, epoch+1))
+		// require.NoError(err)
+		// pred, err := model.PredictBatch(xi)
+		// require.NoError(err)
+		// log.Infovb("expected", yi.Data())
+		// log.Infovb("pred", pred.Data())
+		// sum, err := pred.(*tensor.Dense).Sum()
+		// require.NoError(err)
+		// log.Infovb("sum", sum)
+		accuracy, loss, err := evaluate(testX.(*tensor.Dense), testY.(*tensor.Dense), model, batchSize)
 		require.NoError(err)
 		log.Infof("completed train epoch %v with accuracy %v and loss %v", epoch, accuracy, loss)
 	}
@@ -92,8 +106,7 @@ func main() {
 	require.NoError(err)
 }
 
-func evaluate(x, y *tensor.Dense, model *Sequential) (acc, loss float32, err error) {
-	batchSize := 100
+func evaluate(x, y *tensor.Dense, model *Sequential, batchSize int) (acc, loss float32, err error) {
 	exampleSize := x.Shape()[0]
 	batches := exampleSize / batchSize
 

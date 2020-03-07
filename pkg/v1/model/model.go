@@ -257,11 +257,11 @@ func (s *Sequential) Compile(x InputOr, y *Input, opts ...Opt) error {
 		s.fwd = x.Inputs()[0]
 		s.logger.Infof("setting foward for layers to input %q", s.fwd.Name())
 	}
-	err = s.buildTrainGraph(s.x, y)
+	err = s.buildTrainGraph(s.x, s.y)
 	if err != nil {
 		return err
 	}
-	err = s.buildTrainBatchGraph(s.x, y)
+	err = s.buildTrainBatchGraph(s.x, s.y)
 	if err != nil {
 		return err
 	}
@@ -341,10 +341,12 @@ func (s *Sequential) buildTrainBatchGraph(x Inputs, y *Input) (err error) {
 		i := input.CloneTo(s.trainBatchGraph, AsBatch(s.batchSize))
 		s.xTrainBatch = append(s.xTrainBatch, i)
 	}
+
 	s.xTrainBatchFwd, err = s.xTrainBatch.Get(NameAsBatch(s.fwd.Name()))
 	if err != nil {
 		return err
 	}
+
 	s.yTrainBatch = s.y.AsBatch(s.batchSize)
 	s.yTrainBatch.Compile(s.trainBatchGraph)
 
@@ -368,6 +370,7 @@ func (s *Sequential) buildTrainBatchGraph(x Inputs, y *Input) (err error) {
 	if err != nil {
 		return err
 	}
+
 	vmOpts := []g.VMOpt{}
 	copy(vmOpts, s.vmOpts)
 	vmOpts = append(vmOpts, g.BindDualValues(s.trainBatchChain.Learnables()...))
@@ -437,13 +440,18 @@ func (s *Sequential) buildOnlineBatchGraph(x Inputs) (err error) {
 }
 
 // ResizeBatch will resize the batch graph.
-// Note: this is expensive and recompiles the graph.
+// Note: this is expensive as it recompiles the graph.
 func (s *Sequential) ResizeBatch(n int) (err error) {
+	log.Debugf("resizing batch graphs to %d", n)
 	s.batchSize = n
+	s.xTrainBatch = Inputs{}
+	s.xTrainBatchFwd = nil
 	err = s.buildTrainBatchGraph(s.x, s.y)
 	if err != nil {
 		return
 	}
+	s.xOnlineBatch = Inputs{}
+	s.xOnlineBatchFwd = nil
 	return s.buildOnlineBatchGraph(s.x)
 }
 
@@ -457,6 +465,7 @@ func (s *Sequential) Predict(x g.Value) (prediction g.Value, err error) {
 	if err != nil {
 		return prediction, err
 	}
+	// log.Infovb("online pred val", s.onlinePredVal)
 	prediction = s.onlinePredVal
 	s.onlineVM.Reset()
 	return
@@ -516,6 +525,7 @@ func (s *Sequential) FitBatch(x ValueOr, y g.Value) error {
 	if err != nil {
 		return err
 	}
+	// log.Infovb("pred val", s.trainBatchPredVal)
 	grads := g.NodesToValueGrads(s.trainBatchChain.Learnables())
 	s.optimizer.Step(grads)
 	s.trainBatchVM.Reset()

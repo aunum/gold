@@ -21,7 +21,7 @@ func main() {
 
 	agent.View()
 
-	numEpisodes := 200
+	numEpisodes := 5000
 	for _, episode := range agent.MakeEpisodes(numEpisodes) {
 		init, err := env.Reset()
 		require.NoError(err)

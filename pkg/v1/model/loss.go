@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/pbarker/log"
 	g "gorgonia.org/gorgonia"
 )
 
@@ -44,7 +45,7 @@ func (m *MSELoss) Compute(yHat, y *g.Node) (loss *g.Node, err error) {
 
 // CloneTo another graph.
 func (m *MSELoss) CloneTo(graph *g.ExprGraph, opts ...CloneOpt) Loss {
-	return m
+	return &MSELoss{}
 }
 
 // Inputs returns any inputs the loss function utilizes.
@@ -81,7 +82,7 @@ func (c *CrossEntropyLoss) Compute(yHat, y *g.Node) (loss *g.Node, err error) {
 
 // CloneTo another graph.
 func (c *CrossEntropyLoss) CloneTo(graph *g.ExprGraph, opts ...CloneOpt) Loss {
-	return c
+	return &CrossEntropyLoss{}
 }
 
 // Inputs returns any inputs the loss function utilizes.
@@ -153,10 +154,43 @@ func (h *PseudoHuberLoss) Compute(yHat, y *g.Node) (loss *g.Node, err error) {
 
 // CloneTo another graph.
 func (h *PseudoHuberLoss) CloneTo(graph *g.ExprGraph, opts ...CloneOpt) Loss {
-	return h
+	return &PseudoHuberLoss{Delta: h.Delta}
 }
 
 // Inputs returns any inputs the loss function utilizes.
 func (h *PseudoHuberLoss) Inputs() Inputs {
+	return Inputs{}
+}
+
+// PseudoCrossEntropy loss.
+var PseudoCrossEntropy = &PseudoCrossEntropyLoss{}
+
+// PseudoCrossEntropyLoss is standard cross entropy loss.
+type PseudoCrossEntropyLoss struct{}
+
+// Compute the loss.
+func (c *PseudoCrossEntropyLoss) Compute(yHat, y *g.Node) (loss *g.Node, err error) {
+	loss, err = g.HadamardProd(yHat, y)
+	if err != nil {
+		log.Fatal(err)
+	}
+	loss, err = g.Mean(loss)
+	if err != nil {
+		log.Fatal(err)
+	}
+	loss, err = g.Neg(loss)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return
+}
+
+// CloneTo another graph.
+func (c *PseudoCrossEntropyLoss) CloneTo(graph *g.ExprGraph, opts ...CloneOpt) Loss {
+	return &PseudoCrossEntropyLoss{}
+}
+
+// Inputs returns any inputs the loss function utilizes.
+func (c *PseudoCrossEntropyLoss) Inputs() Inputs {
 	return Inputs{}
 }

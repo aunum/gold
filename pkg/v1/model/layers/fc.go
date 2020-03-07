@@ -122,7 +122,8 @@ func (f *FC) Fwd(x *g.Node) (*g.Node, error) {
 		x, err = g.Reshape(x, s)
 		log.Debugf("normalizing dimensions of x to %v", s)
 	}
-	// Note: parts of this are borrowed from golgi.
+
+	// Note: parts of this are borrowed from https://github.com/gorgonia/golgi
 	if xw, err = g.Mul(x, f.weights); err != nil {
 		return nil, err
 	}
@@ -131,7 +132,6 @@ func (f *FC) Fwd(x *g.Node) (*g.Node, error) {
 		xwb = xw
 		goto act
 	}
-
 	if f.isBatched {
 		if xwb, err = g.BroadcastAdd(xw, f.bias, nil, []byte{0}); err != nil {
 			return nil, err

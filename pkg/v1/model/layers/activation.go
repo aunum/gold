@@ -1,8 +1,7 @@
 package layers
 
 import (
-	"fmt"
-
+	"github.com/pbarker/log"
 	"github.com/pkg/errors"
 	g "gorgonia.org/gorgonia"
 	t "gorgonia.org/tensor"
@@ -204,13 +203,17 @@ func (l *LinearActivation) Clone() Activation {
 // For a more numerically stable SoftMax, use StableSoftMax.
 //
 // This is ripped from Gorgonia core as there was a bug in it that needs to be
-// contributed back upstream once I have authorization to do so.
+// contributed back upstream.
 func softMax(a *g.Node, axes ...int) (retVal *g.Node, err error) {
+	log.Infof("---- running softmax")
 	aShape := a.Shape()
+	log.Infov("a shape", aShape)
 
 	if aShape[0] == 1 {
 		aShape = aShape[1:]
-		g.Reshape(a, aShape)
+		log.Infof("reshaping %v to %v", a.Shape(), aShape)
+		a, err = g.Reshape(a, aShape)
+		log.Infof("a reshaped to %v", a.Shape())
 	}
 	axis := aShape.Dims() - 1 // default: last dim
 	if a.IsColVec() || (a.IsVector() && !a.IsRowVec()) {
@@ -219,11 +222,11 @@ func softMax(a *g.Node, axes ...int) (retVal *g.Node, err error) {
 
 	if len(axes) > 0 {
 		if axes[0] >= axis+1 || axes[0] < 0 {
-			return nil, fmt.Errorf("Cannot perform SoftMax on axis %d. Input has shape %v", axes[0], a.Shape())
+			return nil, errors.Errorf("Cannot perform SoftMax on axis %d. Input has shape %v", axes[0], a.Shape())
 		}
 		axis = axes[0]
 	}
-
+	log.Infov("axis", axis)
 	var exp, sum *g.Node
 	if exp, err = g.Exp(a); err != nil {
 		return nil, err
@@ -231,6 +234,7 @@ func softMax(a *g.Node, axes ...int) (retVal *g.Node, err error) {
 	if sum, err = g.Sum(exp, axis); err != nil {
 		return nil, err
 	}
+	log.Infov("sum shape", sum.Shape())
 
 	if sum.IsScalar() {
 		return g.HadamardDiv(exp, sum)

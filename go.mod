@@ -20,7 +20,7 @@ require (
 	github.com/stretchr/testify v1.4.0
 	golang.org/x/exp v0.0.0-20200207192155-f17229e696bd
 	golang.org/x/tools v0.0.0-20200207224406-61798d64f025 // indirect
-	gonum.org/v1/gonum v0.6.2
+	gonum.org/v1/gonum v0.7.0
 	gonum.org/v1/plot v0.0.0-20200111075622-4abb28f724d5
 	google.golang.org/grpc v1.27.0
 	gopkg.in/yaml.v2 v2.2.8 // indirect
@@ -29,4 +29,4 @@ require (
 	gorgonia.org/tensor v0.9.4
 )
 
-replace gorgonia.org/gorgonia => github.com/pbarker/gorgonia v0.0.0-20200209225806-37febf40acbc
+// replace gorgonia.org/gorgonia => github.com/pbarker/gorgonia v0.0.0-20200209225806-37febf40acbc

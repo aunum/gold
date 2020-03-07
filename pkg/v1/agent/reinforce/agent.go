@@ -30,8 +30,7 @@ type Agent struct {
 	// Memory of the agent.
 	Memory *Memory
 
-	env   *envv1.Env
-	steps int
+	env *envv1.Env
 }
 
 // Hyperparameters for the dqn agent.
@@ -77,7 +76,6 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 	if env == nil {
 		return nil, fmt.Errorf("environment cannot be nil")
 	}
-	fmt.Println("making policy")
 	policy, err := MakePolicy(c.PolicyConfig, c.Base, env)
 	if err != nil {
 		return nil, err
@@ -116,9 +114,9 @@ func (a *Agent) Learn() error {
 
 	// make advantage
 	advShape := []int{len(states)}
-	advShape = append(advShape, a.Policy.Y().Shape()...)
+	advShape = append(advShape, a.Policy.Y().Squeeze()...)
 	advantages := dense.Zeros(tensor.Float32, advShape...)
-	for i := 0; i <= len(states); i++ {
+	for i := 0; i < len(states); i++ {
 		advantages.SetAt(rewardsNorm.Get(i), i, int(actions[i]))
 	}
 
@@ -127,7 +125,7 @@ func (a *Agent) Learn() error {
 		return err
 	}
 
-	err = a.Policy.Fit(statesT, advantages)
+	err = a.Policy.FitBatch(statesT, advantages)
 	if err != nil {
 		return err
 	}
@@ -136,8 +134,6 @@ func (a *Agent) Learn() error {
 
 // Action selects the best known action for the given state.
 func (a *Agent) Action(state *tensor.Dense) (action int, err error) {
-	a.steps++
-
 	actionProbsVal, err := a.Policy.Predict(state)
 	if err != nil {
 		return action, err
@@ -145,8 +141,8 @@ func (a *Agent) Action(state *tensor.Dense) (action int, err error) {
 	actionProbs := actionProbsVal.(*tensor.Dense)
 
 	// Get action as a random value of the probability distribution.
-	wieghts := num.F32SliceToF64(actionProbs.Data().([]float32))
-	dist := distuv.NewCategorical(wieghts, rand.NewSource(uint64(time.Now().UnixNano())))
+	weights := num.F32SliceToF64(actionProbs.Data().([]float32))
+	dist := distuv.NewCategorical(weights, rand.NewSource(uint64(time.Now().UnixNano())))
 	action = int(dist.Rand())
 	return
 }
