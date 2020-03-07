@@ -7,20 +7,23 @@ import (
 	"reflect"
 	"time"
 
+	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
 	"github.com/pbarker/go-rl/pkg/v1/common/num"
-	"github.com/pbarker/go-rl/pkg/v1/env/space"
+	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
+	"github.com/pbarker/log"
 	"gorgonia.org/tensor"
 )
 
 // Agent that utilizes the Q-Learning algorithm.
 type Agent struct {
+	*agentv1.Base
 	*Hyperparameters
 
-	r           *rand.Rand
-	actionSpace *space.Discrete
-	table       Table
-	minAlpha    float32
-	minEpsilon  float32
+	r          *rand.Rand
+	env        *envv1.Env
+	table      Table
+	minAlpha   float32
+	minEpsilon float32
 }
 
 // Hyperparameters for a Q-learning agent.
@@ -50,29 +53,54 @@ var DefaultHyperparameters = &Hyperparameters{
 	AdaDivisor: 5.0,
 }
 
-// NewAgent returns a new Q-learning agent. If table is nil, it will default to a basic in-memory table.
-func NewAgent(h *Hyperparameters, actionSpaceSize int, table Table) *Agent {
-	if table == nil || (reflect.ValueOf(table).Kind() == reflect.Ptr && reflect.ValueOf(table).IsNil()) {
-		table = NewMemTable(actionSpaceSize)
-	}
+// AgentConfig is the config for a dqn agent.
+type AgentConfig struct {
+	// Base for the agent.
+	Base *agentv1.Base
+
+	// Hyperparameters for the agent.
+	*Hyperparameters
+
+	// Table for the agent.
+	Table Table
+}
+
+// DefaultAgentConfig is the default config for a dqn agent.
+var DefaultAgentConfig = &AgentConfig{
+	Hyperparameters: DefaultHyperparameters,
+	Base:            agentv1.NewBase(),
+}
+
+// NewAgent returns a new Q-learning agent.
+func NewAgent(c *AgentConfig, env *envv1.Env) *Agent {
+	actionSpaceSize := int(env.GetNumActions())
+	log.Infov("num actions", actionSpaceSize)
 	s := rand.NewSource(time.Now().Unix())
-	return &Agent{
-		Hyperparameters: h,
-		r:               rand.New(s),
-		actionSpace:     space.NewDiscrete(actionSpaceSize),
-		table:           table,
-		minAlpha:        h.Alpha,
-		minEpsilon:      h.Epsilon,
+	if c.Base == nil {
+		c.Base = agentv1.NewBase()
 	}
+	if c.Table == nil || (reflect.ValueOf(c.Table).Kind() == reflect.Ptr && reflect.ValueOf(c.Table).IsNil()) {
+		c.Table = NewMemTable(actionSpaceSize)
+	}
+	a := &Agent{
+		Hyperparameters: c.Hyperparameters,
+		Base:            c.Base,
+		r:               rand.New(s),
+		env:             env,
+		table:           c.Table,
+		minAlpha:        c.Hyperparameters.Alpha,
+		minEpsilon:      c.Hyperparameters.Epsilon,
+	}
+	return a
 }
 
 // Adapt will adjust the hyperparameters based on th timestep.
 func (a *Agent) Adapt(timestep int) {
 	// max(self.min_alpha, min(1.0, 1.0 - math.log10((t + 1) / self.ada_divisor)))
 	a.Epsilon = adapt(timestep, a.minEpsilon, a.AdaDivisor)
-	fmt.Println("set epsilon to: ", a.Epsilon)
+	log.Infov("set epsilon to", a.Epsilon)
 	a.Alpha = adapt(timestep, a.minAlpha, a.AdaDivisor)
-	fmt.Println("set alpha to: ", a.Alpha)
+	log.Infov("set alpha to", a.Alpha)
 }
 
 func adapt(timestep int, min float32, ada float32) float32 {
@@ -87,28 +115,23 @@ func adapt(timestep int, min float32, ada float32) float32 {
 }
 
 // Action returns the action that should be taken given the state hash.
-func (a *Agent) Action(state *tensor.Dense) (int, error) {
+func (a *Agent) Action(state *tensor.Dense) (action int, err error) {
 	stateHash := HashState(state)
-	var action int
 	if num.RandF32(float32(0.0), float32(1.0)) < a.Epsilon {
 		// explore
-		action = a.actionSpace.Sample().(int)
-	} else {
-		// exploit
-		var err error
-		action, _, err = a.table.GetMax(stateHash)
-		if err != nil {
-			return 0, err
-		}
+		action, err = a.env.SampleAction()
+		return
 	}
-	return action, nil
+	// exploit
+	action, _, err = a.table.GetMax(stateHash)
+	return
 }
 
 // Learn using the Q-learning algorithm.
 // Q(state,action)←(1−α)Q(state,action)+α(reward+γmaxaQ(next state,all actions))
-func (a *Agent) Learn(action int, reward float32, state, nextState *tensor.Dense) error {
+func (a *Agent) Learn(action int, state *tensor.Dense, outcome *envv1.Outcome) error {
 	stateHash := HashState(state)
-	nextStateHash := HashState(nextState)
+	nextStateHash := HashState(outcome.Observation)
 	oldVal, err := a.table.Get(stateHash, action)
 	if err != nil {
 		return err
@@ -120,9 +143,9 @@ func (a *Agent) Learn(action int, reward float32, state, nextState *tensor.Dense
 
 	// fmt.Printf("eq: oldVal %v + alpha %v * (reward %v + gamma %v * nextMax %v - oldVal %v)\n", oldVal, a.Alpha, reward, a.Gamma, nextMax, oldVal)
 	// Q learning algorithm.
-	newValue := (oldVal + a.Alpha) * (reward + a.Gamma*nextMax - oldVal)
+	newValue := (oldVal + a.Alpha) * (outcome.Reward + a.Gamma*nextMax - oldVal)
 
-	fmt.Printf("learning reward: %v on state: %v with new value: %v\n", reward, stateHash, newValue)
+	fmt.Printf("learning reward: %v on state: %v with new value: %v\n", outcome.Reward, stateHash, newValue)
 	err = a.table.Set(stateHash, action, newValue)
 	if err != nil {
 		return err

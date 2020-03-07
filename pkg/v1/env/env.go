@@ -10,13 +10,15 @@ import (
 	"os/signal"
 	"path/filepath"
 	"syscall"
+	"time"
 
+	"github.com/pbarker/go-rl/pkg/v1/common"
 	"github.com/pbarker/go-rl/pkg/v1/common/require"
+	"github.com/pbarker/log"
 
 	"github.com/pbarker/go-rl/pkg/v1/common/num"
 
 	"github.com/ory/dockertest"
-	"github.com/pbarker/log"
 	spherev1alpha "github.com/pbarker/sphere/api/gen/go/v1alpha"
 	"github.com/skratchdot/open-golang/open"
 	"google.golang.org/grpc"
@@ -34,8 +36,8 @@ type Server struct {
 	logger *log.Logger
 }
 
-// ServerConfig is the environment server config.
-type ServerConfig struct {
+// LocalServerConfig is the environment server config.
+type LocalServerConfig struct {
 	// Docker image of environment.
 	Image string
 
@@ -50,10 +52,10 @@ type ServerConfig struct {
 }
 
 // GymServerConfig is a configuration for a OpenAI Gym server environment.
-var GymServerConfig = &ServerConfig{Image: "sphereproject/gym", Version: "latest", Port: "50051/tcp"}
+var GymServerConfig = &LocalServerConfig{Image: "sphereproject/gym", Version: "latest", Port: "50051/tcp"}
 
 // NewLocalServer creates a new environment server by launching a docker container and connecting to it.
-func NewLocalServer(config *ServerConfig) (*Server, error) {
+func NewLocalServer(config *LocalServerConfig) (*Server, error) {
 	if config.Logger == nil {
 		config.Logger = log.DefaultLogger
 	}
@@ -81,8 +83,11 @@ func NewLocalServer(config *ServerConfig) (*Server, error) {
 		}
 		sphereClient = spherev1alpha.NewEnvironmentAPIClient(conn)
 		resp, err := sphereClient.Info(context.Background(), &spherev1alpha.Empty{})
+		if err != nil {
+			return err
+		}
 		config.Logger.Successf("connected to server %q", resp.ServerName)
-		return err
+		return nil
 	}); err != nil {
 		return nil, fmt.Errorf("Could not connect to docker: %s", err)
 	}
@@ -101,6 +106,46 @@ func NewLocalServer(config *ServerConfig) (*Server, error) {
 		Client:   sphereClient,
 		logger:   config.Logger,
 	}, nil
+}
+
+// Connect to a server.
+func Connect(addr string, opts ...ServerOpts) (*Server, error) {
+	s := &Server{}
+	for _, opt := range opts {
+		opt(s)
+	}
+	if s.logger == nil {
+		s.logger = log.DefaultLogger
+	}
+	var sphereClient spherev1alpha.EnvironmentAPIClient
+	err := common.Retry(10, time.Second*1, func() error {
+		conn, err := grpc.Dial(addr, grpc.WithInsecure(), grpc.WithBlock())
+		if err != nil {
+			return err
+		}
+		sphereClient = spherev1alpha.NewEnvironmentAPIClient(conn)
+		resp, err := sphereClient.Info(context.Background(), &spherev1alpha.Empty{})
+		if err != nil {
+			return err
+		}
+		s.logger.Successf("connected to server %q", resp.ServerName)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	s.Client = sphereClient
+	return s, nil
+}
+
+// ServerOpts are the connection opts.
+type ServerOpts func(*Server)
+
+// WithServerLogger adds a logger to the server.
+func WithServerLogger(logger *log.Logger) func(*Server) {
+	return func(s *Server) {
+		s.logger = logger
+	}
 }
 
 // Env is a convienience environment wrapper.

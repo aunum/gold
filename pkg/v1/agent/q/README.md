@@ -18,11 +18,7 @@ The implemented agent also employs adaptive learning by which the `alpha` and `e
 Q-learning doesn't work well in continous environments, the `pkg/v1/env` package provides a normalization adapter. One of the adapter is for discretization and can be used to make continuous states discrete.
 
 ## Examples
-
-See the experiments folder for implementations.
-
-## Roadmap
-This algorithm currently doesn't converge on cartpole, more investigation is needed to find why.
+See the [experiments](./experiments) folder for example implementations.
 
 ## References
 - https://en.wikipedia.org/wiki/Q-learning

@@ -1,4 +1,4 @@
-package main
+package tune
 
 import (
 	"fmt"
@@ -14,21 +14,8 @@ import (
 	"github.com/schwarmco/go-cartesian-product"
 )
 
-func main() {
-	s, err := sphere.NewLocalServer(sphere.GymServerConfig)
-	require.NoError(err)
-	defer s.Resource.Close()
-
-	_, err = TestCartPole(s, CartPoleTestConfig{
-		Hyperparameters: DefaultHyperparameters,
-		Buckets:         []int{1, 1, 6, 12},
-		NumEpisodes:     30,
-	})
-	require.NoError(err)
-
-}
-
-func gridSearch() {
+// TODO: make generic
+func GridSearch() {
 	s, err := sphere.NewLocalServer(sphere.GymServerConfig)
 	require.NoError(err)
 	defer s.Resource.Close()
