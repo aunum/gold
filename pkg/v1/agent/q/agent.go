@@ -7,6 +7,7 @@ import (
 	"time"
 
 	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
+	"github.com/pbarker/go-rl/pkg/v1/common"
 	"github.com/pbarker/go-rl/pkg/v1/common/num"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
 	"github.com/pbarker/log"
@@ -18,18 +19,17 @@ type Agent struct {
 	*agentv1.Base
 	*Hyperparameters
 
-	r          *rand.Rand
-	env        *envv1.Env
-	table      Table
-	minAlpha   float32
-	minEpsilon float32
+	r        *rand.Rand
+	env      *envv1.Env
+	table    Table
+	minAlpha float32
 }
 
 // Hyperparameters for a Q-learning agent.
 type Hyperparameters struct {
 	// Epsilon is the rate at which the agent should explore vs exploit. The lower the value
 	// the more exploitation.
-	Epsilon float32
+	Epsilon common.Schedule
 
 	// Gamma is the discount factor (0≤γ≤1). It determines how much importance we want to give to future
 	// rewards. A high value for the discount factor (close to 1) captures the long-term effective award, whereas,
@@ -46,7 +46,7 @@ type Hyperparameters struct {
 
 // DefaultHyperparameters is the default agent configuration.
 var DefaultHyperparameters = &Hyperparameters{
-	Epsilon:    0.1,
+	Epsilon:    common.NewConstantSchedule(0.1),
 	Gamma:      0.6,
 	Alpha:      0.1,
 	AdaDivisor: 5.0,
@@ -67,7 +67,7 @@ type AgentConfig struct {
 // DefaultAgentConfig is the default config for a dqn agent.
 var DefaultAgentConfig = &AgentConfig{
 	Hyperparameters: DefaultHyperparameters,
-	Base:            agentv1.NewBase(),
+	Base:            agentv1.NewBase("q"),
 }
 
 // NewAgent returns a new Q-learning agent.
@@ -75,7 +75,7 @@ func NewAgent(c *AgentConfig, env *envv1.Env) *Agent {
 	actionSpaceSize := int(env.GetNumActions())
 	s := rand.NewSource(time.Now().Unix())
 	if c.Base == nil {
-		c.Base = agentv1.NewBase()
+		c.Base = DefaultAgentConfig.Base
 	}
 	if c.Table == nil || (reflect.ValueOf(c.Table).Kind() == reflect.Ptr && reflect.ValueOf(c.Table).IsNil()) {
 		c.Table = NewMemTable(actionSpaceSize)
@@ -87,16 +87,12 @@ func NewAgent(c *AgentConfig, env *envv1.Env) *Agent {
 		env:             env,
 		table:           c.Table,
 		minAlpha:        c.Hyperparameters.Alpha,
-		minEpsilon:      c.Hyperparameters.Epsilon,
 	}
 	return a
 }
 
 // Adapt will adjust the hyperparameters based on th timestep.
 func (a *Agent) Adapt(timestep int) {
-	// max(self.min_alpha, min(1.0, 1.0 - math.log10((t + 1) / self.ada_divisor)))
-	a.Epsilon = adapt(timestep, a.minEpsilon, a.AdaDivisor)
-	log.Infov("set epsilon to", a.Epsilon)
 	a.Alpha = adapt(timestep, a.minAlpha, a.AdaDivisor)
 	log.Infov("set alpha to", a.Alpha)
 }
@@ -113,7 +109,7 @@ func adapt(timestep int, min float32, ada float32) float32 {
 // Action returns the action that should be taken given the state hash.
 func (a *Agent) Action(state *tensor.Dense) (action int, err error) {
 	stateHash := HashState(state)
-	if num.RandF32(float32(0.0), float32(1.0)) < a.Epsilon {
+	if num.RandF32(float32(0.0), float32(1.0)) < a.Epsilon.Value() {
 		// explore
 		action, err = a.env.SampleAction()
 		return

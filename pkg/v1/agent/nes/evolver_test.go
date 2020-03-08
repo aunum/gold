@@ -69,7 +69,7 @@ func TestEvolver(t *testing.T) {
 	config := &EvolverConfig{
 		EvolverHyperparameters: DefaultEvolverHyperparameters,
 		BlackBox:               blackBox,
-		Base:                   agentv1.NewBase(agentv1.WithLogger(log.NewLogger(log.InfoLevel, false))),
+		Base:                   agentv1.NewBase("nes", agentv1.WithLogger(log.NewLogger(log.InfoLevel, false))),
 	}
 	config.NGen = 10000
 	evolver := NewEvolver(config)

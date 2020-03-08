@@ -18,12 +18,12 @@ func TestPolicy(t *testing.T) {
 	// test that network converges to static values.
 	s, err := sphere.NewLocalServer(sphere.GymServerConfig)
 	require.NoError(t, err)
-	defer s.Resource.Close()
+	defer s.Close()
 
 	env, err := s.Make("BitFlipper-v0")
 	require.NoError(t, err)
 
-	base := agentv1.NewBase()
+	base := agentv1.NewBase("test")
 	m, err := MakePolicy("test", DefaultPolicyConfig, base, env)
 	require.NoError(t, err)
 

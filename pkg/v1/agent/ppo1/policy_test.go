@@ -18,12 +18,12 @@ func TestPolicy(t *testing.T) {
 	// test that network converges to static values.
 	s, err := sphere.NewLocalServer(sphere.GymServerConfig)
 	require.NoError(t, err)
-	defer s.Resource.Close()
+	defer s.Close()
 
 	env, err := s.Make("CartPole-v1")
 	require.NoError(t, err)
 
-	base := agentv1.NewBase()
+	base := agentv1.NewBase("test")
 	m, err := MakeCritic(DefaultCriticConfig, base, env)
 	require.NoError(t, err)
 

@@ -23,4 +23,4 @@ See the [experiments](./experiments) folder for example implementations.
 ## References
 - https://en.wikipedia.org/wiki/Q-learning
 - https://en.wikipedia.org/wiki/Temporal_difference_learning
-- https://dev.to/n1try/cartpole-with-q-learning---first-experiences-with-openai-gym
+- tutorial: https://www.learndatasci.com/tutorials/reinforcement-q-learning-scratch-python-openai-gym/

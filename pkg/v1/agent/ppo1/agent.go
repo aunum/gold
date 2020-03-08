@@ -74,7 +74,7 @@ type AgentConfig struct {
 // DefaultAgentConfig is the default config for a dqn agent.
 var DefaultAgentConfig = &AgentConfig{
 	Hyperparameters: DefaultHyperparameters,
-	Base:            agentv1.NewBase(),
+	Base:            agentv1.NewBase("ppo"),
 	ActorConfig:     DefaultActorConfig,
 	CriticConfig:    DefaultCriticConfig,
 }
@@ -85,7 +85,7 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 		c = DefaultAgentConfig
 	}
 	if c.Base == nil {
-		c.Base = agentv1.NewBase()
+		c.Base = DefaultAgentConfig.Base
 	}
 	if env == nil {
 		return nil, fmt.Errorf("environment cannot be nil")

@@ -20,6 +20,9 @@ import (
 
 // Base is an agents base functionality.
 type Base struct {
+	// Name of the agent.
+	Name string
+
 	// Port agent is serving on.
 	Port string
 
@@ -29,7 +32,6 @@ type Base struct {
 	// Logger for the agent.
 	Logger *log.Logger
 
-	// address to the agent.
 	address   string
 	noTracker bool
 	noServer  bool
@@ -74,8 +76,8 @@ func WithoutServer() func(*Base) {
 }
 
 // NewBase returns a new base agent. Any errors will be fatal.
-func NewBase(opts ...Opt) *Base {
-	b := &Base{}
+func NewBase(name string, opts ...Opt) *Base {
+	b := &Base{Name: name}
 	for _, opt := range opts {
 		opt(b)
 	}
@@ -173,9 +175,11 @@ func (b *Base) execTmpl() ([]byte, error) {
 	valueNames := b.Tracker.ValueNames()
 	b.Logger.Debugv("value names", valueNames)
 	templHelper := struct {
+		Name       string
 		ValueNames []string
 		Port       string
 	}{
+		Name:       b.Name,
 		ValueNames: valueNames,
 		Port:       b.Port,
 	}
@@ -189,15 +193,14 @@ var visualizeTemplate = `
 <html lang="en">
 	<head>
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<title>{{.Name}} agent</title>
+		<link rel="icon" href="https://avatars1.githubusercontent.com/u/17137938?s=400&v=4">
 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 	</head>
 	<body>
 	<ul class="nav">
 		<li class="nav-item">
-			<a class="nav-link" href="#">Overview</a>
-		</li>
-		<li class="nav-item">
-			<a class="nav-link" href="/graphs">Graphs</a>
+			<a class="nav-link" href="#">Dashboard</a>
 		</li>
   	</ul>
 

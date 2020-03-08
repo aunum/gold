@@ -124,7 +124,7 @@ func (s *SphereBlackBox) Run(weights *tensor.Dense) (reward float32, err error) 
 		}
 	}()
 
-	base := agentv1.NewBase(agentv1.WithLogger(s.logger), agentv1.WithoutTracker(), agentv1.WithoutServer())
+	base := agentv1.NewBase("nes worker", agentv1.WithLogger(s.logger), agentv1.WithoutTracker(), agentv1.WithoutServer())
 	agent, err := NewAgent(s.agentConfig, env, base)
 	if err != nil {
 		return reward, err

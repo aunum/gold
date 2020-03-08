@@ -59,7 +59,7 @@ type Evolver struct {
 // NewEvolver returns a new evolver.
 func NewEvolver(c *EvolverConfig) *Evolver {
 	if c.Base == nil {
-		c.Base = agentv1.NewBase()
+		c.Base = agentv1.NewBase("nes")
 	}
 	rewardVal := c.Base.Tracker.TrackValue("reward", 0)
 	return &Evolver{

@@ -80,7 +80,7 @@ type AgentConfig struct {
 var DefaultAgentConfig = &AgentConfig{
 	Hyperparameters:  DefaultHyperparameters,
 	PolicyConfig:     DefaultPolicyConfig,
-	Base:             agentv1.NewBase(),
+	Base:             agentv1.NewBase("her"),
 	SuccessfulReward: 0,
 	MemorySize:       1e4,
 }
@@ -91,7 +91,7 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 		c = DefaultAgentConfig
 	}
 	if c.Base == nil {
-		c.Base = agentv1.NewBase()
+		c.Base = DefaultAgentConfig.Base
 	}
 	if env == nil {
 		return nil, fmt.Errorf("environment cannot be nil")
