@@ -11,7 +11,7 @@ import (
 func main() {
 	s, err := envv1.NewLocalServer(envv1.GymServerConfig)
 	require.NoError(err)
-	defer s.Resource.Close()
+	defer s.Close()
 
 	env, err := s.Make("CartPole-v0", envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
 	require.NoError(err)

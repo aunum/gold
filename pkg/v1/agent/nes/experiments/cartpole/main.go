@@ -14,7 +14,7 @@ func main() {
 	serverConfig.Logger = errorLogger
 	server, err := envv1.NewLocalServer(envv1.GymServerConfig)
 	require.NoError(err)
-	defer server.Resource.Close()
+	defer server.Close()
 
 	blackBoxConfig := nes.DefaultSphereBlackBoxConfig
 	blackBoxConfig.Logger = errorLogger

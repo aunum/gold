@@ -6,6 +6,7 @@ import (
 
 	"github.com/k0kubun/pp"
 	"github.com/pbarker/go-rl/pkg/v1/common/num"
+	"github.com/pbarker/log"
 	"gorgonia.org/tensor"
 )
 
@@ -47,7 +48,7 @@ func NewMemTable(actionSpaceSize int) Table {
 func (m *MemTable) GetMax(state uint32) (action int, qValue float32, err error) {
 	qv, ok := m.table[state]
 	if !ok {
-		fmt.Println("state does not exist yet: ", state)
+		log.Debug("state does not exist yet: ", state)
 		return 0, 0.0, nil
 	}
 	// fmt.Println("state exists! ", state)

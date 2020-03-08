@@ -50,13 +50,13 @@ var (
 )
 
 func main() {
-	test(test20)
+	test(test15)
 }
 
 func test(test *Test) {
 	s, err := envv1.NewLocalServer(envv1.GymServerConfig)
 	require.NoError(err)
-	defer s.Resource.Close()
+	defer s.Close()
 
 	env, err := s.Make(test.env, envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
 	require.NoError(err)

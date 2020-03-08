@@ -11,7 +11,7 @@ import (
 func main() {
 	s, err := envv1.NewLocalServer(envv1.GymServerConfig)
 	require.NoError(err)
-	defer s.Resource.Close()
+	defer s.Close()
 
 	env, err := s.Make("CartPole-v1", envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
 	require.NoError(err)
@@ -28,7 +28,7 @@ func main() {
 
 		state := init.Observation
 
-		score := episode.TrackScalar("score", 0, track.WithAggregator(track.MaxAggregator))
+		score := episode.TrackScalar("score", 0, track.WithAggregator(track.Max))
 
 		for _, timestep := range episode.Steps(env.MaxSteps()) {
 			action, event, err := agent.Action(state)

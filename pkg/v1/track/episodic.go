@@ -72,14 +72,14 @@ func (e *Episode) GetValue(name string) (TrackedValue, error) {
 func (e *Episode) Data() *History {
 	vals := []*HistoricalValue{}
 	for _, v := range e.tracker.values {
-		vals = append(vals, v.Data(e.I, -1))
+		vals = append(vals, v.Data(e.I, 0))
 	}
 	for _, v := range e.Values {
-		vals = append(vals, v.Data(e.I, -1))
+		vals = append(vals, v.Data(e.I, 0))
 	}
 	return &History{
 		Values:   vals,
-		Timestep: e.I,
+		Timestep: 0,
 		Episode:  e.I,
 	}
 }

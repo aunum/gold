@@ -1,7 +1,6 @@
 package q
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"reflect"
@@ -48,7 +47,7 @@ type Hyperparameters struct {
 // DefaultHyperparameters is the default agent configuration.
 var DefaultHyperparameters = &Hyperparameters{
 	Epsilon:    0.1,
-	Gamma:      0.3,
+	Gamma:      0.6,
 	Alpha:      0.1,
 	AdaDivisor: 5.0,
 }
@@ -74,7 +73,6 @@ var DefaultAgentConfig = &AgentConfig{
 // NewAgent returns a new Q-learning agent.
 func NewAgent(c *AgentConfig, env *envv1.Env) *Agent {
 	actionSpaceSize := int(env.GetNumActions())
-	log.Infov("num actions", actionSpaceSize)
 	s := rand.NewSource(time.Now().Unix())
 	if c.Base == nil {
 		c.Base = agentv1.NewBase()
@@ -107,10 +105,8 @@ func adapt(timestep int, min float32, ada float32) float32 {
 	a := float32((timestep + 1)) / ada
 	b := math.Log10(float64(a))
 	c := 1.0 - b
-	// fmt.Printf("a: %v b: %v c: %v\n", a, b, c)
 	adapted := math.Min(1.0, c)
 	max := math.Max(float64(min), adapted)
-	// fmt.Printf("adapted: %v max: %v\n", adapted, max)
 	return float32(max)
 }
 
@@ -141,11 +137,9 @@ func (a *Agent) Learn(action int, state *tensor.Dense, outcome *envv1.Outcome) e
 		return err
 	}
 
-	// fmt.Printf("eq: oldVal %v + alpha %v * (reward %v + gamma %v * nextMax %v - oldVal %v)\n", oldVal, a.Alpha, reward, a.Gamma, nextMax, oldVal)
 	// Q learning algorithm.
-	newValue := (oldVal + a.Alpha) * (outcome.Reward + a.Gamma*nextMax - oldVal)
+	newValue := (1-a.Alpha)*oldVal + a.Alpha*(outcome.Reward+a.Gamma*nextMax)
 
-	fmt.Printf("learning reward: %v on state: %v with new value: %v\n", outcome.Reward, stateHash, newValue)
 	err = a.table.Set(stateHash, action, newValue)
 	if err != nil {
 		return err

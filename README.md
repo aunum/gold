@@ -56,6 +56,7 @@ All of the agent implementations can be found in `pkg/v1/agents` each agent has 
 - Neuromodulation - http://www.evolvingai.org/miconi-t-rawal-clune-stanley-2019-backpropamine-training-self
 - Coevolutionary Temporal Difference Learning - http://www.cs.put.poznan.pl/mszubert/pub/mscthesis.pdf
 - Automatic Goal Generation - https://arxiv.org/pdf/1705.06366.pdf
+- Hierarchical Reinforcement Learning - https://thegradient.pub/the-promise-of-hierarchical-reinforcement-learning/
 - Graph Neural Networks - https://arxiv.org/abs/1810.09202
 - Dynamic HER - https://openreview.net/pdf?id=Byf5-30qFX
 - Energy Based HER - https://arxiv.org/pdf/1810.01363.pdf

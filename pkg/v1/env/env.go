@@ -7,146 +7,17 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"os/signal"
 	"path/filepath"
-	"syscall"
-	"time"
 
-	"github.com/pbarker/go-rl/pkg/v1/common"
 	"github.com/pbarker/go-rl/pkg/v1/common/require"
 	"github.com/pbarker/log"
 
 	"github.com/pbarker/go-rl/pkg/v1/common/num"
 
-	"github.com/ory/dockertest"
 	spherev1alpha "github.com/pbarker/sphere/api/gen/go/v1alpha"
 	"github.com/skratchdot/open-golang/open"
-	"google.golang.org/grpc"
 	"gorgonia.org/tensor"
 )
-
-// Server of environments.
-type Server struct {
-	// Resource is the underlying docker container.
-	Resource *dockertest.Resource
-
-	// Client to connect to the Sphere server.
-	Client spherev1alpha.EnvironmentAPIClient
-
-	logger *log.Logger
-}
-
-// LocalServerConfig is the environment server config.
-type LocalServerConfig struct {
-	// Docker image of environment.
-	Image string
-
-	// Version of the docker image.
-	Version string
-
-	// Port the environment is exposed on.
-	Port string
-
-	// Logger for the server.
-	Logger *log.Logger
-}
-
-// GymServerConfig is a configuration for a OpenAI Gym server environment.
-var GymServerConfig = &LocalServerConfig{Image: "sphereproject/gym", Version: "latest", Port: "50051/tcp"}
-
-// NewLocalServer creates a new environment server by launching a docker container and connecting to it.
-func NewLocalServer(config *LocalServerConfig) (*Server, error) {
-	if config.Logger == nil {
-		config.Logger = log.DefaultLogger
-	}
-	config.Logger.Info("creating local server")
-	pool, err := dockertest.NewPool("")
-	if err != nil {
-		return nil, fmt.Errorf("Could not connect to docker: %s", err)
-	}
-
-	resource, err := pool.Run(config.Image, config.Version, []string{})
-	if err != nil {
-		return nil, fmt.Errorf("Could not start resource: %s", err)
-	}
-
-	var sphereClient spherev1alpha.EnvironmentAPIClient
-
-	// exponential backoff-retry, because the application in the container might
-	// not be ready to accept connections yet
-	if err := pool.Retry(func() error {
-		var err error
-		address := fmt.Sprintf("localhost:%s", resource.GetPort(config.Port))
-		conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
-		if err != nil {
-			return err
-		}
-		sphereClient = spherev1alpha.NewEnvironmentAPIClient(conn)
-		resp, err := sphereClient.Info(context.Background(), &spherev1alpha.Empty{})
-		if err != nil {
-			return err
-		}
-		config.Logger.Successf("connected to server %q", resp.ServerName)
-		return nil
-	}); err != nil {
-		return nil, fmt.Errorf("Could not connect to docker: %s", err)
-	}
-
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		sig := <-sigs
-		config.Logger.Warningf("closing env on sig %s", sig.String())
-		resource.Close()
-		os.Exit(1)
-	}()
-
-	return &Server{
-		Resource: resource,
-		Client:   sphereClient,
-		logger:   config.Logger,
-	}, nil
-}
-
-// Connect to a server.
-func Connect(addr string, opts ...ServerOpts) (*Server, error) {
-	s := &Server{}
-	for _, opt := range opts {
-		opt(s)
-	}
-	if s.logger == nil {
-		s.logger = log.DefaultLogger
-	}
-	var sphereClient spherev1alpha.EnvironmentAPIClient
-	err := common.Retry(10, time.Second*1, func() error {
-		conn, err := grpc.Dial(addr, grpc.WithInsecure(), grpc.WithBlock())
-		if err != nil {
-			return err
-		}
-		sphereClient = spherev1alpha.NewEnvironmentAPIClient(conn)
-		resp, err := sphereClient.Info(context.Background(), &spherev1alpha.Empty{})
-		if err != nil {
-			return err
-		}
-		s.logger.Successf("connected to server %q", resp.ServerName)
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	s.Client = sphereClient
-	return s, nil
-}
-
-// ServerOpts are the connection opts.
-type ServerOpts func(*Server)
-
-// WithServerLogger adds a logger to the server.
-func WithServerLogger(logger *log.Logger) func(*Server) {
-	return func(s *Server) {
-		s.logger = logger
-	}
-}
 
 // Env is a convienience environment wrapper.
 type Env struct {
