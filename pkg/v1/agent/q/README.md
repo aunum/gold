@@ -21,6 +21,6 @@ Q-learning doesn't work well in continous environments, the `pkg/v1/env` package
 See the [experiments](./experiments) folder for example implementations.
 
 ## References
-- https://en.wikipedia.org/wiki/Q-learning
-- https://en.wikipedia.org/wiki/Temporal_difference_learning
+- wiki: https://en.wikipedia.org/wiki/Q-learning
+- td wiki: https://en.wikipedia.org/wiki/Temporal_difference_learning
 - tutorial: https://www.learndatasci.com/tutorials/reinforcement-q-learning-scratch-python-openai-gym/

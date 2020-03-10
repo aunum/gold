@@ -6,7 +6,7 @@ import (
 )
 
 func TestBase(t *testing.T) {
-	base := NewBase()
+	base := NewBase("test")
 
 	for ep := 0; ep < 100; ep++ {
 		for ts := 0; ts < 10; ts++ {

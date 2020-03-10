@@ -13,6 +13,8 @@ import (
 	"github.com/phayes/freeport"
 
 	"github.com/pbarker/go-rl/pkg/v1/common"
+	"github.com/pbarker/go-rl/pkg/v1/common/sse"
+	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
 	"github.com/pbarker/go-rl/pkg/v1/track"
 	"github.com/pbarker/log"
 	"github.com/skratchdot/open-golang/open"
@@ -35,6 +37,7 @@ type Base struct {
 	address   string
 	noTracker bool
 	noServer  bool
+	broker    *sse.Broker
 }
 
 // Opt is an option for the base agent.
@@ -110,6 +113,7 @@ func NewBase(name string, opts ...Opt) *Base {
 			}
 			b.Port = strconv.Itoa(port)
 		}
+		b.broker = sse.NewBroker()
 	}
 	return b
 }
@@ -150,9 +154,20 @@ func (b *Base) Wait() {
 	input.Scan()
 }
 
+// Render the given data to the ui.
+func (b *Base) Render(env *envv1.Env) error {
+	frame, err := env.Render()
+	if err != nil {
+		return err
+	}
+	b.broker.Notifier <- frame.Data
+	return nil
+}
+
 // ApplyHandlers adds the base handlers.
 func (b *Base) ApplyHandlers(mux *http.ServeMux) {
 	mux.HandleFunc("/", b.VisualizeHandler)
+	mux.HandleFunc("/live", b.broker.Handler)
 }
 
 // VisualizeHandler vizualizes the agent.
@@ -202,83 +217,280 @@ var visualizeTemplate = `
 		<li class="nav-item">
 			<a class="nav-link" href="#">Dashboard</a>
 		</li>
-  	</ul>
-
-	{{ range $name := .ValueNames }}
-	<div class="container">
-	<canvas id="{{ $name}}" style="height:400px;width:400px"></canvas>
-		<hr>
+	  </ul>
+	<div class="text-center">
+		<img id="live" style="height:400px;width:600px" class="img-fluid"/>
 	</div>
-	{{ end }}
+
+	<div class="d-flex justify-content-around flex-wrap" id="metrics">
+	</div>
 
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 	</body>
-	{{ range $name := .ValueNames }}
 	<script>
-	var ctx_{{$name}}_live = document.getElementById("{{$name}}");
-	var {{$name}}Chart = new Chart(ctx_{{$name}}_live, {
-		type: 'line',
-		data: {
-		  labels: [],
-		  datasets: [{
-			data: [],
-			borderWidth: 1,
-			borderColor:'#00c0ef',
-			fill: false,
-		  }]
-		},
-		options: {
-		  responsive: true,
-		  title: {
-			display: true,
-			text: "{{$name}}",
-		  },
-		  legend: {
-			display: false
-		  },
-		  scales: {
-			yAxes: [{
-				type: 'linear',
-				ticks: {
-					beginAtZero: true,
-			  }
-			}],
-			xAxes: [{
-				type: 'linear',
-				ticks: {
-				  beginAtZero: true,
-				},
-				scaleLabel: {
-					display: true,
-					labelString: 'Episode'
-				}
-			  }]
-		  }
+		source = "http://localhost:{{.Port}}/live"
+		var client = new EventSource(source)
+		client.onmessage = function (msg) {
+			var metaData = "data:image/jpeg;base64,";
+			document.getElementById("live").src = metaData + msg.data;
 		}
-	});
-	var get{{$name}}Data = function() {
-		$.ajax({
-			url: "http://localhost:{{$.Port}}/api/values/{{$name}}",
-			dataType: "json",
-			success: function(response) {
-				// {{$name}}Chart.data.labels.push("Post " + postId++);
-				console.log("response")
-				console.log(response)
-			    // {{$name}}Chart.data.datasets[0].data.push(response);
-				{{$name}}Chart.data.datasets[0].data = response.xys;
-				console.log({{$name}}Chart.data.datasets[0].data)
-				{{$name}}Chart.options.scales.xAxes[0].scaleLabel.labelString = response.xLabel;
-				
-				// re-render the chart
-				{{$name}}Chart.update();
-			}
-		});
-	}
-	get{{$name}}Data()
-	setInterval(get{{$name}}Data, 1000);
 	</script>
-	{{end}}
+	<script>
+		function buildChart(value) {
+			var ctx_live = document.getElementById(value);
+			var chart = new Chart(ctx_live, {
+				type: 'line',
+				data: {
+				labels: [],
+				datasets: [{
+					data: [],
+					borderWidth: 1,
+					borderColor:'#00c0ef',
+					fill: false,
+				}]
+				},
+				options: {
+				responsive: true,
+				title: {
+					display: true,
+					text: value,
+				},
+				legend: {
+					display: false
+				},
+				scales: {
+					yAxes: [{
+						type: 'linear',
+						ticks: {
+							beginAtZero: true,
+					}
+					}],
+					xAxes: [{
+						type: 'linear',
+						ticks: {
+						beginAtZero: true,
+						},
+						scaleLabel: {
+							display: true,
+							labelString: 'Episode'
+						}
+					}]
+				}
+				}
+			});
+			var getData = function() {
+				$.ajax({
+					url: "http://localhost:{{$.Port}}/api/values/"+value,
+					dataType: "json",
+					success: function(response) {
+						chart.data.datasets[0].data = response.xys;
+						chart.options.scales.xAxes[0].scaleLabel.labelString = response.xLabel;
+
+						// re-render the chart
+						chart.update();
+					}
+				});
+			};
+			getData();
+			setInterval(getData, 1000);
+		};
+
+
+		var getValues = function() {
+			$.ajax({
+				url: "http://localhost:{{$.Port}}/api/values",
+				dataType: "json",
+				success: function(response) {
+					values = window.localStorage.getItem('values');
+					console.log('response');
+					console.log(response);
+					console.log('values');
+					console.log(values);
+
+					window.localStorage.setItem('values', response);
+					if(!response) {
+						console.log('returning')
+						return
+					};
+					if(!values) {
+						values = []
+					};
+					
+					newValues = response.filter(e => !values.includes(e))
+					console.log('new values')
+					console.log(newValues)
+					
+					if (newValues) {
+						var body = document.getElementById("metrics");
+						for (value of newValues) {
+							console.log('adding value: ' + value)
+							var div = document.createElement("div");
+							div.id = value + 'Holder';
+							div.class = "p-2"
+
+							var canvas = document.createElement('canvas');
+							canvas.id = value;
+							canvas.width = 400;
+							canvas.height = 400;
+
+							div.appendChild(canvas);
+
+							body.appendChild(div);
+
+							buildChart(value)
+						};
+					};
+				}
+			});
+		}
+		getValues()
+		setInterval(getValues, 2000);
+	</script>
 </html>
 `
+
+// var visualizeTemplate = `
+// <!doctype html>
+// <html lang="en">
+// 	<head>
+// 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+// 		<title>{{.Name}} agent</title>
+// 		<link rel="icon" href="https://avatars1.githubusercontent.com/u/17137938?s=400&v=4">
+// 		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+// 	</head>
+// 	<body>
+// 	<ul class="nav">
+// 		<li class="nav-item">
+// 			<a class="nav-link" href="#">Dashboard</a>
+// 		</li>
+// 	  </ul>
+// 	<div class="text-center">
+// 		<img id="live" style="height:400px;width:600px" class="img-fluid"/>
+// 	</div>
+// 	{{ range $name := .ValueNames }}
+// 	<div class="container">
+// 	<canvas id="{{ $name}}" style="height:400px;width:400px"></canvas>
+// 		<hr>
+// 	</div>
+// 	{{ end }}
+
+// 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+// 	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
+// 	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+// 	</body>
+// 	<script>
+// 	source = "http://localhost:{{.Port}}/live"
+// 	var client = new EventSource(source)
+// 	client.onmessage = function (msg) {
+// 		var metaData = "data:image/jpeg;base64,";
+//         document.getElementById("live").src = metaData + msg.data;
+// 	}
+// 	</script>
+// 	<script>
+
+// 	function arraysEqual(_arr1, _arr2) {
+// 		if (!Array.isArray(_arr1) || ! Array.isArray(_arr2) || _arr1.length !== _arr2.length)
+// 		return false;
+
+// 		var arr1 = _arr1.concat().sort();
+// 		var arr2 = _arr2.concat().sort();
+
+// 		for (var i = 0; i < arr1.length; i++) {
+// 			if (arr1[i] !== arr2[i])
+// 				return false;
+// 		}
+
+// 		return true;
+// 	};
+
+// 	var getValues = function() {
+// 		$.ajax({
+// 			url: "http://localhost:{{$.Port}}/api/values",
+// 			dataType: "json",
+// 			success: function(response) {
+// 				values = window.localStorage.getItem('values');
+// 				console.log('response');
+// 				console.log(response);
+// 				console.log('values');
+// 				console.log(values);
+// 				if(!values) {
+// 					console.log('setting values')
+// 					window.localStorage.setItem('values', response);
+// 					return
+// 				};
+// 				if(!arraysEqual(response, values)) {
+// 					console.log('reloading window')
+// 					location.reload();
+// 				};
+// 				window.localStorage.setItem('values', response);
+// 			}
+// 		});
+// 	}
+// 	getValues()
+// 	setInterval(getValues, 2000);
+// 	</script>
+// 	{{ range $name := .ValueNames }}
+// 	<script>
+// 	var ctx_{{$name}}_live = document.getElementById("{{$name}}");
+// 	var {{$name}}Chart = new Chart(ctx_{{$name}}_live, {
+// 		type: 'line',
+// 		data: {
+// 		  labels: [],
+// 		  datasets: [{
+// 			data: [],
+// 			borderWidth: 1,
+// 			borderColor:'#00c0ef',
+// 			fill: false,
+// 		  }]
+// 		},
+// 		options: {
+// 		  responsive: true,
+// 		  title: {
+// 			display: true,
+// 			text: "{{$name}}",
+// 		  },
+// 		  legend: {
+// 			display: false
+// 		  },
+// 		  scales: {
+// 			yAxes: [{
+// 				type: 'linear',
+// 				ticks: {
+// 					beginAtZero: true,
+// 			  }
+// 			}],
+// 			xAxes: [{
+// 				type: 'linear',
+// 				ticks: {
+// 				  beginAtZero: true,
+// 				},
+// 				scaleLabel: {
+// 					display: true,
+// 					labelString: 'Episode'
+// 				}
+// 			  }]
+// 		  }
+// 		}
+// 	});
+// 	var get{{$name}}Data = function() {
+// 		$.ajax({
+// 			url: "http://localhost:{{$.Port}}/api/values/{{$name}}",
+// 			dataType: "json",
+// 			success: function(response) {
+// 				{{$name}}Chart.data.datasets[0].data = response.xys;
+// 				// console.log({{$name}}Chart.data.datasets[0].data)
+// 				{{$name}}Chart.options.scales.xAxes[0].scaleLabel.labelString = response.xLabel;
+
+// 				// re-render the chart
+// 				{{$name}}Chart.update();
+// 			}
+// 		});
+// 	}
+// 	get{{$name}}Data()
+// 	setInterval(get{{$name}}Data, 1000);
+// 	</script>
+// 	{{end}}
+// </html>
+// `

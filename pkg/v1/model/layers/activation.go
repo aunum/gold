@@ -205,15 +205,12 @@ func (l *LinearActivation) Clone() Activation {
 // This is ripped from Gorgonia core as there was a bug in it that needs to be
 // contributed back upstream.
 func softMax(a *g.Node, axes ...int) (retVal *g.Node, err error) {
-	log.Infof("---- running softmax")
 	aShape := a.Shape()
-	log.Infov("a shape", aShape)
 
 	if aShape[0] == 1 {
 		aShape = aShape[1:]
-		log.Infof("reshaping %v to %v", a.Shape(), aShape)
 		a, err = g.Reshape(a, aShape)
-		log.Infof("a reshaped to %v", a.Shape())
+		log.Debugf("a reshaped to %v", a.Shape())
 	}
 	axis := aShape.Dims() - 1 // default: last dim
 	if a.IsColVec() || (a.IsVector() && !a.IsRowVec()) {
@@ -226,7 +223,6 @@ func softMax(a *g.Node, axes ...int) (retVal *g.Node, err error) {
 		}
 		axis = axes[0]
 	}
-	log.Infov("axis", axis)
 	var exp, sum *g.Node
 	if exp, err = g.Exp(a); err != nil {
 		return nil, err
@@ -234,7 +230,6 @@ func softMax(a *g.Node, axes ...int) (retVal *g.Node, err error) {
 	if sum, err = g.Sum(exp, axis); err != nil {
 		return nil, err
 	}
-	log.Infov("sum shape", sum.Shape())
 
 	if sum.IsScalar() {
 		return g.HadamardDiv(exp, sum)
@@ -259,14 +254,6 @@ func softMax(a *g.Node, axes ...int) (retVal *g.Node, err error) {
 	if err != nil {
 		return
 	}
-	// if squeezed {
-	// 	rShape := retVal.Shape()
-	// 	fmt.Println("rshape: ", rShape)
-	// 	nShape := []int{1}
-	// 	nShape = append(nShape, rShape...)
-	// 	g.Reshape(retVal, nShape)
-	// 	fmt.Println("nshape: ", nShape)
-	// }
 	return
 
 }

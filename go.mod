@@ -6,13 +6,14 @@ require (
 	github.com/awalterschulze/gographviz v0.0.0-20190522210029-fa59802746ab // indirect
 	github.com/chewxy/math32 v1.0.4
 	github.com/gammazero/deque v0.0.0-20200124200322-7e84b94275b8
+	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.3.4 // indirect
 	github.com/k0kubun/pp v3.0.1+incompatible
 	github.com/leesper/go_rng v0.0.0-20190531154944-a612b043e353 // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/ory/dockertest v3.3.5+incompatible
 	github.com/pbarker/log v0.0.0-20200228171605-bd0bb5c511aa
-	github.com/pbarker/sphere v0.0.0-20200218163301-89282f667248
+	github.com/pbarker/sphere v0.0.0-20200309164442-3bf9d8cdd2ba
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/schwarmco/go-cartesian-product v0.0.0-20180515110546-d5ee747a6dc9

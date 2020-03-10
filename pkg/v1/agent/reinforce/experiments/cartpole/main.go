@@ -13,7 +13,7 @@ func main() {
 	require.NoError(err)
 	defer s.Close()
 
-	env, err := s.Make("CartPole-v0", envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
+	env, err := s.Make("CartPole-v0", envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)), envv1.WithRecorder())
 	require.NoError(err)
 
 	agent, err := reinforce.NewAgent(reinforce.DefaultAgentConfig, env)
@@ -49,6 +49,9 @@ func main() {
 				break
 			}
 			state = outcome.Observation
+
+			err = agent.Render(env)
+			require.NoError(err)
 		}
 		err = agent.Learn()
 		require.NoError(err)

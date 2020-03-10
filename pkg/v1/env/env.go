@@ -126,6 +126,17 @@ func (e *Env) SampleAction() (int, error) {
 	return int(resp.Value), nil
 }
 
+// Render the environment.
+// TODO: should maybe be a stream.
+func (e *Env) Render() (*spherev1alpha.Image, error) {
+	ctx := context.Background()
+	resp, err := e.Client.RenderEnv(ctx, &spherev1alpha.RenderEnvRequest{Id: e.Id})
+	if err != nil {
+		return nil, err
+	}
+	return resp.Frame, nil
+}
+
 // InitialState of the environment.
 type InitialState struct {
 	// Observation of the environment.
