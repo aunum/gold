@@ -63,6 +63,8 @@ type Sequential struct {
 	y   *Input
 	fwd *Input
 
+	activeGraphs Graphs
+
 	trainChain, trainBatchChain   *layers.Chain
 	onlineChain, onlineBatchChain *layers.Chain
 	backwardChain                 *layers.Chain
@@ -75,7 +77,6 @@ type Sequential struct {
 	xTrainFwd, xTrainBatchFwd   *Input
 	xOnline, xOnlineBatch       Inputs
 	xOnlineFwd, xOnlineBatchFwd *Input
-	lossInput                   *Input
 
 	yTrain, yTrainBatch *Input
 
@@ -97,14 +98,74 @@ type Sequential struct {
 // NewSequential returns a new sequential model.
 func NewSequential(name string) (*Sequential, error) {
 	return &Sequential{
-		Chain:     layers.NewChain(),
-		name:      name,
-		batchSize: 32,
+		Chain:        layers.NewChain(),
+		name:         name,
+		batchSize:    32,
+		activeGraphs: AllGraphs,
 	}, nil
 }
 
 // Opt is a model option.
 type Opt func(Model)
+
+// Graph is a type of graph.
+type Graph string
+
+const (
+	// TrainGraph is a training graph with singular inputs.
+	TrainGraph Graph = "train"
+
+	// TrainBatchGraph is a training graph with batch inputs.
+	TrainBatchGraph Graph = "train_batch"
+
+	// OnlineGraph is a prediction graph with singular inputs.
+	OnlineGraph Graph = "online"
+
+	// OnlineBatchGraph is an online graph with batch inputs.
+	OnlineBatchGraph Graph = "online_batch"
+)
+
+// Graphs is a set of graph.
+type Graphs []Graph
+
+// AllGraphs is all the available graphs.
+var AllGraphs = Graphs{TrainGraph, TrainBatchGraph, OnlineGraph, OnlineBatchGraph}
+
+// Includes tells whether the set of graphs includes the given graph.
+func (g Graphs) Includes(graph Graph) bool {
+	for _, gr := range g {
+		if gr == graph {
+			return true
+		}
+	}
+	return false
+}
+
+// WithGraphs sets which graphs you would like available to the model.
+// Defaults to AllGraphs.
+func WithGraphs(graphs ...Graph) func(Model) {
+	return func(m Model) {
+		switch t := m.(type) {
+		case *Sequential:
+			t.activeGraphs = graphs
+		default:
+			log.Fatal("unknown model type")
+		}
+	}
+}
+
+// Metric tracked by the model.
+type Metric string
+
+const (
+	// TrainLossMetric is the metric for training loss.
+	TrainLossMetric Metric = "train_loss"
+
+	// TrainBatchLossMetric is the metric for batch training loss.
+	TrainBatchLossMetric Metric = "train_batch_loss"
+)
+
+func WithMetrics(metrics ...Metric)
 
 // WithLoss uses a specific loss function with the model.
 // Defaults to MSE.
@@ -113,18 +174,6 @@ func WithLoss(loss Loss) func(Model) {
 		switch t := m.(type) {
 		case *Sequential:
 			t.loss = loss
-		default:
-			log.Fatal("unknown model type")
-		}
-	}
-}
-
-// WithLossInput sets a loss input to use with the Backward method.
-func WithLossInput(loss *Input) func(Model) {
-	return func(m Model) {
-		switch t := m.(type) {
-		case *Sequential:
-			t.lossInput = loss
 		default:
 			log.Fatal("unknown model type")
 		}
@@ -277,6 +326,9 @@ func (s *Sequential) Compile(x InputOr, y *Input, opts ...Opt) error {
 }
 
 func (s *Sequential) buildTrainGraph(x Inputs, y *Input) (err error) {
+	if !s.activeGraphs.Includes(TrainGraph) {
+		return nil
+	}
 	s.trainGraph = g.NewGraph()
 
 	s.trainLoss = s.loss.CloneTo(s.trainGraph)
@@ -329,6 +381,9 @@ func (s *Sequential) buildTrainGraph(x Inputs, y *Input) (err error) {
 }
 
 func (s *Sequential) buildTrainBatchGraph(x Inputs, y *Input) (err error) {
+	if !s.activeGraphs.Includes(TrainBatchGraph) {
+		return nil
+	}
 	s.trainBatchGraph = g.NewGraph()
 
 	s.trainBatchLoss = s.loss.CloneTo(s.trainBatchGraph, AsBatch(s.batchSize))
@@ -380,6 +435,9 @@ func (s *Sequential) buildTrainBatchGraph(x Inputs, y *Input) (err error) {
 }
 
 func (s *Sequential) buildOnlineGraph(x Inputs) (err error) {
+	if !s.activeGraphs.Includes(OnlineGraph) {
+		return nil
+	}
 	s.onlineGraph = g.NewGraph()
 
 	s.xOnline = s.x.Clone()
@@ -406,6 +464,9 @@ func (s *Sequential) buildOnlineGraph(x Inputs) (err error) {
 }
 
 func (s *Sequential) buildOnlineBatchGraph(x Inputs) (err error) {
+	if !s.activeGraphs.Includes(OnlineBatchGraph) {
+		return nil
+	}
 	s.onlineBatchGraph = g.NewGraph()
 
 	for _, input := range x {

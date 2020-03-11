@@ -59,6 +59,7 @@ func MakePolicy(config *PolicyConfig, base *agentv1.Base, env *envv1.Env) (model
 	opts.Add(
 		modelv1.WithOptimizer(config.Optimizer),
 		modelv1.WithLoss(modelv1.CrossEntropy),
+		modelv1.WithGraphs(modelv1.TrainBatchGraph, modelv1.OnlineGraph),
 	)
 	if config.Track {
 		opts.Add(modelv1.WithTracker(base.Tracker))

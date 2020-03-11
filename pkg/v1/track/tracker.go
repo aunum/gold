@@ -124,12 +124,12 @@ func (t *Tracker) TrackValue(name string, value interface{}, opts ...TrackedValu
 		tv := NewTrackedNodeValue(name, opts...)
 		t.values[tv.name] = tv
 		g.Read(n, &tv.value)
-		t.logger.Infof("tracking node value %q", tv.name)
+		t.logger.Debugf("tracking node value %q", tv.name)
 		return tv
 	}
 	tv := NewTrackedScalarValue(name, value, opts...)
 	t.values[tv.name] = tv
-	t.logger.Infof("tracking scalar value %q", tv.name)
+	t.logger.Debugf("tracking scalar value %q", tv.name)
 	return tv
 }
 
