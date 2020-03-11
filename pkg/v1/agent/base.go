@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"github.com/pbarker/go-rl/pkg/v1/ui"
+	"github.com/pbarker/go-rl/pkg/v1/ui/sse"
 
 	"github.com/phayes/freeport"
 
 	"github.com/pbarker/go-rl/pkg/v1/common"
-	"github.com/pbarker/go-rl/pkg/v1/common/sse"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
 	"github.com/pbarker/go-rl/pkg/v1/track"
 	"github.com/pbarker/log"
@@ -132,7 +132,6 @@ func (b *Base) Serve() {
 		b.Logger.Fatal("trying to serve an agent that was created with WithoutServer option")
 	}
 	mux := http.NewServeMux()
-	b.Tracker.ApplyHandlers(mux)
 	b.ApplyHandlers(mux)
 	b.address = fmt.Sprintf("http://localhost:%s", b.Port)
 	b.Logger.Infof("serving agent api/ui on %s", b.address)
@@ -166,13 +165,15 @@ func (b *Base) Render(env *envv1.Env) error {
 }
 
 // ApplyHandlers adds the base handlers.
-func (b *Base) ApplyHandlers(mux *http.ServeMux) {
-	// mux.HandleFunc("/", b.VisualizeHandler)
-	// box := rice.MustFindBox("../ui")
-	// mux.Handle("/", http.FileServer(box.HTTPBox()))
-	ui.ApplyHandlers(mux)
+func (b *Base) ApplyHandlers(mux *http.ServeMux) error {
+	b.Tracker.ApplyHandlers(mux)
+	err := ui.ApplyHandlers(mux)
+	if err != nil {
+		return err
+	}
 	mux.HandleFunc("/live", b.broker.Handler)
 	mux.HandleFunc("/info", b.InfoHandler)
+	return nil
 }
 
 // InfoHandler returns info about the agent.
@@ -190,159 +191,3 @@ func (b *Base) InfoHandler(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(200)
 	w.Write(bts)
 }
-
-// VisualizeHandler vizualizes the agent.
-func (b *Base) VisualizeHandler(w http.ResponseWriter, req *http.Request) {
-	w.WriteHeader(200)
-	w.Write([]byte(dashboard))
-}
-
-var dashboard = `
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-		<link rel="icon" href="https://avatars1.githubusercontent.com/u/17137938?s=400&v=4">
-		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-	</head>
-	<body>
-	<ul class="nav">
-		<li class="nav-item">
-			<a class="nav-link" href="#">Dashboard</a>
-		</li>
-	  </ul>
-	<div class="text-center">
-		<img id="live" style="height:400px;width:600px" class="img-fluid"/>
-	</div>
-
-	<div class="d-flex justify-content-around flex-wrap" id="metrics">
-	</div>
-
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.bundle.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-	</body>
-	<script>
-		var getInfo = function() {
-			$.ajax({
-				url: "/info",
-				dataType: "json",
-				success: function(response) {
-					document.title = response.name + " agent";
-				}
-			});
-		};
-		getInfo();
-	</script>
-	<script>
-		var client = new EventSource("/live")
-		client.onmessage = function (msg) {
-			var metaData = "data:image/jpeg;base64,";
-			document.getElementById("live").src = metaData + msg.data;
-		}
-	</script>
-	<script>
-		function buildChart(value) {
-			var ctx_live = document.getElementById(value);
-			var chart = new Chart(ctx_live, {
-				type: 'line',
-				data: {
-				labels: [],
-				datasets: [{
-					data: [],
-					borderWidth: 1,
-					borderColor:'#00c0ef',
-					fill: false,
-				}]
-				},
-				options: {
-				responsive: true,
-				title: {
-					display: true,
-					text: value,
-				},
-				legend: {
-					display: false
-				},
-				scales: {
-					yAxes: [{
-						type: 'linear',
-						ticks: {
-							beginAtZero: true,
-					}
-					}],
-					xAxes: [{
-						type: 'linear',
-						ticks: {
-						beginAtZero: true,
-						},
-						scaleLabel: {
-							display: true,
-							labelString: 'Episode'
-						}
-					}]
-				}
-				}
-			});
-			var getData = function() {
-				$.ajax({
-					url: "/api/values/"+value,
-					dataType: "json",
-					success: function(response) {
-						chart.data.datasets[0].data = response.xys;
-						chart.options.scales.xAxes[0].scaleLabel.labelString = response.xLabel;
-
-						// re-render the chart
-						chart.update();
-					}
-				});
-			};
-			getData();
-			setInterval(getData, 1000);
-		};
-
-
-		var getValues = function() {
-			$.ajax({
-				url: "/api/values",
-				dataType: "json",
-				success: function(response) {
-					values = window.localStorage.getItem('values');
-					window.localStorage.setItem('values', response);
-					if(!response) {
-						return
-					};
-					if(!values) {
-						values = []
-					};
-					
-					newValues = response.filter(e => !values.includes(e))
-					
-					if (newValues) {
-						var body = document.getElementById("metrics");
-						for (value of newValues) {
-							console.log('adding value: ' + value)
-							var div = document.createElement("div");
-							div.id = value + 'Holder';
-							div.class = "p-2"
-
-							var canvas = document.createElement('canvas');
-							canvas.id = value;
-							canvas.width = 400;
-							canvas.height = 400;
-
-							div.appendChild(canvas);
-
-							body.appendChild(div);
-
-							buildChart(value)
-						};
-					};
-				}
-			});
-		}
-		getValues()
-		setInterval(getValues, 2000);
-	</script>
-</html>
-`
