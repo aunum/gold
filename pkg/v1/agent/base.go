@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/pbarker/go-rl/pkg/v1/ui"
+
 	"github.com/phayes/freeport"
 
 	"github.com/pbarker/go-rl/pkg/v1/common"
@@ -165,7 +167,10 @@ func (b *Base) Render(env *envv1.Env) error {
 
 // ApplyHandlers adds the base handlers.
 func (b *Base) ApplyHandlers(mux *http.ServeMux) {
-	mux.HandleFunc("/", b.VisualizeHandler)
+	// mux.HandleFunc("/", b.VisualizeHandler)
+	// box := rice.MustFindBox("../ui")
+	// mux.Handle("/", http.FileServer(box.HTTPBox()))
+	ui.ApplyHandlers(mux)
 	mux.HandleFunc("/live", b.broker.Handler)
 	mux.HandleFunc("/info", b.InfoHandler)
 }

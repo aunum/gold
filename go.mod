@@ -3,7 +3,7 @@ module github.com/pbarker/go-rl
 go 1.13
 
 require (
-	github.com/GeertJohan/go.rice v1.0.0 // indirect
+	github.com/GeertJohan/go.rice v1.0.0
 	github.com/awalterschulze/gographviz v0.0.0-20190522210029-fa59802746ab // indirect
 	github.com/chewxy/math32 v1.0.4
 	github.com/gammazero/deque v0.0.0-20200124200322-7e84b94275b8
