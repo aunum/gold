@@ -9,7 +9,7 @@ Reinforcement Learning in Go
 go run ./pkg/v1/agents/deepq/experiments/cartpole/main.go
 ```
 
-## Requirements
+### Requirements
 - Go > v12.0
 - Docker
 - A browser that isn't IE
@@ -17,7 +17,7 @@ go run ./pkg/v1/agents/deepq/experiments/cartpole/main.go
 ## Agents
 All of the agent implementations can be found in [pkg/v1/agent](./pkg/v1/agent) each agent has an experiments folder providing demos across various environments.
 
-| | |
+|agent|algorithm|
 |---|---|
 |[pkg/v1/agent/q](./pkg/v1/agent/q)| [Q Learning](https://en.wikipedia.org/wiki/Q-learning)|
 |[pkg/v1/agent/deepq](./pkg/v1/agent/deepq)| [Deep Q learning](https://arxiv.org/abs/1312.5602) with [Double Q](https://arxiv.org/abs/1509.06461)|
@@ -27,27 +27,38 @@ All of the agent implementations can be found in [pkg/v1/agent](./pkg/v1/agent) 
 |[pkg/v1/agent/ppo1](./pkg/v1/agent/ppo1)|[Proximal Policy Optimization](https://arxiv.org/pdf/1707.06347.pdf) ⚠️ in progress |
 
 ## Inspiration
-- OpenAI Baselines https://github.com/openai/baselines
-- The Gorgonia Project https://github.com/gorgonia
-- RL Overview by Lilian Weng https://lilianweng.github.io/lil-log/2018/02/19/a-long-peek-into-reinforcement-learning.html
-- Open Endedness https://www.oreilly.com/radar/open-endedness-the-last-grand-challenge-youve-never-heard-of
-- AI-GAs http://www.evolvingai.org/files/1905.10985.pdf 
-- The Bitter Lesson http://incompleteideas.net/IncIdeas/BitterLesson.html
+- [OpenAI Baselines](https://github.com/openai/baselines)
+- [The Gorgonia Project](https://github.com/gorgonia)
+- [GoNum](https://www.gonum.org/)
+- [RL Overview](https://lilianweng.github.io/lil-log/2018/02/19/a-long-peek-into-reinforcement-learning.html) by Lilian Weng
+- [Open Endedness](https://www.oreilly.com/radar/open-endedness-the-last-grand-challenge-youve-never-heard-of) by Kenneth O. Stanley, Joel Lehman and Lisa Soros
+- [AI-GAs](http://www.evolvingai.org/files/1905.10985.pdf) by Jeff Clune
+- [The Bitter Lesson](http://incompleteideas.net/IncIdeas/BitterLesson.html) by Rich Sutton
+- [Reinforcement Learning: An Introduction](http://incompleteideas.net/book/the-book-2nd.html) by Rich Sutton and Andrew Barto
 
+## Contributing
+Feel free to open an MR for any issues or feature requests.
+
+The project is fairly simple to hack on, environments are provided through [Sphere](github.com/pbarker/sphere).
+
+## Roadmap
+- [ ] More agents, more environments; see [Future Thoughts](#future-thoughts)
+- [ ] Accelerated compute support 
+- [ ] Tuning libraries
+- [ ] Deployments
 
 ## Future Thoughts
-- Neural Logic - paper: https://arxiv.org/pdf/1904.10729.pdf
-- Neural Episodic Control - paper: https://arxiv.org/pdf/1703.01988.pdf
-- Imagination-Augmented Agents - paper: https://arxiv.org/pdf/1707.06203.pdf code: https://github.com/clvrai/i2a-tf release: https://deepmind.com/blog/article/agents-imagine-and-plan
-- World Models - paper: https://github.com/clvrai/i2a-tf code: https://github.com/hardmaru/WorldModelsExperiments
-- HER - paper: https://arxiv.org/abs/1707.01495 tutorial: 
+- Neural Logic - _paper:_ https://arxiv.org/pdf/1904.10729.pdf
+- Neural Episodic Control - _paper:_ https://arxiv.org/pdf/1703.01988.pdf
+- Imagination-Augmented Agents - _paper:_ https://arxiv.org/pdf/1707.06203.pdf _code:_ https://github.com/clvrai/i2a-tf _release:_ https://deepmind.com/blog/article/agents-imagine-and-plan
+- World Models - _paper:_ https://github.com/clvrai/i2a-tf _code:_ https://github.com/hardmaru/WorldModelsExperiments
 - Neuroevolution - https://towardsdatascience.com/deep-neuroevolution-genetic-algorithms-are-a-competitive-alternative-for-training-deep-neural-822bfe3291f5
     - https://towardsdatascience.com/reinforcement-learning-without-gradients-evolving-agents-using-genetic-algorithms-8685817d84f
     - https://eng.uber.com/deep-neuroevolution/
     - https://www.oreilly.com/radar/neuroevolution-a-different-kind-of-deep-learning/
 - Population Based Policy Gradient - https://designrl.github.io/  https://papers.nips.cc/paper/7785-evolved-policy-gradients.pdf
 - NEAT & HyperNEAT - http://blog.otoro.net/2016/05/07/backprop-neat/
-- Compositional Pattern-producing Networks - https://towardsdatascience.com/understanding-compositional-pattern-producing-networks-810f6bef1b88
+- Compositional Pattern-Producing Networks - https://towardsdatascience.com/understanding-compositional-pattern-producing-networks-810f6bef1b88
 - Multi-agent - https://arxiv.org/abs/1911.10635
 - Novelty Search - https://eplex.cs.ucf.edu/papers/lehman_ecj11.pdf
 - POET - https://eng.uber.com/poet-open-ended-deep-learning/
@@ -66,5 +77,5 @@ All of the agent implementations can be found in [pkg/v1/agent](./pkg/v1/agent) 
 - Energy Based HER - https://arxiv.org/pdf/1810.01363.pdf
 - Wieght Agnostic Neural Networks - https://arxiv.org/abs/1906.04358
 - Improving Evolution Strategies with Generative Neural Networks - https://arxiv.org/pdf/1901.11271.pdf
-- ANML neuromodulation - https://arxiv.org/abs/2002.09571
+- ANML Neuromodulation - https://arxiv.org/abs/2002.09571
 - CMA-ES - https://en.wikipedia.org/wiki/CMA-ES
