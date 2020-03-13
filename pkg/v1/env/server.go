@@ -27,6 +27,7 @@ type Server struct {
 	pool        *dockertest.Pool
 	conn        *grpc.ClientConn
 	logger      *log.Logger
+	dialOpts    []grpc.DialOption
 }
 
 // LocalServerConfig is the environment server config.
@@ -64,7 +65,7 @@ func NewLocalServer(config *LocalServerConfig) (*Server, error) {
 	}
 
 	addr := fmt.Sprintf("localhost:%s", resource.GetPort(config.Port))
-	client, conn, err := connect(addr, config.Logger)
+	client, conn, err := connect(addr, config.Logger, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +115,7 @@ func FindOrCreate(config *LocalServerConfig) (*Server, error) {
 	port := container.Ports[0]
 
 	addr := fmt.Sprintf("localhost:%d", port.PublicPort)
-	client, conn, err := connect(addr, config.Logger)
+	client, conn, err := connect(addr, config.Logger, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +137,7 @@ func Connect(addr string, opts ...ServerOpts) (*Server, error) {
 	if s.logger == nil {
 		s.logger = log.DefaultLogger
 	}
-	client, conn, err := connect(addr, s.logger)
+	client, conn, err := connect(addr, s.logger, s.dialOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -145,12 +146,12 @@ func Connect(addr string, opts ...ServerOpts) (*Server, error) {
 	return s, nil
 }
 
-func connect(addr string, logger *log.Logger) (spherev1alpha.EnvironmentAPIClient, *grpc.ClientConn, error) {
+func connect(addr string, logger *log.Logger, opts ...grpc.DialOption) (spherev1alpha.EnvironmentAPIClient, *grpc.ClientConn, error) {
 	var sphereClient spherev1alpha.EnvironmentAPIClient
 	var conn *grpc.ClientConn
 	err := common.Retry(10, 1*time.Second, func() error {
 		var err error
-		conn, err = grpc.Dial(addr, grpc.WithInsecure(), grpc.WithBlock())
+		conn, err = grpc.Dial(addr, opts...)
 		if err != nil {
 			return err
 		}
@@ -186,5 +187,12 @@ type ServerOpts func(*Server)
 func WithServerLogger(logger *log.Logger) func(*Server) {
 	return func(s *Server) {
 		s.logger = logger
+	}
+}
+
+// WithDialOpts adds dial options to the server connection.
+func WithDialOpts(dialOpts ...grpc.DialOption) func(*Server) {
+	return func(s *Server) {
+		s.dialOpts = dialOpts
 	}
 }

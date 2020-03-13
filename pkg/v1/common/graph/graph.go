@@ -1,4 +1,4 @@
-package common
+package graph
 
 import (
 	"fmt"
@@ -7,13 +7,14 @@ import (
 
 	"github.com/pbarker/go-rl/pkg/v1/common/require"
 	"github.com/pbarker/log"
+	"github.com/skratchdot/open-golang/open"
 
 	g "gorgonia.org/gorgonia"
 )
 
-// Visualize the graph.
+// Visualize the graph using graphviz.
 //
-// Note: this requires `dot` to be installed on the host os.
+// Note: this requires graphviz `dot` to be installed on the host os.
 func Visualize(graph *g.ExprGraph) {
 	f, err := ioutil.TempFile("", "graph.*.dot")
 	require.NoError(err)
@@ -21,11 +22,10 @@ func Visualize(graph *g.ExprGraph) {
 	require.NoError(err)
 	tempPath := f.Name()
 	svgPath := fmt.Sprintf("%s.svg", f.Name())
-	log.Info("saved file: ", tempPath)
+	log.Debug("saved file: ", tempPath)
 	cmd := exec.Command("dot", "-Tsvg", tempPath, "-O")
 	err = cmd.Run()
 	require.NoError(err)
-	cmd = exec.Command("open", svgPath)
-	err = cmd.Run()
+	err = open.Run(svgPath)
 	require.NoError(err)
 }

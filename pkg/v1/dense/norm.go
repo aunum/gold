@@ -68,75 +68,14 @@ func ZNorm(x *t.Dense, along ...int) (*t.Dense, error) {
 	return ret, nil
 }
 
-// Mean of the tensor along the axis.
-//
-// y=Σx/n
-func Mean(x *t.Dense, along ...int) (*t.Dense, error) {
-	if len(along) == 0 {
-		along = []int{0}
+// NormalizeZeros normalizes the zero values.
+func NormalizeZeros(d *t.Dense) error {
+	contains, indicies := Contains(d, ZeroValue(d.Dtype()))
+	if !contains {
+		return nil
 	}
-	axis := along[0]
-	sum, err := x.Sum(axis)
-	if err != nil {
-		return nil, err
+	for _, i := range indicies {
+		d.Set(i, FauxZeroValue(d.Dtype()))
 	}
-	if len(x.Shape()) < axis {
-		return nil, fmt.Errorf("tensor shape %v does not contain the axis %v", x.Shape(), along)
-	}
-
-	size, err := SizeAsDType(x, along...)
-	if err != nil {
-		return nil, err
-	}
-	mean, err := sum.Div(size)
-	if err != nil {
-		return nil, err
-	}
-	return mean, nil
-}
-
-// StdDev is the standard deviation of the tensor along the axis.
-//
-// y=√(Σ((x-μ)^2)/n)
-func StdDev(x *t.Dense, along ...int) (*t.Dense, error) {
-	if len(along) == 0 {
-		along = []int{0}
-	}
-	axis := along[0]
-	mu, err := Mean(x, axis)
-	if err != nil {
-		return nil, err
-	}
-	mus, err := mu.Repeat(0, x.Shape()[axis])
-	if err != nil {
-		return nil, err
-	}
-	distance, err := x.Sub(mus.(*t.Dense))
-	if err != nil {
-		return nil, err
-	}
-
-	abs, err := t.Square(distance)
-	if err != nil {
-		return nil, err
-	}
-	sum, err := abs.(*t.Dense).Sum(0)
-	if err != nil {
-		return nil, err
-	}
-
-	size, err := SizeAsDType(x, along...)
-	if err != nil {
-		return nil, err
-	}
-	inner, err := sum.Div(size)
-	if err != nil {
-		return nil, err
-	}
-	ret, err := t.Sqrt(inner)
-	if err != nil {
-		return nil, err
-	}
-
-	return ret.(*t.Dense), nil
+	return nil
 }

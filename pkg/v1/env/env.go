@@ -404,7 +404,6 @@ type BoxSpace struct {
 }
 
 // BoxSpace returns the box space as dense tensors.
-// TODO: make proto plugin to do this automagically (protoc-gen-tensor)
 func (e *Env) BoxSpace() (*BoxSpace, error) {
 	space := e.GetObservationSpace()
 
