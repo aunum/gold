@@ -28,7 +28,7 @@ All of the agent implementations can be found in [pkg/v1/agent](./pkg/v1/agent) 
 
 ## Inspiration
 - [OpenAI Baselines](https://github.com/openai/baselines)
-- [The Gorgonia Project](https://github.com/gorgonia)
+- [The Gorgonia Project](https://gorgonia.org)
 - [GoNum](https://www.gonum.org/)
 - [RL Overview](https://lilianweng.github.io/lil-log/2018/02/19/a-long-peek-into-reinforcement-learning.html) by Lilian Weng
 - [Open Endedness](https://www.oreilly.com/radar/open-endedness-the-last-grand-challenge-youve-never-heard-of) by Kenneth O. Stanley, Joel Lehman and Lisa Soros
@@ -40,6 +40,8 @@ All of the agent implementations can be found in [pkg/v1/agent](./pkg/v1/agent) 
 Feel free to open an MR for any issues or feature requests.
 
 The project is fairly simple to hack on, environments are provided through [Sphere](github.com/pbarker/sphere).
+
+Feel free to ping @pbarker on Gopher slack.
 
 ## Roadmap
 - [ ] More agents, more environments; see [Future Thoughts](#future-thoughts)

@@ -202,8 +202,8 @@ func (l *LinearActivation) Clone() Activation {
 //		e^(a[i]) / sum((e^(a[i])))
 // For a more numerically stable SoftMax, use StableSoftMax.
 //
-// This is ripped from Gorgonia core as there was a bug in it that needs to be
-// contributed back upstream.
+// This is ripped from Gorgonia core and tweaked as there was a bug in it https://github.com/gorgonia/gorgonia/issues/373
+// which is currently being worked on.
 func softMax(a *g.Node, axes ...int) (retVal *g.Node, err error) {
 	aShape := a.Shape()
 

@@ -6,7 +6,7 @@ import (
 	"gorgonia.org/tensor"
 )
 
-// EqWidthBinner is an EqWidthBinner applied using tensors.
+// EqWidthBinner bins values within diminsions to the given intervals.
 type EqWidthBinner struct {
 	// Intervals to bin.
 	Intervals *tensor.Dense
@@ -21,7 +21,7 @@ type EqWidthBinner struct {
 	bounds []*tensor.Dense
 }
 
-// NewEqWidthBinner is a new dense binner.
+// NewEqWidthBinner creates a new Equal Width Binner.
 func NewEqWidthBinner(intervals, low, high *tensor.Dense) (*EqWidthBinner, error) {
 	var err error
 

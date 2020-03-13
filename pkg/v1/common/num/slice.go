@@ -4,7 +4,7 @@ import (
 	"math/rand"
 )
 
-// MakeIRange creates an int slice.
+// MakeIRange creates an int slice for the given range.
 func MakeIRange(min, max int) []int {
 	a := make([]int, max-min+1)
 	for i := range a {

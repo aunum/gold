@@ -16,7 +16,7 @@ func ToF32(i interface{}) (float32, error) {
 	case float64:
 		return float32(a), nil
 	default:
-		return 0, fmt.Errorf("could not cast type to float32: %v", a)
+		return 0, fmt.Errorf("type not supported: %v", a)
 	}
 }
 
@@ -34,7 +34,7 @@ func ToF64(i interface{}) (float64, error) {
 	case float32:
 		return float64(a), nil
 	default:
-		return 0, fmt.Errorf("could not cast type to float64: %v", a)
+		return 0, fmt.Errorf("type not supported: %v", a)
 	}
 }
 

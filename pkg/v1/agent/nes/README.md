@@ -2,7 +2,7 @@
 An implementation of Natural Evolution Strategies for black box optimization.
 
 ## How it works
-Natural Evolution Strategies optimizes a black box function parameterized with a set of weights by mutating a baseline 
+[Natural Evolution Strategies](http://www.jmlr.org/papers/volume15/wierstra14a/wierstra14a.pdf) optimizes a black box function parameterized with a set of weights by mutating a baseline 
 set of weights with noise for each member of the population, then biasing the noise provided to the rewards achieved
 and summing that accross the entire population. The baseline set of weights is then updated at each generation based on the 
 [Natural Gradient](https://towardsdatascience.com/its-only-natural-an-excessively-deep-dive-into-natural-gradient-optimization-75d464b89dbb) of the 

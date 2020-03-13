@@ -15,7 +15,7 @@ An agent will explore or exploit the Q-values based on the `epsilon` hyperparame
 
 The implemented agent also employs adaptive learning by which the `alpha` and `epsilon` hyperparameters are dynamically tuned based on the timestep and a `ada divisor`.
 
-Q-learning doesn't work well in continous environments, the `pkg/v1/env` package provides a normalization adapter. One of the adapter is for discretization and can be used to make continuous states discrete.
+Q-learning doesn't work well in continous environments, the [pkg/v1/env](../env/norm.go) package provides a normalization adapter. One of the adapters is for discretization and can be used to make continuous states discrete.
 
 ## Examples
 See the [experiments](./experiments) folder for example implementations.

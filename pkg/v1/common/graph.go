@@ -12,6 +12,8 @@ import (
 )
 
 // Visualize the graph.
+//
+// Note: this requires `dot` to be installed on the host os.
 func Visualize(graph *g.ExprGraph) {
 	f, err := ioutil.TempFile("", "graph.*.dot")
 	require.NoError(err)
