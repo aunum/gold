@@ -39,7 +39,7 @@ func NewAgent(c *AgentConfig, env *envv1.Env, base *agentv1.Base) (*Agent, error
 		c = DefaultAgentConfig
 	}
 	if base == nil {
-		base = agentv1.NewBase("nes")
+		base = agentv1.NewBase("NES")
 	}
 	if env == nil {
 		return nil, fmt.Errorf("environment cannot be nil")

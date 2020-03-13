@@ -20,7 +20,7 @@ func TestPolicy(t *testing.T) {
 	require.NoError(t, err)
 	defer s.Close()
 
-	env, err := s.Make("CartPole-v1")
+	env, err := s.Make("CartPole-v0")
 	require.NoError(t, err)
 
 	base := agentv1.NewBase("test")
@@ -80,5 +80,4 @@ func TestPolicy(t *testing.T) {
 	log.Infov("initial prediction x2", qv2)
 	log.Infov("expected 2", y2)
 	log.Infov("final prediction 2", qvf2)
-	// time.Sleep(60 * time.Second)
 }

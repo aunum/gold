@@ -1,5 +1,7 @@
 # Proximal Policy Optimization
 
+__In Progress__ blocked on https://github.com/gorgonia/gorgonia/issues/373
+
 Implementation of the PPO algorithm.
 
 ## How it works

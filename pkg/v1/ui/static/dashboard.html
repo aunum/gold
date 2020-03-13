@@ -7,12 +7,10 @@
 	</head>
 	<body>
 	<ul class="nav">
-		<li class="nav-item">
-			<a class="nav-link" href="#">Dashboard</a>
-		</li>
-	  </ul>
+		<a class="navbar-brand" id="brand" href="#" style="padding-left: 20px;"></a>
+	</ul>
 	<div class="text-center">
-		<img id="live" style="height:400px;width:600px" class="img-fluid"/>
+		<img id="live" style="display:none" class="img-fluid"/>
 	</div>
 
 	<div class="d-flex justify-content-around flex-wrap" id="metrics">
@@ -28,7 +26,10 @@
 				url: "/info",
 				dataType: "json",
 				success: function(response) {
-					document.title = response.name + " agent";
+					title = response.name + " Agent"
+					document.title = title;
+					var node = document.createTextNode(title);
+					document.getElementById("brand").appendChild(node);
 				}
 			});
 		};
@@ -38,7 +39,9 @@
 		var client = new EventSource("/live")
 		client.onmessage = function (msg) {
 			var metaData = "data:image/jpeg;base64,";
-			document.getElementById("live").src = metaData + msg.data;
+			live = document.getElementById("live")
+			live.style = "height:400px;width:600px";
+			live.src = metaData + msg.data;
 		}
 	</script>
 	<script>

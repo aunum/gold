@@ -74,7 +74,7 @@ type AgentConfig struct {
 // DefaultAgentConfig is the default config for a dqn agent.
 var DefaultAgentConfig = &AgentConfig{
 	Hyperparameters: DefaultHyperparameters,
-	Base:            agentv1.NewBase("ppo"),
+	Base:            agentv1.NewBase("PPO"),
 	ActorConfig:     DefaultActorConfig,
 	CriticConfig:    DefaultCriticConfig,
 }

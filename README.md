@@ -1,37 +1,41 @@
-# go-rl
+# Gold
 
-Reinforcement learning in Go!
+Reinforcement Learning in Go
 
-## Getting Started
+![cartpole](./static/cartpole_deepq.gif)
 
-All of the agent implementations can be found in `pkg/v1/agents` each agent has an experiment folder providing demos across various environments.
+## Quick Start
+```
+go run ./pkg/v1/agents/deepq/experiments/cartpole/main.go
+```
+
+## Requirements
+- Go > v12.0
+- Docker
+- A browser that isn't IE
 
 ## Agents
+All of the agent implementations can be found in [pkg/v1/agent](./pkg/v1/agent) each agent has an experiments folder providing demos across various environments.
 
-- [x] Q
-- [ ] A2C
-- [ ] ACER
-- [ ] ACKTR
-- [ ] DDPG
-- [x] DQN
-- [ ] GAIL
-- [ ] HER
-- [!] PPO1
-- [ ] PPO2
-- [ ] SAC
-- [ ] TD3
-- [ ] TRPO
+| | |
+|---|---|
+|[pkg/v1/agent/q](./pkg/v1/agent/q)| [Q Learning](https://en.wikipedia.org/wiki/Q-learning)|
+|[pkg/v1/agent/deepq](./pkg/v1/agent/deepq)| [Deep Q learning](https://arxiv.org/abs/1312.5602) with [Double Q](https://arxiv.org/abs/1509.06461)|
+|[pkg/v1/agent/reinforce](./pkg/v1/agent/reinforce)| [REINFORCE](http://www-anw.cs.umass.edu/~barto/courses/cs687/williams92simple.pdf) aka Monte Carlo Policy Gradients |
+|[pkg/v1/agent/nes](./pkg/v1/agent/nes)| [Natural Evolution Strategies](http://www.jmlr.org/papers/volume15/wierstra14a/wierstra14a.pdf)|
+|[pkg/v1/agent/her](./pkg/v1/agent/her)| [Hindsight Experience Replay](https://arxiv.org/pdf/1707.01495.pdf)|
+|[pkg/v1/agent/ppo1](./pkg/v1/agent/ppo1)|[Proximal Policy Optimization](https://arxiv.org/pdf/1707.06347.pdf) ⚠️ in progress |
 
 ## Inspiration
 - OpenAI Baselines https://github.com/openai/baselines
 - The Gorgonia Project https://github.com/gorgonia
 - RL Overview by Lilian Weng https://lilianweng.github.io/lil-log/2018/02/19/a-long-peek-into-reinforcement-learning.html
-- Open Endedness https://www.oreilly.com/radar/open-endedness-the-last-grand-challenge-youve-never-heard-of/
+- Open Endedness https://www.oreilly.com/radar/open-endedness-the-last-grand-challenge-youve-never-heard-of
 - AI-GAs http://www.evolvingai.org/files/1905.10985.pdf 
 - The Bitter Lesson http://incompleteideas.net/IncIdeas/BitterLesson.html
 
 
-## Ideas
+## Future Thoughts
 - Neural Logic - paper: https://arxiv.org/pdf/1904.10729.pdf
 - Neural Episodic Control - paper: https://arxiv.org/pdf/1703.01988.pdf
 - Imagination-Augmented Agents - paper: https://arxiv.org/pdf/1707.06203.pdf code: https://github.com/clvrai/i2a-tf release: https://deepmind.com/blog/article/agents-imagine-and-plan

@@ -67,7 +67,7 @@ type AgentConfig struct {
 // DefaultAgentConfig is the default config for a dqn agent.
 var DefaultAgentConfig = &AgentConfig{
 	Hyperparameters: DefaultHyperparameters,
-	Base:            agentv1.NewBase("q"),
+	Base:            agentv1.NewBase("Q"),
 }
 
 // NewAgent returns a new Q-learning agent.

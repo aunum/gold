@@ -13,7 +13,7 @@ func main() {
 	require.NoError(err)
 	defer s.Close()
 
-	env, err := s.Make("CartPole-v0", envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)), envv1.WithRecorder())
+	env, err := s.Make("CartPole-v0", envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
 	require.NoError(err)
 
 	agent, err := reinforce.NewAgent(reinforce.DefaultAgentConfig, env)
@@ -21,7 +21,7 @@ func main() {
 
 	agent.View()
 
-	numEpisodes := 5000
+	numEpisodes := 2000
 	for _, episode := range agent.MakeEpisodes(numEpisodes) {
 		init, err := env.Reset()
 		require.NoError(err)
@@ -37,9 +37,6 @@ func main() {
 			outcome, err := env.Step(action)
 			require.NoError(err)
 
-			if outcome.Done {
-				outcome.Reward = -outcome.Reward
-			}
 			score.Inc(outcome.Reward)
 
 			agent.Memory.Store(state, action, outcome.Reward)
@@ -55,6 +52,7 @@ func main() {
 		}
 		err = agent.Learn()
 		require.NoError(err)
+
 		episode.Log()
 	}
 	agent.Wait()

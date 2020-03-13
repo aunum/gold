@@ -24,7 +24,7 @@ type PolicyConfig struct {
 
 // DefaultPolicyConfig are the default hyperparameters for a policy.
 var DefaultPolicyConfig = &PolicyConfig{
-	Optimizer:    g.NewAdamSolver(g.WithLearnRate(0.001)),
+	Optimizer:    g.NewAdamSolver(),
 	LayerBuilder: DefaultFCLayerBuilder,
 	Track:        true,
 }
@@ -44,7 +44,7 @@ var DefaultFCLayerBuilder = func(x, y *modelv1.Input) []l.Layer {
 // MakePolicy makes a model.
 func MakePolicy(config *PolicyConfig, base *agentv1.Base, env *envv1.Env) (modelv1.Model, error) {
 	x := modelv1.NewInput("state", []int{1, env.ObservationSpaceShape()[0]})
-	y := modelv1.NewInput("actionPotentials", []int{1, envv1.PotentialsShape(env.ActionSpace)[0]})
+	y := modelv1.NewInput("advantages", []int{1, envv1.PotentialsShape(env.ActionSpace)[0]})
 
 	log.Infov("x shape", x.Shape())
 	log.Infov("y shape", y.Shape())
@@ -59,7 +59,7 @@ func MakePolicy(config *PolicyConfig, base *agentv1.Base, env *envv1.Env) (model
 	opts.Add(
 		modelv1.WithOptimizer(config.Optimizer),
 		modelv1.WithLoss(modelv1.CrossEntropy),
-		modelv1.WithGraphs(modelv1.TrainBatchGraph, modelv1.OnlineGraph),
+		modelv1.WithMetrics(modelv1.TrainBatchLossMetric),
 	)
 	if config.Track {
 		opts.Add(modelv1.WithTracker(base.Tracker))

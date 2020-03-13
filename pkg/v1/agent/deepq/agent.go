@@ -22,16 +22,21 @@ type Agent struct {
 	// Hyperparameters for the dqn agent.
 	*Hyperparameters
 
-	Policy            model.Model
-	TargetPolicy      model.Model
-	Epsilon           common.Schedule
+	// Policy for the agent.
+	Policy model.Model
+
+	// Target policy for double Q learning.
+	TargetPolicy model.Model
+
+	// Epsilon is the rate at which the agent explores vs exploits.
+	Epsilon common.Schedule
+
 	env               *envv1.Env
 	epsilon           float32
 	updateTargetSteps int
 	batchSize         int
-
-	memory *Memory
-	steps  int
+	memory            *Memory
+	steps             int
 }
 
 // Hyperparameters for the dqn agent.
@@ -71,7 +76,7 @@ type AgentConfig struct {
 var DefaultAgentConfig = &AgentConfig{
 	Hyperparameters: DefaultHyperparameters,
 	PolicyConfig:    DefaultPolicyConfig,
-	Base:            agentv1.NewBase("deepq"),
+	Base:            agentv1.NewBase("DeepQ"),
 }
 
 // NewAgent returns a new dqn agent.
@@ -170,8 +175,7 @@ func (a *Agent) Learn() error {
 // updateTarget copies the weights from the online network to the target network on the provided interval.
 func (a *Agent) updateTarget() error {
 	if a.steps%a.updateTargetSteps == 0 {
-		log.BreakPound()
-		log.Infof("updating target model - current steps %v target update %v", a.steps, a.updateTargetSteps)
+		log.Debugf("updating target model - current steps %v target update %v", a.steps, a.updateTargetSteps)
 		err := a.Policy.(*model.Sequential).CloneLearnablesTo(a.TargetPolicy.(*model.Sequential))
 		if err != nil {
 			return err

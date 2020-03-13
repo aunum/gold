@@ -32,7 +32,8 @@ type Env struct {
 	// Normalizer normalizes observation data.
 	Normalizer Normalizer
 
-	logger *log.Logger
+	logger    *log.Logger
+	recording bool
 }
 
 // Opt is an environment option.
@@ -65,6 +66,7 @@ func WithRecorder() func(*Env) {
 		ctx := context.Background()
 		resp, err := e.Client.StartRecordEnv(ctx, &spherev1alpha.StartRecordEnvRequest{Id: e.Environment.Id})
 		require.NoError(err)
+		e.recording = true
 		e.logger.Success(resp.Message)
 	}
 }
@@ -275,20 +277,22 @@ func (e *Env) Videos(path string) ([]string, error) {
 // End is a helper function that will close an environment and return the
 // results and play any videos.
 func (e *Env) End() {
-	err := e.PrintResults()
-	if err != nil {
-		e.logger.Fatal(err)
+	if e.recording {
+		err := e.PrintResults()
+		if err != nil {
+			e.logger.Fatal(err)
+		}
+		dir, err := ioutil.TempDir("", "sphere")
+		if err != nil {
+			e.logger.Fatal(err)
+		}
+		videoPaths, err := e.Videos(dir)
+		if err != nil {
+			e.logger.Fatal(err)
+		}
+		e.logger.Successy("saved videos", videoPaths)
 	}
-	dir, err := ioutil.TempDir("", "sphere")
-	if err != nil {
-		e.logger.Fatal(err)
-	}
-	videoPaths, err := e.Videos(dir)
-	if err != nil {
-		e.logger.Fatal(err)
-	}
-	e.logger.Successy("saved videos", videoPaths)
-	err = e.Close()
+	err := e.Close()
 	if err != nil {
 		e.logger.Fatal(err)
 	}
@@ -296,6 +300,9 @@ func (e *Env) End() {
 
 // PlayAll videos stored locally.
 func (e *Env) PlayAll() {
+	if !e.recording {
+		log.Fatal("no recordings present, use the WithRecorder() option to record.")
+	}
 	for _, video := range e.VideoPaths {
 		e.logger.Debugf("playing video: %s", video)
 		err := open.Run(video)

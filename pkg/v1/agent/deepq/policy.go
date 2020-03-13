@@ -31,7 +31,7 @@ type PolicyConfig struct {
 // DefaultPolicyConfig are the default hyperparameters for a policy.
 var DefaultPolicyConfig = &PolicyConfig{
 	Loss:         modelv1.MSE,
-	Optimizer:    g.NewAdamSolver(g.WithLearnRate(0.001)),
+	Optimizer:    g.NewAdamSolver(g.WithLearnRate(0.0005)),
 	LayerBuilder: DefaultFCLayerBuilder,
 	BatchSize:    20,
 	Track:        true,
@@ -68,6 +68,7 @@ func MakePolicy(name string, config *PolicyConfig, base *agentv1.Base, env *envv
 		modelv1.WithOptimizer(config.Optimizer),
 		modelv1.WithLoss(config.Loss),
 		modelv1.WithBatchSize(config.BatchSize),
+		modelv1.WithMetrics(modelv1.TrainBatchLossMetric),
 	)
 	if config.Track {
 		opts.Add(modelv1.WithTracker(base.Tracker))

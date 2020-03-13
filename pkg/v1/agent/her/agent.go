@@ -80,7 +80,7 @@ type AgentConfig struct {
 var DefaultAgentConfig = &AgentConfig{
 	Hyperparameters:  DefaultHyperparameters,
 	PolicyConfig:     DefaultPolicyConfig,
-	Base:             agentv1.NewBase("her"),
+	Base:             agentv1.NewBase("HER"),
 	SuccessfulReward: 0,
 	MemorySize:       1e4,
 }

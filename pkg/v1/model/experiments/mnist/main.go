@@ -82,22 +82,10 @@ func main() {
 			yi, err = y.Slice(dense.MakeRangedSlice(start, end))
 			require.NoError(err)
 
-			// yi, err = y.Slice(dense.MakeRangedSlice(0, 2))
-			// require.NoError(err)
-
 			err = model.FitBatch(xi, yi)
 			require.NoError(err)
 			model.Tracker.LogStep(epoch, batch)
 		}
-		// xi, err := x.Slice(dense.MakeRangedSlice(epoch, epoch+1))
-		// require.NoError(err)
-		// pred, err := model.PredictBatch(xi)
-		// require.NoError(err)
-		// log.Infovb("expected", yi.Data())
-		// log.Infovb("pred", pred.Data())
-		// sum, err := pred.(*tensor.Dense).Sum()
-		// require.NoError(err)
-		// log.Infovb("sum", sum)
 		accuracy, loss, err := evaluate(testX.(*tensor.Dense), testY.(*tensor.Dense), model, batchSize)
 		require.NoError(err)
 		log.Infof("completed train epoch %v with accuracy %v and loss %v", epoch, accuracy, loss)

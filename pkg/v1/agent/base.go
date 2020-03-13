@@ -35,10 +35,11 @@ type Base struct {
 	// Logger for the agent.
 	Logger *log.Logger
 
-	address   string
+	address string
+	broker  *sse.Broker
+
 	noTracker bool
 	noServer  bool
-	broker    *sse.Broker
 }
 
 // Opt is an option for the base agent.

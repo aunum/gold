@@ -12,8 +12,7 @@ import (
 	g "gorgonia.org/gorgonia"
 )
 
-// Test are the params for a test.
-type Test struct {
+type test struct {
 	env         string
 	learnRate   float64
 	numEpisodes int
@@ -23,7 +22,7 @@ type Test struct {
 }
 
 var (
-	test10 = &Test{
+	test10 = &test{
 		env:         "BitFlipper10-v0",
 		learnRate:   0.0005,
 		numEpisodes: 10000,
@@ -31,7 +30,7 @@ var (
 		batchSize:   128,
 		loss:        modelv1.MSE,
 	}
-	test15 = &Test{
+	test15 = &test{
 		env:         "BitFlipper15-v0",
 		learnRate:   0.0001,
 		numEpisodes: 10000,
@@ -39,7 +38,7 @@ var (
 		batchSize:   128,
 		loss:        modelv1.MSE,
 	}
-	test20 = &Test{
+	test20 = &test{
 		env:         "BitFlipper20-v0",
 		learnRate:   0.00008,
 		numEpisodes: 20000,
@@ -50,44 +49,44 @@ var (
 )
 
 func main() {
-	test(test15)
+	runTest(test15)
 }
 
-func test(test *Test) {
+func runTest(t *test) {
 	s, err := envv1.NewLocalServer(envv1.GymServerConfig)
 	require.NoError(err)
 	defer s.Close()
 
-	env, err := s.Make(test.env, envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
+	env, err := s.Make(t.env, envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
 	require.NoError(err)
 
 	agentConfig := her.DefaultAgentConfig
-	agentConfig.PolicyConfig.BatchSize = test.batchSize
+	agentConfig.PolicyConfig.BatchSize = t.batchSize
 	agentConfig.PolicyConfig.Optimizer = g.NewAdamSolver(
-		g.WithLearnRate(test.learnRate),
-		g.WithBatchSize(float64(test.batchSize)),
+		g.WithLearnRate(t.learnRate),
+		g.WithBatchSize(float64(t.batchSize)),
 	)
-	agentConfig.PolicyConfig.Loss = test.loss
+	agentConfig.PolicyConfig.Loss = t.loss
+
 	agent, err := her.NewAgent(agentConfig, env)
 	require.NoError(err)
 
 	agent.View()
 
-	numEpisodes := test.numEpisodes
-	agent.Epsilon = common.DefaultDecaySchedule(common.WithDecayRate(test.decayRate))
+	numEpisodes := t.numEpisodes
+	agent.Epsilon = common.DefaultDecaySchedule(common.WithDecayRate(t.decayRate))
 	for _, episode := range agent.MakeEpisodes(numEpisodes) {
 		init, err := env.Reset()
 		require.NoError(err)
+
 		state := init.Observation
-		log.Infov("state", state.Data())
-		log.Infov("goal", init.Goal.Data())
 
 		success := episode.TrackScalar("success", 0, track.WithAggregator(track.DefaultRateAggregator))
+
 		episodeEvents := her.Events{}
 		for _, timestep := range episode.Steps(env.MaxSteps()) {
-			log.BreakPound()
-			log.Infov("action state", state.Data())
-			log.Infov("action goal", init.Goal.Data())
+			log.Infov("state", state.Data())
+			log.Infov("goal", init.Goal.Data())
 			action, err := agent.Action(state, init.Goal)
 			require.NoError(err)
 
@@ -104,10 +103,11 @@ func test(test *Test) {
 				log.Successf("Episode %d finished after %d timesteps, with success of %v", episode.I, timestep.I+1, success.Scalar())
 				break
 			}
-			log.Infov("setting state", outcome.Observation.Data())
 			state = outcome.Observation
 		}
 		agent.Remember(episodeEvents...)
+
+		// apply hindsight if episode failed.
 		if success.Scalar() == 0 {
 			err = agent.Hindsight(episodeEvents)
 			require.NoError(err)

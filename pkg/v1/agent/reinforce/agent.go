@@ -62,7 +62,7 @@ type AgentConfig struct {
 var DefaultAgentConfig = &AgentConfig{
 	Hyperparameters: DefaultHyperparameters,
 	PolicyConfig:    DefaultPolicyConfig,
-	Base:            agentv1.NewBase("reinforce"),
+	Base:            agentv1.NewBase("REINFORCE"),
 }
 
 // NewAgent returns a new dqn agent.

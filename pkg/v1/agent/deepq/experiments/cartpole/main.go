@@ -14,7 +14,7 @@ func main() {
 	require.NoError(err)
 	defer s.Close()
 
-	env, err := s.Make("CartPole-v1", envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
+	env, err := s.Make("CartPole-v0", envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
 	require.NoError(err)
 
 	agent, err := deepq.NewAgent(deepq.DefaultAgentConfig, env)
@@ -39,9 +39,6 @@ func main() {
 			outcome, err := env.Step(action)
 			require.NoError(err)
 
-			if outcome.Done {
-				outcome.Reward = -outcome.Reward
-			}
 			score.Inc(outcome.Reward)
 
 			event := deepq.NewEvent(state, action, outcome)
@@ -50,14 +47,16 @@ func main() {
 			err = agent.Learn()
 			require.NoError(err)
 
-			timestep.Log()
-
 			if outcome.Done {
 				log.Successf("Episode %d finished after %d timesteps", episode.I, timestep.I+1)
 				break
 			}
 			state = outcome.Observation
+
+			err = agent.Render(env)
+			require.NoError(err)
 		}
+		episode.Log()
 	}
 	agent.Wait()
 	env.End()
