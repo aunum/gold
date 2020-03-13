@@ -16,7 +16,7 @@ func Div(a, b *t.Dense) (*t.Dense, error) {
 	return a.Div(b)
 }
 
-// Neg negates the tensor elementwize.
+// Neg negates the tensor elementwise.
 func Neg(v *tensor.Dense) (*t.Dense, error) {
 	ret, err := BroadcastMul(v, tensor.New(tensor.FromScalar(NegValue(v.Dtype()))))
 	if err != nil {

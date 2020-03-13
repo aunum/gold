@@ -19,12 +19,12 @@ func OneHotVector(id, classes int, dt t.Dtype) (retVal *t.Dense, err error) {
 		err = retVal.SetAt(float32(1), id)
 	case tensor.Float64:
 		err = retVal.SetAt(float64(1), id)
-	case tensor.Int64:
-		err = retVal.SetAt(int64(1), id)
 	case tensor.Int:
 		err = retVal.SetAt(int(1), id)
 	case tensor.Int32:
 		err = retVal.SetAt(int32(1), id)
+	case tensor.Int64:
+		err = retVal.SetAt(int64(1), id)
 	default:
 		return nil, fmt.Errorf("tensor dtype %v is not supported for one hot vector", dt)
 	}
