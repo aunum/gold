@@ -8,6 +8,7 @@ and summing that accross the entire population. The baseline set of weights is t
 [Natural Gradient](https://towardsdatascience.com/its-only-natural-an-excessively-deep-dive-into-natural-gradient-optimization-75d464b89dbb) of the 
 entire population.
 
+![eq](https://wikimedia.org/api/rest_v1/media/math/render/svg/61af6a537a386b327c5c1d88b82128ceabb08d6d)
 ## Examples
 See the [experiments](./experiments) folder for example implementations.
 
