@@ -90,17 +90,14 @@ func NewAgent(c *AgentConfig, env *envv1.Env) (*Agent, error) {
 	if env == nil {
 		return nil, fmt.Errorf("environment cannot be nil")
 	}
-
 	actor, err := MakeActor(c.ActorConfig, c.Base, env)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("making critic")
 	critic, err := MakeCritic(c.CriticConfig, c.Base, env)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("made da critic")
 	return &Agent{
 		Base:            c.Base,
 		Hyperparameters: c.Hyperparameters,

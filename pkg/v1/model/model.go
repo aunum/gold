@@ -4,7 +4,7 @@ import (
 	"fmt"
 	golog "log"
 
-	"github.com/pbarker/go-rl/pkg/v1/common"
+	cgraph "github.com/pbarker/go-rl/pkg/v1/common/graph"
 	"github.com/pbarker/go-rl/pkg/v1/model/layers"
 	"github.com/pbarker/go-rl/pkg/v1/track"
 	"github.com/pbarker/log"
@@ -570,7 +570,7 @@ func (s *Sequential) FitBatch(x ValueOr, y g.Value) error {
 
 // Visualize the model by graph name.
 func (s *Sequential) Visualize(name string) {
-	common.Visualize(s.Graphs()[name])
+	cgraph.Visualize(s.Graphs()[name])
 }
 
 // Graphs returns the expression graphs for the model.

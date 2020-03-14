@@ -99,3 +99,9 @@ func Max(a *g.Node, b *g.Node) (retVal *g.Node, err error) {
 	}
 	return g.Add(aVal, bVal)
 }
+
+// AddFauxF32 adds a the faux zero value 1e-6.
+func AddFauxF32(n *g.Node) (retVal *g.Node, err error) {
+	faux := g.NewScalar(n.Graph(), g.Float32, g.WithValue(float32(1e-6)))
+	return g.BroadcastAdd(faux, n, []byte{}, []byte{})
+}

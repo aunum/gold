@@ -1,8 +1,6 @@
 package ppo1
 
 import (
-	"fmt"
-
 	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
 	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
 	modelv1 "github.com/pbarker/go-rl/pkg/v1/model"
@@ -58,8 +56,8 @@ func MakeActor(config *ModelConfig, base *agentv1.Base, env *envv1.Env) (modelv1
 	rewards := modelv1.NewInput("rewards", []int{1, 1})
 	values := modelv1.NewInput("values", []int{1, 1})
 
-	log.Infov("xshape", x.Shape())
-	log.Infov("yshape", y.Shape())
+	log.Debugv("x shape", x.Shape())
+	log.Debugv("y shape", y.Shape())
 
 	model, err := modelv1.NewSequential("actor")
 	if err != nil {
@@ -67,7 +65,7 @@ func MakeActor(config *ModelConfig, base *agentv1.Base, env *envv1.Env) (modelv1
 	}
 	model.AddLayers(config.LayerBuilder(env)...)
 
-	loss := NewPPOLoss(oldPolicyProbs, advantages, rewards, values)
+	loss := NewLoss(oldPolicyProbs, advantages, rewards, values)
 
 	opts := modelv1.NewOpts()
 	opts.Add(
@@ -75,6 +73,7 @@ func MakeActor(config *ModelConfig, base *agentv1.Base, env *envv1.Env) (modelv1
 		modelv1.WithLoss(loss),
 		modelv1.WithBatchSize(config.BatchSize),
 		modelv1.WithTracker(base.Tracker),
+		modelv1.WithMetrics(modelv1.TrainBatchLossMetric),
 	)
 
 	model.Fwd(x)
@@ -111,22 +110,22 @@ func MakeCritic(config *ModelConfig, base *agentv1.Base, env *envv1.Env) (modelv
 	x := modelv1.NewInput("x", []int{1, env.ObservationSpaceShape()[0]})
 	y := modelv1.NewInput("y", []int{1, 1})
 
-	log.Infov("xshape", x.Shape())
-	log.Infov("yshape", y.Shape())
+	log.Debugv("x shape", x.Shape())
+	log.Debugv("y shape", y.Shape())
 
 	model, err := modelv1.NewSequential("critic")
 	if err != nil {
 		return nil, err
 	}
 	model.AddLayers(config.LayerBuilder(env)...)
-	fmt.Println("added layers")
 
 	opts := modelv1.NewOpts()
 	opts.Add(
 		modelv1.WithOptimizer(config.Optimizer),
 		modelv1.WithLoss(config.Loss),
 		modelv1.WithBatchSize(config.BatchSize),
-		// modelv1.WithTracker(base.Tracker),
+		modelv1.WithTracker(base.Tracker),
+		modelv1.WithMetrics(modelv1.TrainBatchLossMetric),
 	)
 
 	model.Fwd(x)
@@ -138,6 +137,5 @@ func MakeCritic(config *ModelConfig, base *agentv1.Base, env *envv1.Env) (modelv
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("compiled")
 	return model, nil
 }

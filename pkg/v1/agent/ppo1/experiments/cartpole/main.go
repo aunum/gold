@@ -9,11 +9,11 @@ import (
 )
 
 func main() {
-	s, err := envv1.NewLocalServer(envv1.GymServerConfig)
+	s, err := envv1.FindOrCreate(envv1.GymServerConfig)
 	require.NoError(err)
 	defer s.Close()
 
-	env, err := s.Make("CartPole-v1", envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
+	env, err := s.Make("CartPole-v0", envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
 	require.NoError(err)
 
 	agent, err := ppo1.NewAgent(ppo1.DefaultAgentConfig, env)
@@ -37,9 +37,6 @@ func main() {
 			outcome, err := env.Step(action)
 			require.NoError(err)
 
-			if outcome.Done {
-				outcome.Reward = -outcome.Reward
-			}
 			score.Inc(outcome.Reward)
 
 			event.Apply(outcome)
@@ -47,14 +44,13 @@ func main() {
 			err = agent.Learn(event)
 			require.NoError(err)
 
-			timestep.Log()
-
 			if outcome.Done {
 				log.Successf("Episode %d finished after %d timesteps", episode.I, timestep.I+1)
 				break
 			}
 			state = outcome.Observation
 		}
+		episode.Log()
 	}
 	agent.Wait()
 	env.End()
