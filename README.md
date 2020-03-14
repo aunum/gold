@@ -1,6 +1,4 @@
-# Gold
-
-Reinforcement Learning in Go
+![logo](./docs/static/logo.png)
 
 ![cartpole](./docs/static/cartpole_deepq.gif)
 

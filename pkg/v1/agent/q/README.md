@@ -13,7 +13,7 @@ the discounted future reward.
 
 An agent will explore or exploit the Q-values based on the `epsilon` hyperparameter.
 
-The implemented agent also employs adaptive learning by which the `alpha` and `epsilon` hyperparameters are dynamically tuned based on the timestep and a `ada divisor`.
+The implemented agent also employs adaptive learning by which the `alpha` and `epsilon` hyperparameters are dynamically tuned based on the timestep and an `ada divisor` parameter.
 
 Q-learning doesn't work well in continous environments, the [pkg/v1/env](../env/norm.go) package provides a normalization adapter. One of the adapters is for discretization and can be used to make continuous states discrete.
 
@@ -21,6 +21,6 @@ Q-learning doesn't work well in continous environments, the [pkg/v1/env](../env/
 See the [experiments](./experiments) folder for example implementations.
 
 ## References
-- wiki: https://en.wikipedia.org/wiki/Q-learning
-- td wiki: https://en.wikipedia.org/wiki/Temporal_difference_learning
-- tutorial: https://www.learndatasci.com/tutorials/reinforcement-q-learning-scratch-python-openai-gym/
+- Wiki: https://en.wikipedia.org/wiki/Q-learning
+- TD wiki: https://en.wikipedia.org/wiki/Temporal_difference_learning
+- Tutorial: https://www.learndatasci.com/tutorials/reinforcement-q-learning-scratch-python-openai-gym/

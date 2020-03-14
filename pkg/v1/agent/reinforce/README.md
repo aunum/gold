@@ -19,7 +19,7 @@ See the [experiments](./experiments) folder for example implementations.
 - [ ] more environments
 
 ## References
-- paper: http://www-anw.cs.umass.edu/~barto/courses/cs687/williams92simple.pdf
-- tutorial: https://www.freecodecamp.org/news/an-introduction-to-policy-gradients-with-cartpole-and-doom-495b5ef2207f
-- tutorial: https://medium.com/@jonathan_hui/rl-policy-gradients-explained-9b13b688b146
-- sample python code: https://github.com/rlcode/reinforcement-learning/blob/master/2-cartpole/3-reinforce/cartpole_reinforce.py
+- Paper: http://www-anw.cs.umass.edu/~barto/courses/cs687/williams92simple.pdf
+- Tutorial: https://www.freecodecamp.org/news/an-introduction-to-policy-gradients-with-cartpole-and-doom-495b5ef2207f
+- Tutorial: https://medium.com/@jonathan_hui/rl-policy-gradients-explained-9b13b688b146
+- Sample python code: https://github.com/rlcode/reinforcement-learning/blob/master/2-cartpole/3-reinforce/cartpole_reinforce.py
