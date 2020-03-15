@@ -1,4 +1,4 @@
-// Package track provides tooling for tracking agent metrics
+// Package track provides tooling for tracking agent metrics.
 package track
 
 import (

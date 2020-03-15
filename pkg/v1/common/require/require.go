@@ -1,3 +1,4 @@
+// Package require provides methods for enforcing requirements on values or exiting.
 package require
 
 import (

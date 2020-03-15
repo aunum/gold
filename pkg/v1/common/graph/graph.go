@@ -1,4 +1,4 @@
-// Package graph provides helper methods for a Gorgonia graph
+// Package graph provides helper methods for a Gorgonia graph.
 package graph
 
 import (

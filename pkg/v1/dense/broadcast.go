@@ -1,4 +1,4 @@
-// Package dense provides helper methods for Gorgonia's Dense Tensors
+// Package dense provides methods for Gorgonia's Dense Tensors.
 package dense
 
 import (

@@ -1,4 +1,4 @@
-// Package op provides extended Gorgonia graph operations
+// Package op provides extended Gorgonia graph operations.
 package op
 
 import (

@@ -1,4 +1,4 @@
-// Package num provides various numeric functions
+// Package num provides various numeric functions.
 package num
 
 import "fmt"

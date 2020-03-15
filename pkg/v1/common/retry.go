@@ -1,4 +1,4 @@
-// Package common provides common methods and tooling for the agents
+// Package common provides common methods and tooling for the agents.
 package common
 
 import (

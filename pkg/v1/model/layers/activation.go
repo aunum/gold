@@ -1,4 +1,4 @@
-// Package layers provides the layers for sequential models
+// Package layers provides the layers for sequential models.
 package layers
 
 import (
