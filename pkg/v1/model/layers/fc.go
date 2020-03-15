@@ -120,6 +120,9 @@ func (f *FC) Fwd(x *g.Node) (*g.Node, error) {
 		s := t.Shape{1}
 		s = append(s, x.Shape()...)
 		x, err = g.Reshape(x, s)
+		if err != nil {
+			return nil, err
+		}
 		log.Debugf("normalizing dimensions of x to %v", s)
 	}
 

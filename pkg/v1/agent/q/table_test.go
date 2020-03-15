@@ -1,10 +1,11 @@
 package q_test
 
 import (
+	"testing"
+
 	. "github.com/pbarker/go-rl/pkg/v1/agent/q"
 	"github.com/stretchr/testify/require"
 	"gorgonia.org/tensor"
-	"testing"
 )
 
 func TestMemTable(t *testing.T) {
@@ -21,6 +22,7 @@ func TestMemTable(t *testing.T) {
 
 	qRes1, err := table.Get(state1, action1)
 	require.Equal(t, qVal1, qRes1)
+	require.NoError(t, err)
 
 	observation2 := tensor.New(tensor.WithShape(2, 4), tensor.WithBacking(tensor.Range(tensor.Float32, 8, 16)))
 	qVal2 := float32(0.2)
@@ -31,8 +33,10 @@ func TestMemTable(t *testing.T) {
 
 	qRes2, err := table.Get(state2, action2)
 	require.Equal(t, qVal2, qRes2)
+	require.NoError(t, err)
 
 	err = table.Set(state1, action2, qVal2)
+	require.NoError(t, err)
 
 	action, qval, err := table.GetMax(state1)
 	require.Nil(t, err)

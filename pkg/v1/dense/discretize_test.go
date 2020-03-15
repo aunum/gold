@@ -23,10 +23,10 @@ func TestDenseEqWidthBinner(t *testing.T) {
 	fmt.Printf("binned: %v \n", binned)
 
 	outHighObservation := New(WithShape(1, 4), WithBacking([]float32{20.0, -0.2, 2.0, 5.0}))
-	binned, err = binner.Bin(outHighObservation)
+	_, err = binner.Bin(outHighObservation)
 	require.NotNil(t, err, "should have errored on out of high bounds")
 
 	outLowObservation := New(WithShape(1, 4), WithBacking([]float32{-20.0, -0.2, 2.0, 5.0}))
-	binned, err = binner.Bin(outLowObservation)
+	_, err = binner.Bin(outLowObservation)
 	require.NotNil(t, err, "should have errored on out of low bounds")
 }
