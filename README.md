@@ -1,8 +1,7 @@
 ![logo](./docs/static/logo.png)   
+![cartpole](./docs/static/cartpole_deepq.gif)   
 [![GoDoc](https://godoc.org/github.com/pbarker/go-rl?status.svg)](https://godoc.org/github.com/pbarker/go-rl)
 [![Go Report Card](https://goreportcard.com/badge/github.com/pbarker/go-rl)](https://goreportcard.com/report/github.com/pbarker/go-rl)
-
-![cartpole](./docs/static/cartpole_deepq.gif)
 
 ## Overview 
 Gold is a reinforcement learning library for Go. It provides a set of agents that can be used to solve challenges in various environments. The library further contains a composable tooling for creating agents and visualizing their performance.
