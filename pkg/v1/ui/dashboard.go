@@ -1,3 +1,4 @@
+// Package ui package contains resources for creating agent dashboards.
 package ui
 
 import (

@@ -1,3 +1,4 @@
+// Package model provides a high level library for Gorgonia
 package model
 
 import (

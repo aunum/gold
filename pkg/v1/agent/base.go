@@ -1,3 +1,4 @@
+// Package agent provides the agent implementations and base tooling
 package agent
 
 import (

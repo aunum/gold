@@ -1,3 +1,4 @@
+// Package nes is an agent implementation of the Natural Evolution Strategies algorithm.
 package nes
 
 import (

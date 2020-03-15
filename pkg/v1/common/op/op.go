@@ -1,3 +1,4 @@
+// Package op provides extended Gorgonia graph operations
 package op
 
 import (

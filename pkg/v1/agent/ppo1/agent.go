@@ -1,3 +1,4 @@
+// Package ppo1 is an agent implementation of the Proximal Policy Optimization algorithm.
 package ppo1
 
 import (

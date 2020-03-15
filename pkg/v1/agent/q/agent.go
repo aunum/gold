@@ -1,3 +1,4 @@
+// Package q is an agent implementation of the Q learning algorithm
 package q
 
 import (

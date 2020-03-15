@@ -1,3 +1,4 @@
+// Package her is an agent implementation of the Hindsight Experience Replay algorithm.
 package her
 
 import (

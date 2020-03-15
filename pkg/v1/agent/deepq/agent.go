@@ -1,3 +1,4 @@
+// Package deepq is an agent implementation of the DeepQ algorithm.
 package deepq
 
 import (

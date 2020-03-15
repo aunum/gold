@@ -1,3 +1,4 @@
+// Package reinforce is an agent implementation of the REINFORCE algorithm.
 package reinforce
 
 import (

@@ -1,3 +1,4 @@
+// Package env provides a wrapper for interacting with Sphere as well as normalization tools
 package env
 
 import (
