@@ -167,8 +167,8 @@ func (a *Agent) Action(state *tensor.Dense) (action int, event *Event, err error
 	actionProbs := actionProbsVal.(*tensor.Dense)
 
 	// Get action as a random value of the probability distribution.
-	wieghts := num.F32SliceToF64(actionProbs.Data().([]float32))
-	dist := distuv.NewCategorical(wieghts, rand.NewSource(uint64(time.Now().UnixNano())))
+	weights := num.F32SliceToF64(actionProbs.Data().([]float32))
+	dist := distuv.NewCategorical(weights, rand.NewSource(uint64(time.Now().UnixNano())))
 	action = int(dist.Rand())
 
 	qv, err := a.Critic.Predict(state)

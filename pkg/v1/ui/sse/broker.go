@@ -93,7 +93,7 @@ func (broker *Broker) Handler(rw http.ResponseWriter, req *http.Request) {
 			encData := base64.StdEncoding.EncodeToString(data)
 			fmt.Fprintf(rw, "data: %s\n\n", encData)
 
-			// Flush the data immediatly instead of buffering it for later.
+			// Flush the data immediately instead of buffering it for later.
 			flusher.Flush()
 		}
 	}

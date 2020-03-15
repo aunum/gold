@@ -173,6 +173,6 @@ func RandN(dt t.Dtype, shape ...int) *t.Dense {
 		}
 		return t.New(t.WithShape(shape...), t.WithBacking(backing))
 	default:
-		panic("unkown type")
+		panic("unknown type")
 	}
 }

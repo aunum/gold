@@ -12,7 +12,7 @@ import (
 
 // PolicyConfig are the hyperparameters for a policy.
 type PolicyConfig struct {
-	// Optimizer to optimize the wieghts with regards to the error.
+	// Optimizer to optimize the weights with regards to the error.
 	Optimizer g.Solver
 
 	// LayerBuilder is a builder of layer.

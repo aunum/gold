@@ -50,7 +50,7 @@ type Hyperparameters struct {
 	// Epsilon is the rate at which the agent should exploit vs explore.
 	Epsilon common.Schedule
 
-	// UpdateTargetSteps determins how often the target network updates its parameters.
+	// UpdateTargetSteps determines how often the target network updates its parameters.
 	UpdateTargetSteps int
 }
 

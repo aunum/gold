@@ -95,7 +95,7 @@ func Fill(val interface{}, shape ...int) *t.Dense {
 		}
 		return t.New(t.WithShape(shape...), t.WithBacking(backing))
 	default:
-		panic("unkown type")
+		panic("unknown type")
 	}
 }
 
@@ -188,6 +188,6 @@ func Zeros(dt t.Dtype, shape ...int) *t.Dense {
 		}
 		return t.New(t.WithShape(shape...), t.WithBacking(backing))
 	default:
-		panic("unkown type")
+		panic("unknown type")
 	}
 }

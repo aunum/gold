@@ -1,2 +1,2 @@
-// Package gold is a reinforcement learning library for Go.
+// Package gold provides reinforcement learning libraries and agent implementations.
 package gold

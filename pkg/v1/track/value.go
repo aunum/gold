@@ -220,10 +220,10 @@ type HistoricalValue struct {
 	// TrackedValue of the value.
 	TrackedValue float64 `json:"value"`
 
-	// Timestep at which the value occured.
+	// Timestep at which the value occurred.
 	Timestep int `json:"timestep"`
 
-	// Episode at which the value occured.
+	// Episode at which the value occurred.
 	Episode int `json:"episode"`
 }
 

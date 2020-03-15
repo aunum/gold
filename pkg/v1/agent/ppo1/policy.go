@@ -11,10 +11,10 @@ import (
 
 // ModelConfig are the hyperparameters for a model.
 type ModelConfig struct {
-	// Loss function to evaluate network perfomance.
+	// Loss function to evaluate network performance.
 	Loss modelv1.Loss
 
-	// Optimizer to optimize the wieghts with regards to the error.
+	// Optimizer to optimize the weights with regards to the error.
 	Optimizer g.Solver
 
 	// LayerBuilder is a builder of layer.

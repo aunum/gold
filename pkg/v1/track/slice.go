@@ -107,5 +107,5 @@ func (e *CummulativeRangeSlicer) Label() string {
 	return fmt.Sprintf("per last %d episodes", e.back)
 }
 
-// DefaultCummulativeSlicer is the defualt slicer for cummulative slices.
+// DefaultCummulativeSlicer is the default slicer for cummulative slices.
 var DefaultCummulativeSlicer = &CummulativeRangeSlicer{back: 100, start: 0, end: -1}

@@ -112,7 +112,7 @@ func (f *FC) Compile(graph *g.ExprGraph, opts ...LayerOpt) {
 	}
 }
 
-// Fwd is a foward pass on a single fully connected layer.
+// Fwd is a forward pass on a single fully connected layer.
 func (f *FC) Fwd(x *g.Node) (*g.Node, error) {
 	var xw, xwb *g.Node
 	var err error

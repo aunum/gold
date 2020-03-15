@@ -295,7 +295,7 @@ func (i *InputLayer) Compile(graph *g.ExprGraph, opts ...l.LayerOpt) {
 	i.input.Compile(graph)
 }
 
-// Fwd is a foward pass through the layer.
+// Fwd is a forward pass through the layer.
 func (i *InputLayer) Fwd(x *g.Node) (*g.Node, error) {
 	return x, nil
 }

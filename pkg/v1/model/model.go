@@ -286,7 +286,7 @@ func (s *Sequential) Compile(x InputOr, y *Input, opts ...Opt) error {
 	}
 	if s.fwd == nil {
 		s.fwd = x.Inputs()[0]
-		s.logger.Infof("setting foward for layers to input %q", s.fwd.Name())
+		s.logger.Infof("setting forward for layers to input %q", s.fwd.Name())
 	}
 	err = s.buildTrainGraph(s.x, s.y)
 	if err != nil {

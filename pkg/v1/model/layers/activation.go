@@ -10,7 +10,7 @@ import (
 
 // Activation is an activation function.
 type Activation interface {
-	// Fwd is a foward pass through x.
+	// Fwd is a forward pass through x.
 	Fwd(x *g.Node) (*g.Node, error)
 
 	// Clone the activation.
@@ -28,7 +28,7 @@ func NewSigmoid() *SigmoidActivation {
 	return &SigmoidActivation{}
 }
 
-// Fwd is a foward pass through the layer.
+// Fwd is a forward pass through the layer.
 func (s *SigmoidActivation) Fwd(x *g.Node) (*g.Node, error) {
 	return g.Sigmoid(x)
 }
@@ -57,7 +57,7 @@ func NewTanh() *TanhActivation {
 	return &TanhActivation{}
 }
 
-// Fwd is a foward pass through the layer.
+// Fwd is a forward pass through the layer.
 func (t *TanhActivation) Fwd(x *g.Node) (*g.Node, error) {
 	return g.Tanh(x)
 }
@@ -86,7 +86,7 @@ func NewReLU() *ReLUActivation {
 	return &ReLUActivation{}
 }
 
-// Fwd is a foward pass through the layer.
+// Fwd is a forward pass through the layer.
 func (r *ReLUActivation) Fwd(x *g.Node) (*g.Node, error) {
 	return g.Rectify(x)
 }
@@ -117,7 +117,7 @@ func NewLeakyReLU(alpha float64) *LeakyReLUActivation {
 	return &LeakyReLUActivation{alpha: alpha}
 }
 
-// Fwd is a foward pass through the layer.
+// Fwd is a forward pass through the layer.
 func (r *LeakyReLUActivation) Fwd(x *g.Node) (*g.Node, error) {
 	return g.LeakyRelu(x, r.alpha)
 }
@@ -151,7 +151,7 @@ func NewSoftmax(axis ...int) *SoftmaxActivation {
 	return &SoftmaxActivation{axis: axis}
 }
 
-// Fwd is a foward pass through the layer.
+// Fwd is a forward pass through the layer.
 func (s *SoftmaxActivation) Fwd(x *g.Node) (*g.Node, error) {
 	// fmt.Printf("running softmax with x shape: %v dims: %v \n", x.Shape(), x.Dims())
 	return softMax(x, s.axis...)
@@ -181,7 +181,7 @@ func NewLinear() *LinearActivation {
 	return &LinearActivation{}
 }
 
-// Fwd is a foward pass through the layer.
+// Fwd is a forward pass through the layer.
 func (l *LinearActivation) Fwd(x *g.Node) (*g.Node, error) {
 	return x, nil
 }

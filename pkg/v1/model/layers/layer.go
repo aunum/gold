@@ -10,7 +10,7 @@ type Layer interface {
 	// Compile the layer.
 	Compile(graph *g.ExprGraph, opts ...LayerOpt)
 
-	// Fwd is a foward pass through the layer.
+	// Fwd is a forward pass through the layer.
 	Fwd(x *g.Node) (*g.Node, error)
 
 	// Learnables returns all learnable nodes within this layer.
