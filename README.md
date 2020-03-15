@@ -1,5 +1,5 @@
 ![logo](./docs/static/logo.png)   
-[![GoDoc](https://godoc.org/github.com/pbarker/go-rl/pkg/v1?status.svg)](https://godoc.org/github.com/pbarker/go-rl/pkg/v1)
+[![GoDoc](https://godoc.org/github.com/pbarker/go-rl?status.svg)](https://godoc.org/github.com/pbarker/go-rl)
 
 ![cartpole](./docs/static/cartpole_deepq.gif)
 
