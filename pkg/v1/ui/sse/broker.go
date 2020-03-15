@@ -1,3 +1,4 @@
+// Package sse provides server sent events to the agent dashboard.
 package sse
 
 import (
