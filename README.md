@@ -1,5 +1,6 @@
 ![logo](./docs/static/logo.png)   
 [![GoDoc](https://godoc.org/github.com/pbarker/go-rl?status.svg)](https://godoc.org/github.com/pbarker/go-rl)
+[![Go Report Card](https://goreportcard.com/badge/github.com/pbarker/go-rl)](https://goreportcard.com/report/github.com/pbarker/go-rl)
 
 ![cartpole](./docs/static/cartpole_deepq.gif)
 
