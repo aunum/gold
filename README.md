@@ -28,6 +28,9 @@ All of the agent implementations can be found in [pkg/v1/agent](./pkg/v1/agent) 
 |[pkg/v1/agent/her](./pkg/v1/agent/her)| [Hindsight Experience Replay](https://arxiv.org/pdf/1707.01495.pdf)|
 |[pkg/v1/agent/ppo1](./pkg/v1/agent/ppo1)|[Proximal Policy Optimization](https://arxiv.org/pdf/1707.06347.pdf) ⚠️ in progress |
 
+## Docs
+Each package contains a README explaining the usage, also see [GoDoc](https://godoc.org/github.com/pbarker/go-rl).
+
 ## Contributing
 Please open an MR for any issues or feature requests.
 
