@@ -100,7 +100,7 @@ func FindOrCreate(config *LocalServerConfig) (*Server, error) {
 	containers, err := pool.Client.ListContainers(dc.ListContainersOptions{
 		All: true,
 		Filters: map[string][]string{
-			"ancestor": []string{config.Image},
+			"ancestor": {config.Image},
 		},
 	})
 	if err != nil {
