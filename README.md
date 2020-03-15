@@ -2,6 +2,9 @@
 
 ![cartpole](./docs/static/cartpole_deepq.gif)
 
+## Overview 
+Gold is a reinforcement learning library for Go. It provides a set of agents that can be used to solve challenges in various environments. The library further contains a composable set of tooling for creating agents and visualizing their performance.
+
 ## Quick Start
 ```
 go run ./pkg/v1/agents/deepq/experiments/cartpole/main.go

@@ -9,7 +9,8 @@ In Q-learning the agent stores Q-values (quality values) for each state that it 
 
 Q-learning is an off-policy form of [temporal difference](https://en.wikipedia.org/wiki/Temporal_difference_learning). The Agent simply learns by 
 storing a quality value for the state that it encountered and the reward that it recieved for the action taken along with 
-the discounted future reward.
+the discounted future reward. Taking the future reward into account at each value iteration forms a Markov Chain which will converge to the highest 
+reward.
 
 An agent will explore or exploit the Q-values based on the `epsilon` hyperparameter.
 
