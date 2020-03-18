@@ -1,4 +1,4 @@
-package ppo1
+package ppo
 
 import (
 	"fmt"

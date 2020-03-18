@@ -1,5 +1,5 @@
-// Package layers provides the layers for sequential models.
-package layers
+// Package activation provides activation layers and functions.
+package activation
 
 import (
 	"github.com/aunum/log"
@@ -8,13 +8,13 @@ import (
 	t "gorgonia.org/tensor"
 )
 
-// Activation is an activation function.
-type Activation interface {
+// Fn is an activation function.
+type Fn interface {
 	// Fwd is a forward pass through x.
 	Fwd(x *g.Node) (*g.Node, error)
 
 	// Clone the activation.
-	Clone() Activation
+	Clone() Fn
 }
 
 // SigmoidActivation is a sigmoid activation layer.
@@ -39,10 +39,10 @@ func (s *SigmoidActivation) Learnables() (n g.Nodes) {
 }
 
 // Compile the layer.
-func (s *SigmoidActivation) Compile(x *g.Node, opts ...LayerOpt) {}
+func (s *SigmoidActivation) Compile(x *g.Node, opts *layers.CompileOpts) {}
 
 // Clone the activation.
-func (s *SigmoidActivation) Clone() Activation {
+func (s *SigmoidActivation) Clone() Fn {
 	return NewSigmoid()
 }
 
@@ -68,10 +68,10 @@ func (t *TanhActivation) Learnables() (n g.Nodes) {
 }
 
 // Compile the layer.
-func (t *TanhActivation) Compile(x *g.Node, opts ...LayerOpt) {}
+func (t *TanhActivation) Compile(x *g.Node, opts *layers.CompileOpts) {}
 
 // Clone the activation.
-func (t *TanhActivation) Clone() Activation {
+func (t *TanhActivation) Clone() Fn {
 	return NewTanh()
 }
 
@@ -97,10 +97,10 @@ func (r *ReLUActivation) Learnables() (n g.Nodes) {
 }
 
 // Compile the layer.
-func (r *ReLUActivation) Compile(x *g.Node, opts ...LayerOpt) {}
+func (r *ReLUActivation) Compile(x *g.Node, opts *layers.CompileOpts) {}
 
 // Clone the activation.
-func (r *ReLUActivation) Clone() Activation {
+func (r *ReLUActivation) Clone() Fn {
 	return NewReLU()
 }
 
@@ -128,10 +128,10 @@ func (r *LeakyReLUActivation) Learnables() (n g.Nodes) {
 }
 
 // Compile the layer.
-func (r *LeakyReLUActivation) Compile(x *g.Node, opts ...LayerOpt) {}
+func (r *LeakyReLUActivation) Compile(x *g.Node, opts *layers.CompileOpts) {}
 
 // Clone the activation.
-func (r *LeakyReLUActivation) Clone() Activation {
+func (r *LeakyReLUActivation) Clone() Fn {
 	return NewLeakyReLU(r.alpha)
 }
 
@@ -163,10 +163,10 @@ func (s *SoftmaxActivation) Learnables() (n g.Nodes) {
 }
 
 // Compile the layer.
-func (s *SoftmaxActivation) Compile(x *g.Node, opts ...LayerOpt) {}
+func (s *SoftmaxActivation) Compile(x *g.Node, opts *layers.CompileOpts) {}
 
 // Clone the activation.
-func (s *SoftmaxActivation) Clone() Activation {
+func (s *SoftmaxActivation) Clone() Fn {
 	return NewSoftmax(s.axis...)
 }
 
@@ -192,10 +192,10 @@ func (l *LinearActivation) Learnables() (n g.Nodes) {
 }
 
 // Compile the layer.
-func (l *LinearActivation) Compile(x *g.Node, opts ...LayerOpt) {}
+func (l *LinearActivation) Compile(x *g.Node, opts *layers.CompileOpts) {}
 
 // Clone the activation.
-func (l *LinearActivation) Clone() Activation {
+func (l *LinearActivation) Clone() Fn {
 	return NewLinear()
 }
 

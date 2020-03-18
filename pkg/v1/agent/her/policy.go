@@ -43,9 +43,9 @@ type LayerBuilder func(x, y *modelv1.Input) []l.Layer
 // DefaultFCLayerBuilder is a default fully connected layer builder.
 var DefaultFCLayerBuilder = func(x, y *modelv1.Input) []l.Layer {
 	return []l.Layer{
-		l.NewFC(x.Squeeze()[0], 512, l.WithActivation(l.ReLU), l.WithName("fc1")),
-		l.NewFC(512, 512, l.WithActivation(l.ReLU), l.WithName("fc2")),
-		l.NewFC(512, y.Squeeze()[0], l.WithActivation(l.Linear), l.WithName("qvalues")),
+		fc.New(x.Squeeze()[0], 512, fc.WithName("fc1")),
+		fc.New(512, 512, fc.WithName("fc2")),
+		fc.New(512, y.Squeeze()[0], fc.WithActivation(activation.Linear), fc.WithName("qvalues")),
 	}
 }
 

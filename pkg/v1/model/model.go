@@ -385,7 +385,7 @@ func (s *Sequential) buildTrainBatchGraph(x Inputs, y *Input) (err error) {
 	s.yTrainBatch.Compile(s.trainBatchGraph)
 
 	s.trainBatchChain = s.Chain.Clone()
-	s.trainBatchChain.Compile(s.trainBatchGraph, layers.WithSharedChainLearnables(s.trainChain), layers.WithLayerOpts(layers.AsBatch()))
+	s.trainBatchChain.Compile(s.trainBatchGraph, layers.WithSharedChainLearnables(s.trainChain), layers.WithLayerOpts(&layers.CompileOpts{AsBatch: true}))
 
 	prediction, err := s.trainBatchChain.Fwd(s.xTrainBatchFwd.Node())
 	if err != nil {
@@ -462,7 +462,7 @@ func (s *Sequential) buildOnlineBatchGraph(x Inputs) (err error) {
 	}
 
 	s.onlineBatchChain = s.Chain.Clone()
-	s.onlineBatchChain.Compile(s.onlineBatchGraph, layers.WithSharedChainLearnables(s.trainChain), layers.WithLayerOpts(layers.AsBatch()))
+	s.onlineBatchChain.Compile(s.onlineBatchGraph, layers.WithSharedChainLearnables(s.trainChain), layers.WithLayerOpts(&layers.CompileOpts{AsBatch: true}))
 
 	prediction, err := s.onlineBatchChain.Fwd(s.xOnlineBatchFwd.Node())
 	if err != nil {

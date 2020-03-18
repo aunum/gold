@@ -21,9 +21,9 @@ model, _ := NewSequential("mnist")
 
 // add layers to the model
 model.AddLayers(
-    l.NewFC(784, 300, l.WithActivation(l.ReLU), l.WithInit(g.GlorotN(1)), l.WithName("w0")),
-    l.NewFC(300, 100, l.WithActivation(l.ReLU), l.WithInit(g.GlorotN(1)), l.WithName("w1")),
-    l.NewFC(100, 10, l.WithActivation(l.Softmax), l.WithInit(g.GlorotN(1)), l.WithName("w2")),
+    fc.New(784, 300, fc.WithInit(g.GlorotN(1)), fc.WithName("w0")),
+    fc.New(300, 100, fc.WithInit(g.GlorotN(1)), fc.WithName("w1")),
+    fc.New(100, 10, fc.WithActivation(activation.Softmax), fc.WithInit(g.GlorotN(1)), fc.WithName("w2")),
 )
 
 // pick an optimizer
