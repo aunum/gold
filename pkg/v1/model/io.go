@@ -288,7 +288,7 @@ func (i *Input) AsLayer() l.Layer {
 }
 
 // Compile the layer.
-func (i *InputLayer) Compile(graph *g.ExprGraph, opts ...l.LayerOpt) {
+func (i *InputLayer) Compile(graph *g.ExprGraph, opts *l.CompileOpts) {
 	if i.Graph() != nil {
 		return
 	}

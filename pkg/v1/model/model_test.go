@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	. "github.com/aunum/gold/pkg/v1/model"
-	l "github.com/aunum/gold/pkg/v1/model/layers"
 	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
 	"gorgonia.org/tensor"
@@ -53,9 +52,9 @@ func TestSequential(t *testing.T) {
 	model, err := NewSequential("test")
 	require.NoError(t, err)
 	model.AddLayers(
-		l.NewFC(5, 24, l.WithActivation(l.Sigmoid), l.WithName("w0")),
-		l.NewFC(24, 24, l.WithActivation(l.Sigmoid), l.WithName("w1")),
-		l.NewFC(24, 1, l.WithActivation(l.Linear), l.WithName("w2")),
+		fc.New(5, 24, fc.WithActivation(activation.Sigmoid), fc.WithName("w0")),
+		fc.New(24, 24, fc.WithActivation(activation.Sigmoid), fc.WithName("w1")),
+		fc.New(24, 1, fc.WithActivation(activation.Linear), fc.WithName("w2")),
 	)
 
 	optimizer := g.NewAdamSolver()

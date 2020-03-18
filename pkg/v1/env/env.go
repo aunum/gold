@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/aunum/gold/pkg/v1/common/require"
 	"github.com/aunum/log"
 
 	"github.com/aunum/gold/pkg/v1/common/num"
@@ -33,8 +32,12 @@ type Env struct {
 	// Normalizer normalizes observation data.
 	Normalizer Normalizer
 
+	// GoalNormalizer normalizes goal data.
+	GoalNormalizer Normalizer
+
 	logger    *log.Logger
 	recording bool
+	wrappers  []*spherev1alpha.EnvWrapper
 }
 
 // Opt is an environment option.
@@ -42,21 +45,28 @@ type Opt func(*Env)
 
 // Make an environment.
 func (s *Server) Make(model string, opts ...Opt) (*Env, error) {
+	e := &Env{
+		Client: s.Client,
+		logger: s.logger,
+	}
+	for _, opt := range opts {
+		opt(e)
+	}
 	ctx := context.Background()
-	resp, err := s.Client.CreateEnv(ctx, &spherev1alpha.CreateEnvRequest{ModelName: model})
+	resp, err := s.Client.CreateEnv(ctx, &spherev1alpha.CreateEnvRequest{ModelName: model, Wrappers: e.wrappers})
 	if err != nil {
 		return nil, err
 	}
 	env := resp.Environment
 	s.logger.Successf("created env: %s", env.Id)
+	e.Environment = env
 
-	e := &Env{
-		Environment: env,
-		Client:      s.Client,
-		logger:      s.logger,
-	}
-	for _, opt := range opts {
-		opt(e)
+	if e.recording {
+		resp, err := e.Client.StartRecordEnv(ctx, &spherev1alpha.StartRecordEnvRequest{Id: e.Environment.Id})
+		if err != nil {
+			return nil, err
+		}
+		e.logger.Success(resp.Message)
 	}
 	return e, nil
 }
@@ -64,11 +74,7 @@ func (s *Server) Make(model string, opts ...Opt) (*Env, error) {
 // WithRecorder adds a recorder to the environment
 func WithRecorder() func(*Env) {
 	return func(e *Env) {
-		ctx := context.Background()
-		resp, err := e.Client.StartRecordEnv(ctx, &spherev1alpha.StartRecordEnvRequest{Id: e.Environment.Id})
-		require.NoError(err)
 		e.recording = true
-		e.logger.Success(resp.Message)
 	}
 }
 
@@ -80,11 +86,31 @@ func WithNormalizer(normalizer Normalizer) func(*Env) {
 	}
 }
 
+// WithGoalNormalizer adds a normalizer for goal data.
+func WithGoalNormalizer(normalizer Normalizer) func(*Env) {
+	return func(e *Env) {
+		normalizer.Init(e)
+		e.GoalNormalizer = normalizer
+	}
+}
+
+// WithWrapper adds an environment wrapper.
+func WithWrapper(wrapper spherev1alpha.IsEnvWrapper) func(*Env) {
+	return func(e *Env) {
+		e.wrappers = append(e.wrappers, &spherev1alpha.EnvWrapper{Wrapper: wrapper})
+	}
+}
+
 // WithLogger adds a logger to the env.
 func WithLogger(logger *log.Logger) func(*Env) {
 	return func(e *Env) {
 		e.logger = logger
 	}
+}
+
+// DefaultAtariWrapper is the default deepmind atari wrapper.
+var DefaultAtariWrapper = &spherev1alpha.EnvWrapper_DeepmindAtariWrapper{
+	DeepmindAtariWrapper: &spherev1alpha.DeepmindAtariWrapper{EpisodeLife: true, ClipRewards: true},
 }
 
 // Outcome of taking an action.
@@ -158,7 +184,7 @@ func (e *Env) Reset() (init *InitialState, err error) {
 	}
 	observation := resp.Observation.Dense()
 	var goal *tensor.Dense
-	if resp.Goal != nil {
+	if resp.GetGoal().Data != nil {
 		goal = resp.GetGoal().Dense()
 	}
 	if e.Normalizer != nil {
@@ -166,12 +192,16 @@ func (e *Env) Reset() (init *InitialState, err error) {
 		if err != nil {
 			return nil, err
 		}
-		goal, err = e.Normalizer.Norm(goal)
-		if err != nil {
-			return nil, err
+	}
+	if e.GoalNormalizer != nil {
+		if goal != nil {
+			goal, err = e.GoalNormalizer.Norm(goal)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
-	return &InitialState{observation, goal}, nil
+	return &InitialState{Observation: observation, Goal: goal}, nil
 }
 
 // Close the environment.

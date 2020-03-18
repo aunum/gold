@@ -1,4 +1,4 @@
-package ppo1_test
+package ppo_test
 
 import (
 	"testing"

@@ -1,4 +1,4 @@
-package ppo1
+package ppo
 
 import (
 	agentv1 "github.com/aunum/gold/pkg/v1/agent"
@@ -40,9 +40,9 @@ var DefaultActorConfig = &ModelConfig{
 // DefaultActorLayerBuilder is a default fully connected layer builder.
 var DefaultActorLayerBuilder = func(env *envv1.Env) []l.Layer {
 	return []l.Layer{
-		l.NewFC(env.ObservationSpaceShape()[0], 24, l.WithActivation(l.ReLU), l.WithName("fc1")),
-		l.NewFC(24, 24, l.WithActivation(l.ReLU), l.WithName("fc2")),
-		l.NewFC(24, envv1.PotentialsShape(env.ActionSpace)[0], l.WithActivation(l.Softmax), l.WithName("predictions")),
+		fc.New(env.ObservationSpaceShape()[0], 24, fc.WithName("fc1")),
+		fc.New(24, 24, fc.WithName("fc2")),
+		fc.New(24, envv1.PotentialsShape(env.ActionSpace)[0], fc.WithActivation(activation.Softmax), fc.WithName("predictions")),
 	}
 }
 
@@ -91,9 +91,9 @@ func MakeActor(config *ModelConfig, base *agentv1.Base, env *envv1.Env) (modelv1
 // DefaultCriticLayerBuilder is a default fully connected layer builder.
 var DefaultCriticLayerBuilder = func(env *envv1.Env) []l.Layer {
 	return []l.Layer{
-		l.NewFC(env.ObservationSpaceShape()[0], 24, l.WithActivation(l.ReLU), l.WithName("w0")),
-		l.NewFC(24, 24, l.WithActivation(l.ReLU), l.WithName("w1")),
-		l.NewFC(24, 1, l.WithActivation(l.Tanh), l.WithName("w2")),
+		fc.New(env.ObservationSpaceShape()[0], 24, fc.WithName("w0")),
+		fc.New(24, 24, fc.WithName("w1")),
+		fc.New(24, 1, fc.WithActivation(activation.Tanh), fc.WithName("w2")),
 	}
 }
 

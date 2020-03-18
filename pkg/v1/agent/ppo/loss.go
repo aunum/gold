@@ -1,4 +1,4 @@
-package ppo1
+package ppo
 
 import (
 	"github.com/aunum/gold/pkg/v1/common/op"

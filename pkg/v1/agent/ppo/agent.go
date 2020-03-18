@@ -1,5 +1,5 @@
-// Package ppo1 is an agent implementation of the Proximal Policy Optimization algorithm.
-package ppo1
+// Package ppo is an agent implementation of the Proximal Policy Optimization algorithm.
+package ppo
 
 import (
 	"fmt"
