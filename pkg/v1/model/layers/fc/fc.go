@@ -4,9 +4,7 @@ package fc
 import (
 	"fmt"
 
-	"github.com/pbarker/go-rl/pkg/v1/model/layers"
-	"github.com/pbarker/go-rl/pkg/v1/model/layers/activation"
-	"github.com/pbarker/log"
+	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
 	t "gorgonia.org/tensor"
 )
@@ -108,9 +106,13 @@ func (l *Layer) Compile(graph *g.ExprGraph, opts *layers.CompileOpts) {
 }
 
 func (l *Layer) applyCompileOpts(opts *layers.CompileOpts) {
-	l.shared = opts.SharedLearnables.(*Layer)
-	l.isBatched = opts.AsBatch
-	l.dtype = opts.AsType
+	if opts != nil {
+		if l.shared != nil {
+			l.shared = opts.SharedLearnables.(*Layer)
+		}
+		l.isBatched = opts.AsBatch
+		l.dtype = opts.AsType
+	}
 }
 
 // Fwd is a forward pass on a single fully connected layer.

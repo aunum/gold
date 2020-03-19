@@ -2,6 +2,8 @@
 package conv2d
 
 import (
+	"fmt"
+
 	"github.com/pbarker/go-rl/pkg/v1/model/layers"
 	"github.com/pbarker/go-rl/pkg/v1/model/layers/activation"
 	g "gorgonia.org/gorgonia"
@@ -41,6 +43,7 @@ func New(input, output, height, width int, opts ...Opt) *Layer {
 		pad:         []int{1, 1},
 		stride:      []int{1, 1},
 		dilation:    []int{1, 1},
+		init:        g.GlorotU(1.0),
 		dtype:       t.Float32,
 		activation:  activation.ReLU,
 	}
@@ -53,10 +56,10 @@ func New(input, output, height, width int, opts ...Opt) *Layer {
 // Opt is a Conv2D construction option.
 type Opt func(*Layer)
 
-// WithConv2DActivation adds an activation function to a convolution layer.
+// WithActivation adds an activation function to a convolution layer.
 // Defaults to ReLU
 // TODO: this is a bit ugly, should maybe be in its own package.
-func WithConv2DActivation(fn activation.Fn) func(*Layer) {
+func WithActivation(fn activation.Fn) func(*Layer) {
 	return func(l *Layer) {
 		l.activation = fn
 	}
@@ -94,16 +97,16 @@ func WithDilation(dilation []int) func(*Layer) {
 	}
 }
 
-// WithConv2DInit adds an init function to a convolution weights.
+// WithInit adds an init function to a convolution weights.
 // Defaults to Glorot.
-func WithConv2DInit(fn g.InitWFn) func(*Layer) {
+func WithInit(fn g.InitWFn) func(*Layer) {
 	return func(l *Layer) {
 		l.init = fn
 	}
 }
 
-// WithConv2DName gives a name to a convolution.
-func WithConv2DName(name string) func(*Layer) {
+// WithName gives a name to a convolution.
+func WithName(name string) func(*Layer) {
 	return func(l *Layer) {
 		l.Name = name
 	}
@@ -120,17 +123,30 @@ func (l *Layer) Compile(graph *g.ExprGraph, opts *layers.CompileOpts) {
 }
 
 func (l *Layer) applyCompileOpts(opts *layers.CompileOpts) {
-	l.shared = opts.SharedLearnables.(*Layer)
-	l.isBatched = opts.AsBatch
-	l.dtype = opts.AsType
+	if opts != nil {
+		if l.shared != nil {
+			l.shared = opts.SharedLearnables.(*Layer)
+		}
+		l.isBatched = opts.AsBatch
+		l.dtype = opts.AsType
+	}
 }
 
 // Fwd is a forward pass through the layer.
 func (l *Layer) Fwd(x *g.Node) (*g.Node, error) {
+	fmt.Println("------ conv")
+	fmt.Printf("x: %+v\n", x)
+	fmt.Println("xshape: ", x.Shape())
+	fmt.Println("filter shape: ", l.filter.Shape())
+	fmt.Printf("kernel: %+v \n", l.kernelShape)
+	fmt.Printf("pad: %+v\n", l.pad)
+	fmt.Printf("stride: %+v\n", l.stride)
+	fmt.Printf("dilation: %+v\n", l.dilation)
 	n, err := g.Conv2d(x, l.filter, l.kernelShape, l.pad, l.stride, l.dilation)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("------")
 	return n, nil
 }
 
