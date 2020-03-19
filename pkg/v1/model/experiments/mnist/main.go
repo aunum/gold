@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/aunum/gold/pkg/v1/dense"
 
 	"github.com/aunum/gold/pkg/v1/common/require"
@@ -17,6 +19,11 @@ func main() {
 	x, y, err := mnist.Load("train", "./testdata", g.Float32)
 	require.NoError(err)
 
+	// Reshape for convolution
+	numExamples := x.Shape()[0]
+	x.Reshape(numExamples, 1, 28, 28)
+	y.Reshape(numExamples, 1, 28, 28)
+
 	// load our test set
 	testX, testY, err := mnist.Load("test", "./testdata", g.Float32)
 	require.NoError(err)
@@ -32,23 +39,25 @@ func main() {
 	batches := exampleSize / batchSize
 	log.Infov("num batches", batches)
 
-	x0, err := x.Slice(dense.MakeRangedSlice(0, 1))
-	require.NoError(err)
-	xi := NewInput("x", x0.Shape())
+	xi := NewInput("x", []int{1, 1, 28, 28})
 	log.Infov("x input shape", xi.Shape())
 
-	y0, err := y.Slice(dense.MakeRangedSlice(0, 1))
-	require.NoError(err)
-	yi := NewInput("y", y0.Shape())
+	yi := NewInput("y", []int{1, 10})
 	log.Infov("y input shape", yi.Shape())
 
 	model, err := NewSequential("mnist")
 	require.NoError(err)
 
 	model.AddLayers(
-		fc.New(784, 300, fc.WithInit(g.GlorotN(1)), fc.WithName("w0")),
-		fc.New(300, 100, fc.WithInit(g.GlorotN(1)), fc.WithName("w1")),
-		fc.New(100, 10, fc.WithActivation(activation.Softmax), fc.WithInit(g.GlorotN(1)), fc.WithName("w2")),
+		conv2d.New(1, 32, 3, 3, conv2d.WithName("conv0")),
+		maxpooling2d.New(),
+		conv2d.New(32, 64, 3, 3, conv2d.WithName("conv1")),
+		maxpooling2d.New(),
+		conv2d.New(64, 128, 3, 3, conv2d.WithName("conv3")),
+		maxpooling2d.New(),
+		shape.Flatten(),
+		fc.New(128*3*3, 100, fc.WithInit(g.GlorotN(1)), fc.WithName("fc0")),
+		fc.New(100, 10, fc.WithActivation(activation.Softmax), fc.WithInit(g.GlorotN(1)), fc.WithName("dist")),
 	)
 
 	optimizer := g.NewRMSPropSolver()
@@ -78,6 +87,7 @@ func main() {
 
 			xi, err = x.Slice(dense.MakeRangedSlice(start, end))
 			require.NoError(err)
+			fmt.Println("xi shape: ", xi.Shape())
 			yi, err = y.Slice(dense.MakeRangedSlice(start, end))
 			require.NoError(err)
 

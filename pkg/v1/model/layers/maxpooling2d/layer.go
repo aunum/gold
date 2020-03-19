@@ -2,6 +2,8 @@
 package maxpooling2d
 
 import (
+	"fmt"
+
 	"github.com/pbarker/go-rl/pkg/v1/model/layers"
 	g "gorgonia.org/gorgonia"
 	t "gorgonia.org/tensor"
@@ -20,7 +22,11 @@ type Layer struct {
 
 // New returns a new MaxPooling2D layer.
 func New(opts ...Opt) *Layer {
-	c := &Layer{}
+	c := &Layer{
+		kernel: []int{2, 2},
+		pad:    []int{0, 0},
+		stride: []int{2, 2},
+	}
 	for _, opt := range opts {
 		opt(c)
 	}
@@ -39,7 +45,7 @@ func WithKernelShape(kernel t.Shape) func(*Layer) {
 }
 
 // WithPad sets the padding size.
-// Defaults to (1, 1)
+// Defaults to (0, 0)
 func WithPad(pad []int) func(*Layer) {
 	return func(l *Layer) {
 		l.pad = pad
@@ -47,7 +53,7 @@ func WithPad(pad []int) func(*Layer) {
 }
 
 // WithStride sets the stride size.
-// Defaults to (1, 1)
+// Defaults to (2, 2)
 func WithStride(stride []int) func(*Layer) {
 	return func(l *Layer) {
 		l.stride = stride
@@ -61,10 +67,16 @@ func (l *Layer) Compile(graph *g.ExprGraph, opts *layers.CompileOpts) {
 
 // Fwd is a forward pass through the layer.
 func (l *Layer) Fwd(x *g.Node) (*g.Node, error) {
+	fmt.Println("---- pool")
+	fmt.Println("pool x shape: ", x.Shape())
+	fmt.Println("kernel: ", l.kernel)
+	fmt.Println("pad: ", l.pad)
+	fmt.Println("stride: ", l.stride)
 	n, err := g.MaxPool2D(x, l.kernel, l.pad, l.stride)
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("returning pool shape: ", n.Shape())
 	return n, nil
 }
 
