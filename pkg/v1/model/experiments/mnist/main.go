@@ -48,9 +48,11 @@ func main() {
 	model, err := NewSequential("mnist")
 	require.NoError(err)
 
+	ll := maxpooling2d.New(maxpooling2d.WithName("test"))
+	fmt.Printf("ll: %+v\n", ll)
 	model.AddLayers(
 		conv2d.New(1, 32, 3, 3, conv2d.WithName("conv0")),
-		maxpooling2d.New(),
+		ll,
 		conv2d.New(32, 64, 3, 3, conv2d.WithName("conv1")),
 		maxpooling2d.New(),
 		conv2d.New(64, 128, 3, 3, conv2d.WithName("conv3")),

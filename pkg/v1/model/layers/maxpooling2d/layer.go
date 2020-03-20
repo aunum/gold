@@ -36,6 +36,13 @@ func New(opts ...Opt) *Layer {
 // Opt is a MaxPooling2D construction option.
 type Opt func(*Layer)
 
+// WithName gives a name to a FC layer.
+func WithName(name string) func(*Layer) {
+	return func(l *Layer) {
+		l.Name = name
+	}
+}
+
 // WithKernelShape sets the kernel shape.
 // Defaults to (2, 2)
 func WithKernelShape(kernel t.Shape) func(*Layer) {
@@ -69,14 +76,12 @@ func (l *Layer) Compile(graph *g.ExprGraph, opts *layers.CompileOpts) {
 func (l *Layer) Fwd(x *g.Node) (*g.Node, error) {
 	fmt.Println("---- pool")
 	fmt.Println("pool x shape: ", x.Shape())
-	fmt.Println("kernel: ", l.kernel)
-	fmt.Println("pad: ", l.pad)
-	fmt.Println("stride: ", l.stride)
 	n, err := g.MaxPool2D(x, l.kernel, l.pad, l.stride)
 	if err != nil {
 		return nil, err
 	}
 	fmt.Println("returning pool shape: ", n.Shape())
+	fmt.Println("----")
 	return n, nil
 }
 
@@ -87,7 +92,12 @@ func (l *Layer) Learnables() g.Nodes {
 
 // Clone the layer.
 func (l *Layer) Clone() layers.Layer {
-	return &Layer{}
+	return &Layer{
+		Name:   l.Name,
+		kernel: l.kernel,
+		pad:    l.pad,
+		stride: l.stride,
+	}
 }
 
 // Graph returns the graph for this layer.

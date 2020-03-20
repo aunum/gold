@@ -1,4 +1,5 @@
-package layers
+// Package fc provides a fully connected layer.
+package fc
 
 import (
 	"fmt"
