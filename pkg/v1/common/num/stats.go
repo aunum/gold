@@ -2,7 +2,7 @@ package num
 
 import (
 	"github.com/chewxy/math32"
-	"github.com/pbarker/log"
+	"github.com/aunum/log"
 )
 
 // MinMaxNorm is min-max normalization.

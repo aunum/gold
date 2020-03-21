@@ -7,13 +7,13 @@ import (
 
 	"golang.org/x/exp/rand"
 
-	"github.com/pbarker/go-rl/pkg/v1/dense"
-	"github.com/pbarker/go-rl/pkg/v1/model"
+	"github.com/aunum/gold/pkg/v1/dense"
+	"github.com/aunum/gold/pkg/v1/model"
 	"gonum.org/v1/gonum/stat/distuv"
 
-	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
-	"github.com/pbarker/go-rl/pkg/v1/common/num"
-	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
+	agentv1 "github.com/aunum/gold/pkg/v1/agent"
+	"github.com/aunum/gold/pkg/v1/common/num"
+	envv1 "github.com/aunum/gold/pkg/v1/env"
 	"gorgonia.org/tensor"
 )
 

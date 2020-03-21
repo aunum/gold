@@ -10,7 +10,7 @@ import (
 	"gonum.org/v1/plot/vg"
 	"gorgonia.org/tensor"
 
-	. "github.com/pbarker/go-rl/pkg/v1/track"
+	. "github.com/aunum/gold/pkg/v1/track"
 	g "gorgonia.org/gorgonia"
 )
 

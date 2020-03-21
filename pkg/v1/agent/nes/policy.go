@@ -1,10 +1,10 @@
 package nes
 
 import (
-	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
-	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
-	modelv1 "github.com/pbarker/go-rl/pkg/v1/model"
-	l "github.com/pbarker/go-rl/pkg/v1/model/layers"
+	agentv1 "github.com/aunum/gold/pkg/v1/agent"
+	envv1 "github.com/aunum/gold/pkg/v1/env"
+	modelv1 "github.com/aunum/gold/pkg/v1/model"
+	l "github.com/aunum/gold/pkg/v1/model/layers"
 )
 
 // PolicyConfig are the hyperparameters for a policy.

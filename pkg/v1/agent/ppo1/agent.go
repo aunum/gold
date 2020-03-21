@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pbarker/go-rl/pkg/v1/dense"
+	"github.com/aunum/gold/pkg/v1/dense"
 
-	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
-	"github.com/pbarker/go-rl/pkg/v1/common/num"
-	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
-	modelv1 "github.com/pbarker/go-rl/pkg/v1/model"
+	agentv1 "github.com/aunum/gold/pkg/v1/agent"
+	"github.com/aunum/gold/pkg/v1/common/num"
+	envv1 "github.com/aunum/gold/pkg/v1/env"
+	modelv1 "github.com/aunum/gold/pkg/v1/model"
 	"golang.org/x/exp/rand"
 	"gonum.org/v1/gonum/stat/distuv"
 	"gorgonia.org/tensor"

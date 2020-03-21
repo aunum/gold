@@ -1,7 +1,7 @@
 # Env
 
 Env provides the environment interfaces for the agents. It contains a means of spinning up local 
-[Sphere](github.com/pbarker/sphere) servers and an extra wrapper around the sphere gRPC interface.
+[Sphere](github.com/aunum/sphere) servers and an extra wrapper around the sphere gRPC interface.
 
 The package also includes normalization tools for transorming incoming state in `norm.go`. For instance 
 one could expand the dimensions of a tensor or discretize continuous state.

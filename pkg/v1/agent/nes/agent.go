@@ -4,10 +4,10 @@ package nes
 import (
 	"fmt"
 
-	"github.com/pbarker/go-rl/pkg/v1/model"
+	"github.com/aunum/gold/pkg/v1/model"
 
-	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
-	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
+	agentv1 "github.com/aunum/gold/pkg/v1/agent"
+	envv1 "github.com/aunum/gold/pkg/v1/env"
 	g "gorgonia.org/gorgonia"
 	"gorgonia.org/tensor"
 )

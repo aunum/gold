@@ -106,10 +106,10 @@ github.com/ory/dockertest/docker/types/network
 github.com/ory/dockertest/docker/types/registry
 github.com/ory/dockertest/docker/types/strslice
 github.com/ory/dockertest/docker/types/versions
-# github.com/pbarker/log v0.0.0-20200218213046-e8cd4001803a
-github.com/pbarker/log
-# github.com/pbarker/sphere v0.0.0-20200218163301-89282f667248
-github.com/pbarker/sphere/api/gen/go/v1alpha
+# github.com/aunum/log v0.0.0-20200218213046-e8cd4001803a
+github.com/aunum/log
+# github.com/aunum/sphere v0.0.0-20200218163301-89282f667248
+github.com/aunum/sphere/api/gen/go/v1alpha
 # github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 github.com/phayes/freeport
 # github.com/pkg/errors v0.9.1

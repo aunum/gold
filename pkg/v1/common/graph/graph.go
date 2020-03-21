@@ -6,8 +6,8 @@ import (
 	"io/ioutil"
 	"os/exec"
 
-	"github.com/pbarker/go-rl/pkg/v1/common/require"
-	"github.com/pbarker/log"
+	"github.com/aunum/gold/pkg/v1/common/require"
+	"github.com/aunum/log"
 	"github.com/skratchdot/open-golang/open"
 
 	g "gorgonia.org/gorgonia"

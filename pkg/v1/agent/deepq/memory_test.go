@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
+	envv1 "github.com/aunum/gold/pkg/v1/env"
 	"github.com/stretchr/testify/require"
 	"gorgonia.org/tensor"
 )

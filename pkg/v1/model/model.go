@@ -5,10 +5,10 @@ import (
 	"fmt"
 	golog "log"
 
-	cgraph "github.com/pbarker/go-rl/pkg/v1/common/graph"
-	"github.com/pbarker/go-rl/pkg/v1/model/layers"
-	"github.com/pbarker/go-rl/pkg/v1/track"
-	"github.com/pbarker/log"
+	cgraph "github.com/aunum/gold/pkg/v1/common/graph"
+	"github.com/aunum/gold/pkg/v1/model/layers"
+	"github.com/aunum/gold/pkg/v1/track"
+	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
 )
 

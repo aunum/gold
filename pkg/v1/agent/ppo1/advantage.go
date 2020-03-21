@@ -1,7 +1,7 @@
 package ppo1
 
 import (
-	"github.com/pbarker/go-rl/pkg/v1/dense"
+	"github.com/aunum/gold/pkg/v1/dense"
 	t "gorgonia.org/tensor"
 )
 

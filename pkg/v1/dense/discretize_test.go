@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/pbarker/go-rl/pkg/v1/dense"
+	"github.com/aunum/gold/pkg/v1/dense"
 	"github.com/stretchr/testify/require"
 	. "gorgonia.org/tensor"
 )

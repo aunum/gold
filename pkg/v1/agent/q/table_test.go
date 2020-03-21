@@ -3,7 +3,7 @@ package q_test
 import (
 	"testing"
 
-	. "github.com/pbarker/go-rl/pkg/v1/agent/q"
+	. "github.com/aunum/gold/pkg/v1/agent/q"
 	"github.com/stretchr/testify/require"
 	"gorgonia.org/tensor"
 )

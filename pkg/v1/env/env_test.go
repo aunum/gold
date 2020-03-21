@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	sphere "github.com/pbarker/sphere/api/gen/go/v1alpha"
+	sphere "github.com/aunum/sphere/api/gen/go/v1alpha"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 )

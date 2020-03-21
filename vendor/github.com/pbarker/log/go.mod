@@ -1,4 +1,4 @@
-module github.com/pbarker/log
+module github.com/aunum/log
 
 go 1.13
 

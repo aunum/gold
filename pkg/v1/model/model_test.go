@@ -6,13 +6,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pbarker/go-rl/pkg/v1/dense"
+	"github.com/aunum/gold/pkg/v1/dense"
 
 	"github.com/stretchr/testify/require"
 
-	. "github.com/pbarker/go-rl/pkg/v1/model"
-	l "github.com/pbarker/go-rl/pkg/v1/model/layers"
-	"github.com/pbarker/log"
+	. "github.com/aunum/gold/pkg/v1/model"
+	l "github.com/aunum/gold/pkg/v1/model/layers"
+	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
 	"gorgonia.org/tensor"
 )

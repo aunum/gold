@@ -1,11 +1,11 @@
 package ppo1
 
 import (
-	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
-	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
-	modelv1 "github.com/pbarker/go-rl/pkg/v1/model"
-	l "github.com/pbarker/go-rl/pkg/v1/model/layers"
-	"github.com/pbarker/log"
+	agentv1 "github.com/aunum/gold/pkg/v1/agent"
+	envv1 "github.com/aunum/gold/pkg/v1/env"
+	modelv1 "github.com/aunum/gold/pkg/v1/model"
+	l "github.com/aunum/gold/pkg/v1/model/layers"
+	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
 )
 

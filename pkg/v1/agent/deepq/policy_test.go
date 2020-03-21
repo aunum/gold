@@ -3,12 +3,12 @@ package deepq_test
 import (
 	"testing"
 
-	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
-	. "github.com/pbarker/go-rl/pkg/v1/agent/deepq"
-	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
-	sphere "github.com/pbarker/go-rl/pkg/v1/env"
+	agentv1 "github.com/aunum/gold/pkg/v1/agent"
+	. "github.com/aunum/gold/pkg/v1/agent/deepq"
+	envv1 "github.com/aunum/gold/pkg/v1/env"
+	sphere "github.com/aunum/gold/pkg/v1/env"
 
-	"github.com/pbarker/log"
+	"github.com/aunum/log"
 	"github.com/stretchr/testify/require"
 	"gorgonia.org/tensor"
 )

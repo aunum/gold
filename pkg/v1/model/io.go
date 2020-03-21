@@ -3,8 +3,8 @@ package model
 import (
 	"fmt"
 
-	l "github.com/pbarker/go-rl/pkg/v1/model/layers"
-	"github.com/pbarker/log"
+	l "github.com/aunum/gold/pkg/v1/model/layers"
+	"github.com/aunum/log"
 
 	g "gorgonia.org/gorgonia"
 	t "gorgonia.org/tensor"

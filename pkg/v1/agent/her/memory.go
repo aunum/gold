@@ -5,8 +5,8 @@ import (
 	"math/rand"
 	"time"
 
-	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
-	"github.com/pbarker/log"
+	envv1 "github.com/aunum/gold/pkg/v1/env"
+	"github.com/aunum/log"
 	"gorgonia.org/tensor"
 )
 

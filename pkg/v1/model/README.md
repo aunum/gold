@@ -6,8 +6,8 @@ Model is a high-level helper library for Gorgonia, it aims to have a similar fee
 
 ```go
 import (
-    . "github.com/pbarker/go-rl/pkg/v1/model"
-    l "github.com/pbarker/go-rl/pkg/v1/model/layers"
+    . "github.com/aunum/gold/pkg/v1/model"
+    l "github.com/aunum/gold/pkg/v1/model/layers"
 )
 
 // create the 'x' input

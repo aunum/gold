@@ -1,14 +1,14 @@
 package main
 
 import (
-	"github.com/pbarker/go-rl/pkg/v1/dense"
+	"github.com/aunum/gold/pkg/v1/dense"
 
-	"github.com/pbarker/go-rl/pkg/v1/common/require"
+	"github.com/aunum/gold/pkg/v1/common/require"
 
-	"github.com/pbarker/go-rl/pkg/v1/common/num"
-	. "github.com/pbarker/go-rl/pkg/v1/model"
-	l "github.com/pbarker/go-rl/pkg/v1/model/layers"
-	"github.com/pbarker/log"
+	"github.com/aunum/gold/pkg/v1/common/num"
+	. "github.com/aunum/gold/pkg/v1/model"
+	l "github.com/aunum/gold/pkg/v1/model/layers"
+	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
 	"gorgonia.org/gorgonia/examples/mnist"
 	"gorgonia.org/tensor"

@@ -1,4 +1,4 @@
-module github.com/pbarker/go-rl
+module github.com/aunum/gold
 
 go 1.13
 
@@ -13,8 +13,8 @@ require (
 	github.com/leesper/go_rng v0.0.0-20190531154944-a612b043e353 // indirect
 	github.com/mattn/go-colorable v0.1.6 // indirect
 	github.com/ory/dockertest v3.3.5+incompatible
-	github.com/pbarker/log v0.0.0-20200228171605-bd0bb5c511aa
-	github.com/pbarker/sphere v0.0.0-20200309164442-3bf9d8cdd2ba
+	github.com/aunum/log v0.0.0-20200228171605-bd0bb5c511aa
+	github.com/aunum/sphere v0.0.0-20200309164442-3bf9d8cdd2ba
 	github.com/phayes/freeport v0.0.0-20180830031419-95f893ade6f2
 	github.com/pkg/errors v0.9.1
 	github.com/schwarmco/go-cartesian-product v0.0.0-20180515110546-d5ee747a6dc9
@@ -30,5 +30,3 @@ require (
 	gorgonia.org/gorgonia v0.9.8
 	gorgonia.org/tensor v0.9.4
 )
-
-// replace gorgonia.org/gorgonia => github.com/pbarker/gorgonia v0.0.0-20200209225806-37febf40acbc

@@ -4,12 +4,12 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/pbarker/log"
+	"github.com/aunum/log"
 
 	"github.com/stretchr/testify/require"
 
-	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
-	"github.com/pbarker/go-rl/pkg/v1/dense"
+	agentv1 "github.com/aunum/gold/pkg/v1/agent"
+	"github.com/aunum/gold/pkg/v1/dense"
 	"gorgonia.org/tensor"
 )
 

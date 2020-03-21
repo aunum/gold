@@ -3,7 +3,7 @@ package layers
 import (
 	"fmt"
 
-	"github.com/pbarker/log"
+	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
 	t "gorgonia.org/tensor"
 )

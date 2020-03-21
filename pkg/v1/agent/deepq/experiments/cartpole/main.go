@@ -1,12 +1,12 @@
 package main
 
 import (
-	"github.com/pbarker/go-rl/pkg/v1/agent/deepq"
-	"github.com/pbarker/go-rl/pkg/v1/common"
-	"github.com/pbarker/go-rl/pkg/v1/common/require"
-	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
-	"github.com/pbarker/go-rl/pkg/v1/track"
-	"github.com/pbarker/log"
+	"github.com/aunum/gold/pkg/v1/agent/deepq"
+	"github.com/aunum/gold/pkg/v1/common"
+	"github.com/aunum/gold/pkg/v1/common/require"
+	envv1 "github.com/aunum/gold/pkg/v1/env"
+	"github.com/aunum/gold/pkg/v1/track"
+	"github.com/aunum/log"
 )
 
 func main() {

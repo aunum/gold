@@ -1,9 +1,9 @@
 package ppo1
 
 import (
-	"github.com/pbarker/go-rl/pkg/v1/common/num"
-	"github.com/pbarker/go-rl/pkg/v1/dense"
-	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
+	"github.com/aunum/gold/pkg/v1/common/num"
+	"github.com/aunum/gold/pkg/v1/dense"
+	envv1 "github.com/aunum/gold/pkg/v1/env"
 	"gorgonia.org/tensor"
 )
 

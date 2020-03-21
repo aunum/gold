@@ -3,14 +3,14 @@ package reinforce_test
 import (
 	"testing"
 
-	"github.com/pbarker/go-rl/pkg/v1/dense"
+	"github.com/aunum/gold/pkg/v1/dense"
 
-	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
-	. "github.com/pbarker/go-rl/pkg/v1/agent/reinforce"
-	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
-	sphere "github.com/pbarker/go-rl/pkg/v1/env"
+	agentv1 "github.com/aunum/gold/pkg/v1/agent"
+	. "github.com/aunum/gold/pkg/v1/agent/reinforce"
+	envv1 "github.com/aunum/gold/pkg/v1/env"
+	sphere "github.com/aunum/gold/pkg/v1/env"
 
-	"github.com/pbarker/log"
+	"github.com/aunum/log"
 	"github.com/stretchr/testify/require"
 	"gorgonia.org/tensor"
 )

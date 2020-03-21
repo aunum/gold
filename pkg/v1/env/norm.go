@@ -3,8 +3,8 @@ package env
 import (
 	"fmt"
 
-	"github.com/pbarker/go-rl/pkg/v1/dense"
-	sphere "github.com/pbarker/sphere/api/gen/go/v1alpha"
+	"github.com/aunum/gold/pkg/v1/dense"
+	sphere "github.com/aunum/sphere/api/gen/go/v1alpha"
 	"gorgonia.org/tensor"
 )
 

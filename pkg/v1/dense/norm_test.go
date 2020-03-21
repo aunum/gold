@@ -3,7 +3,7 @@ package dense
 import (
 	"testing"
 
-	"github.com/pbarker/go-rl/pkg/v1/common/num"
+	"github.com/aunum/gold/pkg/v1/common/num"
 
 	"github.com/stretchr/testify/require"
 	"gorgonia.org/tensor"

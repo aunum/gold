@@ -3,11 +3,11 @@ package nes
 import (
 	"sync"
 
-	"github.com/pbarker/go-rl/pkg/v1/track"
+	"github.com/aunum/gold/pkg/v1/track"
 
-	"github.com/pbarker/go-rl/pkg/v1/agent"
-	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
-	"github.com/pbarker/go-rl/pkg/v1/dense"
+	"github.com/aunum/gold/pkg/v1/agent"
+	agentv1 "github.com/aunum/gold/pkg/v1/agent"
+	"github.com/aunum/gold/pkg/v1/dense"
 	"gorgonia.org/tensor"
 	t "gorgonia.org/tensor"
 )

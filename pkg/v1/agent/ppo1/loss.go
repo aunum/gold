@@ -1,8 +1,8 @@
 package ppo1
 
 import (
-	"github.com/pbarker/go-rl/pkg/v1/common/op"
-	modelv1 "github.com/pbarker/go-rl/pkg/v1/model"
+	"github.com/aunum/gold/pkg/v1/common/op"
+	modelv1 "github.com/aunum/gold/pkg/v1/model"
 	g "gorgonia.org/gorgonia"
 )
 

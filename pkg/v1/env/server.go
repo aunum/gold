@@ -11,9 +11,9 @@ import (
 
 	"github.com/ory/dockertest"
 	dc "github.com/ory/dockertest/docker"
-	"github.com/pbarker/go-rl/pkg/v1/common"
-	"github.com/pbarker/log"
-	spherev1alpha "github.com/pbarker/sphere/api/gen/go/v1alpha"
+	"github.com/aunum/gold/pkg/v1/common"
+	"github.com/aunum/log"
+	spherev1alpha "github.com/aunum/sphere/api/gen/go/v1alpha"
 	"google.golang.org/grpc"
 )
 

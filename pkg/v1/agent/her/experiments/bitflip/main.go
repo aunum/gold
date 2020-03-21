@@ -1,13 +1,13 @@
 package main
 
 import (
-	"github.com/pbarker/go-rl/pkg/v1/agent/her"
-	"github.com/pbarker/go-rl/pkg/v1/common"
-	"github.com/pbarker/go-rl/pkg/v1/common/require"
-	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
-	modelv1 "github.com/pbarker/go-rl/pkg/v1/model"
-	"github.com/pbarker/go-rl/pkg/v1/track"
-	"github.com/pbarker/log"
+	"github.com/aunum/gold/pkg/v1/agent/her"
+	"github.com/aunum/gold/pkg/v1/common"
+	"github.com/aunum/gold/pkg/v1/common/require"
+	envv1 "github.com/aunum/gold/pkg/v1/env"
+	modelv1 "github.com/aunum/gold/pkg/v1/model"
+	"github.com/aunum/gold/pkg/v1/track"
+	"github.com/aunum/log"
 
 	g "gorgonia.org/gorgonia"
 )

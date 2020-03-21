@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pbarker/log"
+	"github.com/aunum/log"
 )
 
 // Retry callback function for the number of attempts sleeping for the duration in-between.

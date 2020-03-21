@@ -2,7 +2,7 @@
 package layers
 
 import (
-	"github.com/pbarker/log"
+	"github.com/aunum/log"
 	"github.com/pkg/errors"
 	g "gorgonia.org/gorgonia"
 	t "gorgonia.org/tensor"

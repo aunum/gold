@@ -10,12 +10,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pbarker/go-rl/pkg/v1/common/require"
-	"github.com/pbarker/log"
+	"github.com/aunum/gold/pkg/v1/common/require"
+	"github.com/aunum/log"
 
-	"github.com/pbarker/go-rl/pkg/v1/common/num"
+	"github.com/aunum/gold/pkg/v1/common/num"
 
-	spherev1alpha "github.com/pbarker/sphere/api/gen/go/v1alpha"
+	spherev1alpha "github.com/aunum/sphere/api/gen/go/v1alpha"
 	"github.com/skratchdot/open-golang/open"
 	"gorgonia.org/tensor"
 )

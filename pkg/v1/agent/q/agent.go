@@ -7,11 +7,11 @@ import (
 	"reflect"
 	"time"
 
-	agentv1 "github.com/pbarker/go-rl/pkg/v1/agent"
-	"github.com/pbarker/go-rl/pkg/v1/common"
-	"github.com/pbarker/go-rl/pkg/v1/common/num"
-	envv1 "github.com/pbarker/go-rl/pkg/v1/env"
-	"github.com/pbarker/log"
+	agentv1 "github.com/aunum/gold/pkg/v1/agent"
+	"github.com/aunum/gold/pkg/v1/common"
+	"github.com/aunum/gold/pkg/v1/common/num"
+	envv1 "github.com/aunum/gold/pkg/v1/env"
+	"github.com/aunum/log"
 	"gorgonia.org/tensor"
 )
 
