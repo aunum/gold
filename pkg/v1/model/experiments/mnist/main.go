@@ -3,16 +3,15 @@ package main
 import (
 	"fmt"
 
-	"github.com/aunum/gold/pkg/v1/dense"
-
-	"github.com/aunum/gold/pkg/v1/common/require"
-
-	"github.com/aunum/gold/pkg/v1/common/num"
-	. "github.com/aunum/gold/pkg/v1/model"
-	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
 	"gorgonia.org/gorgonia/examples/mnist"
 	"gorgonia.org/tensor"
+
+	"github.com/aunum/gold/pkg/v1/common/num"
+	"github.com/aunum/gold/pkg/v1/common/require"
+	"github.com/aunum/gold/pkg/v1/dense"
+	. "github.com/aunum/gold/pkg/v1/model"
+	"github.com/aunum/log"
 )
 
 func main() {

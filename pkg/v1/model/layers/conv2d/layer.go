@@ -4,8 +4,8 @@ package conv2d
 import (
 	"fmt"
 
-	"github.com/pbarker/go-rl/pkg/v1/model/layers"
-	"github.com/pbarker/go-rl/pkg/v1/model/layers/activation"
+	"github.com/aunum/gold/pkg/v1/model/layers"
+	"github.com/aunum/gold/pkg/v1/model/layers/activation"
 	g "gorgonia.org/gorgonia"
 	t "gorgonia.org/tensor"
 )
