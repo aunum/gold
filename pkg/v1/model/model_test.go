@@ -11,8 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	. "github.com/aunum/gold/pkg/v1/model"
-	"github.com/aunum/gold/pkg/v1/model/layers/activation"
-	"github.com/aunum/gold/pkg/v1/model/layers/fc"
+	"github.com/aunum/gold/pkg/v1/model/layer"
+
 	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
 	"gorgonia.org/tensor"
@@ -52,9 +52,9 @@ func TestSequential(t *testing.T) {
 	model, err := NewSequential("test")
 	require.NoError(t, err)
 	model.AddLayers(
-		fc.New(5, 24, fc.WithActivation(activation.Sigmoid), fc.WithName("w0")),
-		fc.New(24, 24, fc.WithActivation(activation.Sigmoid), fc.WithName("w1")),
-		fc.New(24, 2, fc.WithActivation(activation.Linear), fc.WithName("w2")),
+		&layer.FC{Input: 5, Output: 24, Name: "w0"},
+		&layer.FC{Input: 24, Output: 24, Activation: layer.Sigmoid, Name: "w1"},
+		&layer.FC{Input: 24, Output: 2, Activation: layer.Linear, Name: "w2"},
 	)
 
 	optimizer := g.NewAdamSolver()
@@ -79,7 +79,7 @@ func TestSequential(t *testing.T) {
 	numSteps := 10000
 	log.Infof("fitting for %v steps", numSteps)
 	for i := 0; i < numSteps; i++ {
-		err = model.Fit(x0, y0)
+		err = model.FitBatch(x, y)
 		require.NoError(t, err)
 	}
 	log.Break()

@@ -3,7 +3,7 @@ package model
 import (
 	"fmt"
 
-	l "github.com/aunum/gold/pkg/v1/model/layers"
+	l "github.com/aunum/gold/pkg/v1/model/layer"
 	"github.com/aunum/log"
 
 	g "gorgonia.org/gorgonia"
@@ -288,7 +288,7 @@ func (i *Input) AsLayer() l.Layer {
 }
 
 // Compile the layer.
-func (i *InputLayer) Compile(graph *g.ExprGraph, opts *l.CompileOpts) {
+func (i *InputLayer) Compile(graph *g.ExprGraph, opts ...l.CompileOpt) {
 	if i.Graph() != nil {
 		return
 	}

@@ -6,7 +6,7 @@ import (
 	golog "log"
 
 	cgraph "github.com/aunum/gold/pkg/v1/common/graph"
-	"github.com/aunum/gold/pkg/v1/model/layers"
+	"github.com/aunum/gold/pkg/v1/model/layer"
 	"github.com/aunum/gold/pkg/v1/track"
 	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
@@ -51,7 +51,7 @@ type Model interface {
 // Sequential model.
 type Sequential struct {
 	// Chain of layers in the model.
-	Chain *layers.Chain
+	Chain *layer.Chain
 
 	// Tracker of values.
 	Tracker   *track.Tracker
@@ -64,9 +64,9 @@ type Sequential struct {
 	y   *Input
 	fwd *Input
 
-	trainChain, trainBatchChain   *layers.Chain
-	onlineChain, onlineBatchChain *layers.Chain
-	backwardChain                 *layers.Chain
+	trainChain, trainBatchChain   *layer.Chain
+	onlineChain, onlineBatchChain *layer.Chain
+	backwardChain                 *layer.Chain
 
 	trainGraph, trainBatchGraph   *g.ExprGraph
 	onlineGraph, onlineBatchGraph *g.ExprGraph
@@ -99,7 +99,7 @@ type Sequential struct {
 // NewSequential returns a new sequential model.
 func NewSequential(name string) (*Sequential, error) {
 	return &Sequential{
-		Chain:     layers.NewChain(),
+		Chain:     layer.NewChain(),
 		name:      name,
 		batchSize: 32,
 		metrics:   AllMetrics,
@@ -238,18 +238,18 @@ func WithLogger(logger *log.Logger) func(Model) {
 }
 
 // AddLayer adds a layer.
-func (s *Sequential) AddLayer(layer layers.Layer) {
+func (s *Sequential) AddLayer(layer layer.Config) {
 	s.Chain.Add(layer)
 }
 
-// AddLayers adds a number of layers.
-func (s *Sequential) AddLayers(layers ...layers.Layer) {
+// AddLayers adds a number of layer.
+func (s *Sequential) AddLayers(layers ...layer.Config) {
 	for _, layer := range layers {
 		s.Chain.Add(layer)
 	}
 }
 
-// Fwd tells the model which input should be sent through the layers.
+// Fwd tells the model which input should be sent through the layer.
 // If not provided, the first input will be used.
 func (s *Sequential) Fwd(x *Input) {
 	s.fwd = x
@@ -385,7 +385,7 @@ func (s *Sequential) buildTrainBatchGraph(x Inputs, y *Input) (err error) {
 	s.yTrainBatch.Compile(s.trainBatchGraph)
 
 	s.trainBatchChain = s.Chain.Clone()
-	s.trainBatchChain.Compile(s.trainBatchGraph, layers.WithSharedChainLearnables(s.trainChain), layers.WithLayerOpts(&layers.CompileOpts{AsBatch: true}))
+	s.trainBatchChain.Compile(s.trainBatchGraph, layer.WithSharedChainLearnables(s.trainChain), layer.WithLayerOpts(layer.AsBatch()))
 
 	prediction, err := s.trainBatchChain.Fwd(s.xTrainBatchFwd.Node())
 	if err != nil {
@@ -428,7 +428,7 @@ func (s *Sequential) buildOnlineGraph(x Inputs) (err error) {
 	}
 
 	s.onlineChain = s.Chain.Clone()
-	s.onlineChain.Compile(s.onlineGraph, layers.WithSharedChainLearnables(s.trainChain))
+	s.onlineChain.Compile(s.onlineGraph, layer.WithSharedChainLearnables(s.trainChain))
 
 	prediction, err := s.onlineChain.Fwd(s.xOnlineFwd.Node())
 	if err != nil {
@@ -462,7 +462,7 @@ func (s *Sequential) buildOnlineBatchGraph(x Inputs) (err error) {
 	}
 
 	s.onlineBatchChain = s.Chain.Clone()
-	s.onlineBatchChain.Compile(s.onlineBatchGraph, layers.WithSharedChainLearnables(s.trainChain), layers.WithLayerOpts(&layers.CompileOpts{AsBatch: true}))
+	s.onlineBatchChain.Compile(s.onlineBatchGraph, layer.WithSharedChainLearnables(s.trainChain), layer.WithLayerOpts(layer.AsBatch()))
 
 	prediction, err := s.onlineBatchChain.Fwd(s.xOnlineBatchFwd.Node())
 	if err != nil {
@@ -614,7 +614,7 @@ func (s *Sequential) CloneLearnablesTo(to *Sequential) error {
 		}
 	}
 	new := to.trainChain.Learnables()
-	shared := map[string]*layers.Chain{
+	shared := map[string]*layer.Chain{
 		"trainBatch":  to.trainBatchChain,
 		"online":      to.onlineChain,
 		"onlineBatch": to.onlineBatchChain,

@@ -1,31 +1,30 @@
-package layers
+package layer
 
 import (
-	"fmt"
-
 	g "gorgonia.org/gorgonia"
 )
 
 // Chain of layers.
 type Chain struct {
 	// Layers are the layers to chain together.
-	Layers []Layer
+	Layers []Config
 
 	sharedLearnables *Chain
-	layerOpts        *CompileOpts
+	compileOpts      []CompileOpt
+	layers           []Layer
 }
 
 // NewChain returns a new chain of layers.
-func NewChain(layers ...Layer) *Chain {
-	return &Chain{
-		Layers: layers,
-	}
+func NewChain(layers ...Config) *Chain {
+	c := &Chain{}
+	c.Add(layers...)
+	return c
 }
 
 // Fwd is a forward pass thorugh all layers of the chain.
 func (c *Chain) Fwd(x *g.Node) (prediction *g.Node, err error) {
 	prediction = x
-	for _, layer := range c.Layers {
+	for _, layer := range c.layers {
 		if prediction, err = layer.Fwd(prediction); err != nil {
 			return nil, err
 		}
@@ -36,15 +35,16 @@ func (c *Chain) Fwd(x *g.Node) (prediction *g.Node, err error) {
 // Learnables are all of the learnable parameters in the chain.
 func (c *Chain) Learnables() g.Nodes {
 	retVal := []*g.Node{}
-	for _, layer := range c.Layers {
+	for _, layer := range c.layers {
 		retVal = append(retVal, layer.Learnables()...)
 	}
 	return retVal
 }
 
 // Add to the chain.
-func (c *Chain) Add(l ...Layer) {
+func (c *Chain) Add(l ...Config) {
 	for _, layer := range l {
+		layer.ApplyDefaults()
 		c.Layers = append(c.Layers, layer)
 	}
 }
@@ -69,9 +69,9 @@ func WithSharedChainLearnables(shared *Chain) func(*Chain) {
 }
 
 // WithLayerOpts adds the given layer opts to all layers.
-func WithLayerOpts(opts *CompileOpts) func(*Chain) {
+func WithLayerOpts(opts ...CompileOpt) func(*Chain) {
 	return func(c *Chain) {
-		c.layerOpts = opts
+		c.compileOpts = opts
 	}
 }
 
@@ -81,17 +81,15 @@ func (c *Chain) Compile(graph *g.ExprGraph, opts ...ChainOpt) {
 		opt(c)
 	}
 	if c.sharedLearnables != nil {
-		fmt.Printf("compile opts: %#v\n", c.layerOpts)
-		if c.layerOpts == nil {
-			c.layerOpts = &CompileOpts{}
-		}
 		for i, layer := range c.Layers {
-			c.layerOpts.SharedLearnables = c.sharedLearnables.Layers[i]
-			layer.Compile(graph, c.layerOpts)
+			c.compileOpts = append(c.compileOpts, WithSharedLearnables(c.sharedLearnables.layers[i]))
+			l := layer.Compile(graph, c.compileOpts...)
+			c.layers = append(c.layers, l)
 		}
 		return
 	}
 	for _, layer := range c.Layers {
-		layer.Compile(graph, c.layerOpts)
+		l := layer.Compile(graph, c.compileOpts...)
+		c.layers = append(c.layers, l)
 	}
 }
