@@ -2,11 +2,10 @@
 package conv2d
 
 import (
-	"fmt"
-
 	"github.com/aunum/gold/pkg/v1/model/layers"
 	"github.com/aunum/gold/pkg/v1/model/layers/activation"
 	g "gorgonia.org/gorgonia"
+	"gorgonia.org/tensor"
 	t "gorgonia.org/tensor"
 )
 
@@ -116,7 +115,7 @@ func WithName(name string) func(*Layer) {
 func (l *Layer) Compile(graph *g.ExprGraph, opts *layers.CompileOpts) {
 	l.applyCompileOpts(opts)
 	if l.shared != nil {
-		l.filter = g.NewTensor(graph, l.dtype, 4, g.WithShape(l.filterShape...), g.WithName(l.Name), g.WithValue(l.shared.filter.Value()))
+		l.filter = g.NewTensor(graph, l.dtype, 4, g.WithShape(l.filterShape...), g.WithInit(l.init), g.WithName(l.Name), g.WithValue(l.shared.filter.Value()))
 		return
 	}
 	l.filter = g.NewTensor(graph, l.dtype, 4, g.WithShape(l.filterShape...), g.WithInit(l.init), g.WithName(l.Name))
@@ -128,25 +127,18 @@ func (l *Layer) applyCompileOpts(opts *layers.CompileOpts) {
 			l.shared = opts.SharedLearnables.(*Layer)
 		}
 		l.isBatched = opts.AsBatch
-		l.dtype = opts.AsType
+		if (tensor.Dtype{}) != opts.AsType {
+			l.dtype = opts.AsType
+		}
 	}
 }
 
 // Fwd is a forward pass through the layer.
 func (l *Layer) Fwd(x *g.Node) (*g.Node, error) {
-	fmt.Println("------ conv")
-	fmt.Printf("x: %+v\n", x)
-	fmt.Println("xshape: ", x.Shape())
-	fmt.Println("filter shape: ", l.filter.Shape())
-	fmt.Printf("kernel: %+v \n", l.kernelShape)
-	fmt.Printf("pad: %+v\n", l.pad)
-	fmt.Printf("stride: %+v\n", l.stride)
-	fmt.Printf("dilation: %+v\n", l.dilation)
 	n, err := g.Conv2d(x, l.filter, l.kernelShape, l.pad, l.stride, l.dilation)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("------")
 	return n, nil
 }
 

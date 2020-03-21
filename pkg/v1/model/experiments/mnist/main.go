@@ -1,27 +1,28 @@
 package main
 
 import (
-	"fmt"
+	"github.com/aunum/gold/pkg/v1/common/num"
+	"github.com/aunum/gold/pkg/v1/common/require"
+	"github.com/aunum/gold/pkg/v1/dense"
+	m "github.com/aunum/gold/pkg/v1/model"
+	"github.com/aunum/gold/pkg/v1/model/layers/activation"
+	"github.com/aunum/gold/pkg/v1/model/layers/conv2d"
+	"github.com/aunum/gold/pkg/v1/model/layers/fc"
+	"github.com/aunum/gold/pkg/v1/model/layers/maxpooling2d"
+	"github.com/aunum/gold/pkg/v1/model/layers/shape"
+	"github.com/aunum/log"
 
 	g "gorgonia.org/gorgonia"
 	"gorgonia.org/gorgonia/examples/mnist"
 	"gorgonia.org/tensor"
-
-	"github.com/aunum/gold/pkg/v1/common/num"
-	"github.com/aunum/gold/pkg/v1/common/require"
-	"github.com/aunum/gold/pkg/v1/dense"
-	. "github.com/aunum/gold/pkg/v1/model"
-	"github.com/aunum/log"
 )
 
 func main() {
 	x, y, err := mnist.Load("train", "./testdata", g.Float32)
 	require.NoError(err)
 
-	// Reshape for convolution
-	numExamples := x.Shape()[0]
-	x.Reshape(numExamples, 1, 28, 28)
-	y.Reshape(numExamples, 1, 28, 28)
+	exampleSize := x.Shape()[0]
+	log.Infov("exampleSize", exampleSize)
 
 	// load our test set
 	testX, testY, err := mnist.Load("test", "./testdata", g.Float32)
@@ -30,42 +31,38 @@ func main() {
 	log.Infov("x batch shape", x.Shape())
 	log.Infov("y batch shape", y.Shape())
 
-	exampleSize := x.Shape()[0]
-	log.Infov("exampleSize", exampleSize)
-
 	batchSize := 100
 	log.Infov("batchsize", batchSize)
+
 	batches := exampleSize / batchSize
 	log.Infov("num batches", batches)
 
-	xi := NewInput("x", []int{1, 1, 28, 28})
+	xi := m.NewInput("x", []int{1, 1, 28, 28})
 	log.Infov("x input shape", xi.Shape())
 
-	yi := NewInput("y", []int{1, 10})
+	yi := m.NewInput("y", []int{1, 10})
 	log.Infov("y input shape", yi.Shape())
 
-	model, err := NewSequential("mnist")
+	model, err := m.NewSequential("mnist")
 	require.NoError(err)
 
-	ll := maxpooling2d.New(maxpooling2d.WithName("test"))
-	fmt.Printf("ll: %+v\n", ll)
 	model.AddLayers(
 		conv2d.New(1, 32, 3, 3, conv2d.WithName("conv0")),
-		ll,
+		maxpooling2d.New(),
 		conv2d.New(32, 64, 3, 3, conv2d.WithName("conv1")),
 		maxpooling2d.New(),
 		conv2d.New(64, 128, 3, 3, conv2d.WithName("conv3")),
 		maxpooling2d.New(),
 		shape.Flatten(),
-		fc.New(128*3*3, 100, fc.WithInit(g.GlorotN(1)), fc.WithName("fc0")),
-		fc.New(100, 10, fc.WithActivation(activation.Softmax), fc.WithInit(g.GlorotN(1)), fc.WithName("dist")),
+		fc.New(128*3*3, 100, fc.WithName("fc0")),
+		fc.New(100, 10, fc.WithActivation(activation.Softmax), fc.WithName("dist")),
 	)
 
 	optimizer := g.NewRMSPropSolver()
 	err = model.Compile(xi, yi,
-		WithOptimizer(optimizer),
-		WithLoss(PseudoCrossEntropy),
-		WithBatchSize(batchSize),
+		m.WithOptimizer(optimizer),
+		m.WithLoss(m.PseudoCrossEntropy),
+		m.WithBatchSize(batchSize),
 	)
 	require.NoError(err)
 
@@ -88,9 +85,11 @@ func main() {
 
 			xi, err = x.Slice(dense.MakeRangedSlice(start, end))
 			require.NoError(err)
-			fmt.Println("xi shape: ", xi.Shape())
+			xi.Reshape(batchSize, 1, 28, 28)
+
 			yi, err = y.Slice(dense.MakeRangedSlice(start, end))
 			require.NoError(err)
+			yi.Reshape(batchSize, 10)
 
 			err = model.FitBatch(xi, yi)
 			require.NoError(err)
@@ -104,7 +103,7 @@ func main() {
 	require.NoError(err)
 }
 
-func evaluate(x, y *tensor.Dense, model *Sequential, batchSize int) (acc, loss float32, err error) {
+func evaluate(x, y *tensor.Dense, model *m.Sequential, batchSize int) (acc, loss float32, err error) {
 	exampleSize := x.Shape()[0]
 	batches := exampleSize / batchSize
 
@@ -121,8 +120,11 @@ func evaluate(x, y *tensor.Dense, model *Sequential, batchSize int) (acc, loss f
 
 		xi, err := x.Slice(dense.MakeRangedSlice(start, end))
 		require.NoError(err)
+		xi.Reshape(batchSize, 1, 28, 28)
+
 		yi, err := y.Slice(dense.MakeRangedSlice(start, end))
 		require.NoError(err)
+		yi.Reshape(batchSize, 10)
 
 		yHat, err := model.PredictBatch(xi)
 		require.NoError(err)
@@ -138,7 +140,7 @@ func evaluate(x, y *tensor.Dense, model *Sequential, batchSize int) (acc, loss f
 	return
 }
 
-func accuracy(yHat, y *tensor.Dense, model Model) (float32, error) {
+func accuracy(yHat, y *tensor.Dense, model m.Model) (float32, error) {
 	yMax, err := y.Argmax(1)
 	require.NoError(err)
 

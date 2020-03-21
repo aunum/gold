@@ -28,7 +28,6 @@ func (l *FlattenLayer) Fwd(x *g.Node) (*g.Node, error) {
 	if len(x.Shape()) < 2 {
 		return nil, fmt.Errorf("flatten expects input in the shape (batch, x...), to few params in %v", x.Shape())
 	}
-	fmt.Println("flattenting shape: ", x.Shape())
 	batch := x.Shape()[0]
 	s := x.Shape()[1:]
 	product := 1
@@ -40,7 +39,6 @@ func (l *FlattenLayer) Fwd(x *g.Node) (*g.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("flattened shape to: ", n.Shape())
 	return n, nil
 }
 

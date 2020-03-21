@@ -2,7 +2,9 @@
 package activation
 
 import (
+	"github.com/aunum/gold/pkg/v1/model/layers"
 	"github.com/aunum/log"
+
 	"github.com/pkg/errors"
 	g "gorgonia.org/gorgonia"
 	t "gorgonia.org/tensor"

@@ -2,8 +2,6 @@
 package maxpooling2d
 
 import (
-	"fmt"
-
 	"github.com/aunum/gold/pkg/v1/model/layers"
 	g "gorgonia.org/gorgonia"
 	t "gorgonia.org/tensor"
@@ -74,14 +72,10 @@ func (l *Layer) Compile(graph *g.ExprGraph, opts *layers.CompileOpts) {
 
 // Fwd is a forward pass through the layer.
 func (l *Layer) Fwd(x *g.Node) (*g.Node, error) {
-	fmt.Println("---- pool")
-	fmt.Println("pool x shape: ", x.Shape())
 	n, err := g.MaxPool2D(x, l.kernel, l.pad, l.stride)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("returning pool shape: ", n.Shape())
-	fmt.Println("----")
 	return n, nil
 }
 

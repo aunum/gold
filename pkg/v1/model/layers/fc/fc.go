@@ -4,8 +4,12 @@ package fc
 import (
 	"fmt"
 
+	"github.com/aunum/gold/pkg/v1/model/layers"
+	"github.com/aunum/gold/pkg/v1/model/layers/activation"
 	"github.com/aunum/log"
+
 	g "gorgonia.org/gorgonia"
+	"gorgonia.org/tensor"
 	t "gorgonia.org/tensor"
 )
 
@@ -111,7 +115,9 @@ func (l *Layer) applyCompileOpts(opts *layers.CompileOpts) {
 			l.shared = opts.SharedLearnables.(*Layer)
 		}
 		l.isBatched = opts.AsBatch
-		l.dtype = opts.AsType
+		if (tensor.Dtype{}) != opts.AsType {
+			l.dtype = opts.AsType
+		}
 	}
 }
 

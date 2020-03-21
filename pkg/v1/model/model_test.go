@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	. "github.com/aunum/gold/pkg/v1/model"
+	"github.com/aunum/gold/pkg/v1/model/layers/activation"
+	"github.com/aunum/gold/pkg/v1/model/layers/fc"
 	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
 	"gorgonia.org/tensor"
@@ -29,15 +31,13 @@ func TestSequential(t *testing.T) {
 	xi := NewInput("x", x0.Shape())
 	fmt.Println("xi shape: ", xi.Shape())
 
-	y := tensor.New(tensor.WithShape(batchSize, 1), tensor.WithBacking(tensor.Range(tensor.Float32, 15, 25)))
-	y0, err := y.Slice(dense.MakeRangedSlice(0, 1))
-	fmt.Println("y0 before reshape: ", y0.Shape())
-	require.NoError(t, err)
-	err = y0.Reshape(1, 1)
+	y := tensor.New(tensor.WithShape(batchSize, 2), tensor.WithBacking(tensor.Range(tensor.Float32, 15, 35)))
+	ynot, err := y.Slice(dense.MakeRangedSlice(0, 1))
 	require.NoError(t, err)
 
-	fmt.Println("y0 data: ", y0.Data())
-	fmt.Println("y0 shape: ", y0.Shape())
+	y0 := ynot.Materialize().(*tensor.Dense)
+	err = dense.ExpandDims(y0, 0)
+	require.NoError(t, err)
 	yi := NewInput("y", y0.Shape())
 	fmt.Println("yi shape: ", yi.Shape())
 
@@ -54,7 +54,7 @@ func TestSequential(t *testing.T) {
 	model.AddLayers(
 		fc.New(5, 24, fc.WithActivation(activation.Sigmoid), fc.WithName("w0")),
 		fc.New(24, 24, fc.WithActivation(activation.Sigmoid), fc.WithName("w1")),
-		fc.New(24, 1, fc.WithActivation(activation.Linear), fc.WithName("w2")),
+		fc.New(24, 2, fc.WithActivation(activation.Linear), fc.WithName("w2")),
 	)
 
 	optimizer := g.NewAdamSolver()
@@ -79,7 +79,7 @@ func TestSequential(t *testing.T) {
 	numSteps := 10000
 	log.Infof("fitting for %v steps", numSteps)
 	for i := 0; i < numSteps; i++ {
-		err = model.FitBatch(x, y)
+		err = model.Fit(x0, y0)
 		require.NoError(t, err)
 	}
 	log.Break()
@@ -93,8 +93,4 @@ func TestSequential(t *testing.T) {
 	require.NoError(t, err)
 	log.Infov("y0", y0)
 	log.Infov("final single prediction", prediction)
-
-	// model.Visualize()
-	// err = model.Tracker.PrintHistoryAll()
-	// require.NoError(t, err)
 }

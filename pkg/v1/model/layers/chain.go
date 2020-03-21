@@ -1,6 +1,8 @@
 package layers
 
 import (
+	"fmt"
+
 	g "gorgonia.org/gorgonia"
 )
 
@@ -79,10 +81,15 @@ func (c *Chain) Compile(graph *g.ExprGraph, opts ...ChainOpt) {
 		opt(c)
 	}
 	if c.sharedLearnables != nil {
+		fmt.Printf("compile opts: %#v\n", c.layerOpts)
+		if c.layerOpts == nil {
+			c.layerOpts = &CompileOpts{}
+		}
 		for i, layer := range c.Layers {
 			c.layerOpts.SharedLearnables = c.sharedLearnables.Layers[i]
 			layer.Compile(graph, c.layerOpts)
 		}
+		return
 	}
 	for _, layer := range c.Layers {
 		layer.Compile(graph, c.layerOpts)
