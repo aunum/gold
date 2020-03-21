@@ -1,3 +1,0 @@
-# logger
-
-A simple logger.

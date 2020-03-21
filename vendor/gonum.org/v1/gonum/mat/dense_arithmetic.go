@@ -545,7 +545,7 @@ func (m *Dense) Exp(a Matrix) {
 		vpu.Add(v, u)
 		vmu.Sub(v, u)
 
-		m.Solve(vmu, vpu)
+		_ = m.Solve(vmu, vpu)
 		return
 	}
 
@@ -615,7 +615,7 @@ func (m *Dense) Exp(a Matrix) {
 	vpu.Add(v, u)
 	vmu.Sub(v, u)
 
-	m.Solve(vmu, vpu)
+	_ = m.Solve(vmu, vpu)
 
 	for ; s > 0; s-- {
 		m.Mul(m, m)
@@ -671,6 +671,20 @@ func (m *Dense) Pow(a Matrix, n int) {
 	putWorkspace(w)
 	putWorkspace(s)
 	putWorkspace(x)
+}
+
+// Kronecker calculates the Kronecker product of a and b, placing the result in
+// the receiver.
+func (m *Dense) Kronecker(a, b Matrix) {
+	ra, ca := a.Dims()
+	rb, cb := b.Dims()
+
+	m.reuseAsNonZeroed(ra*rb, ca*cb)
+	for i := 0; i < ra; i++ {
+		for j := 0; j < ca; j++ {
+			m.slice(i*rb, (i+1)*rb, j*cb, (j+1)*cb).Scale(a.At(i, j), b)
+		}
+	}
 }
 
 // Scale multiplies the elements of a by f, placing the result in the receiver.

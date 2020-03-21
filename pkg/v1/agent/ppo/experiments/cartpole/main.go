@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/aunum/gold/pkg/v1/agent/ppo1"
+	"github.com/aunum/gold/pkg/v1/agent/ppo"
 	"github.com/aunum/gold/pkg/v1/common/require"
 	envv1 "github.com/aunum/gold/pkg/v1/env"
 	"github.com/aunum/gold/pkg/v1/track"
@@ -16,7 +16,7 @@ func main() {
 	env, err := s.Make("CartPole-v0", envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
 	require.NoError(err)
 
-	agent, err := ppo1.NewAgent(ppo1.DefaultAgentConfig, env)
+	agent, err := ppo.NewAgent(ppo.DefaultAgentConfig, env)
 	require.NoError(err)
 
 	agent.View()

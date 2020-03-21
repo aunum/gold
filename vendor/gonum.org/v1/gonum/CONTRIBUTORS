@@ -1,6 +1,6 @@
 # This is the official list of people who can contribute
-# (and typically have contributed) code to the gonum
-# repository.
+# (and typically have contributed) code to the Gonum
+# project.
 #
 # The AUTHORS file lists the copyright holders; this file
 # lists people.  For example, Google employees would be listed here
@@ -16,6 +16,7 @@
 # Please keep the list sorted.
 
 Alexander Egurnov <alexander.egurnov@gmail.com>
+Andrei Blinnikov <goofinator@mail.ru>
 Andrew Brampton <brampton@gmail.com>
 Bill Gray <wgray@gogray.com>
 Bill Noon <noon.bill@gmail.com>
@@ -51,7 +52,6 @@ James Bell <james@stellentus.com>
 James Bowman <james.edward.bowman@gmail.com>
 James Holmes <32bitkid@gmail.com>
 Janne Snabb <snabb@epipe.com>
-Jeff Juozapaitis <jjjuozap@email.arizona.edu>
 Jeremy Atkinson <jchatkinson@gmail.com>
 Jonas Kahler <jonas@derkahler.de>
 Jonas Schulze <jonas.schulze@ovgu.de>
@@ -97,3 +97,4 @@ Vincent Thiery <vjmthiery@gmail.com>
 Vladimír Chalupecký <vladimir.chalupecky@gmail.com>
 Yevgeniy Vahlis <evahlis@gmail.com>
 Yucheng Zhu <zyctc000@gmail.com>
+Zoe Juozapaitis

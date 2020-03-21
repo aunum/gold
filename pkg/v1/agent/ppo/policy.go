@@ -5,6 +5,8 @@ import (
 	envv1 "github.com/aunum/gold/pkg/v1/env"
 	modelv1 "github.com/aunum/gold/pkg/v1/model"
 	l "github.com/aunum/gold/pkg/v1/model/layers"
+	"github.com/aunum/gold/pkg/v1/model/layers/activation"
+	"github.com/aunum/gold/pkg/v1/model/layers/fc"
 	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
 )

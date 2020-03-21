@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	agentv1 "github.com/aunum/gold/pkg/v1/agent"
-	. "github.com/aunum/gold/pkg/v1/agent/ppo1"
+	. "github.com/aunum/gold/pkg/v1/agent/ppo"
 	envv1 "github.com/aunum/gold/pkg/v1/env"
 	sphere "github.com/aunum/gold/pkg/v1/env"
 
