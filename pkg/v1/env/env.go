@@ -38,6 +38,7 @@ type Env struct {
 	logger    *log.Logger
 	recording bool
 	wrappers  []*spherev1alpha.EnvWrapper
+	reshape   []int
 }
 
 // Opt is an environment option.
@@ -61,6 +62,19 @@ func (s *Server) Make(model string, opts ...Opt) (*Env, error) {
 	s.logger.Successf("created env: %s", env.Id)
 	e.Environment = env
 
+	if e.Normalizer != nil {
+		err = e.Normalizer.Init(e)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if e.GoalNormalizer != nil {
+		err = e.GoalNormalizer.Init(e)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	if e.recording {
 		resp, err := e.Client.StartRecordEnv(ctx, &spherev1alpha.StartRecordEnvRequest{Id: e.Environment.Id})
 		if err != nil {
@@ -81,7 +95,6 @@ func WithRecorder() func(*Env) {
 // WithNormalizer adds a normalizer for observation data.
 func WithNormalizer(normalizer Normalizer) func(*Env) {
 	return func(e *Env) {
-		normalizer.Init(e)
 		e.Normalizer = normalizer
 	}
 }
@@ -89,7 +102,6 @@ func WithNormalizer(normalizer Normalizer) func(*Env) {
 // WithGoalNormalizer adds a normalizer for goal data.
 func WithGoalNormalizer(normalizer Normalizer) func(*Env) {
 	return func(e *Env) {
-		normalizer.Init(e)
 		e.GoalNormalizer = normalizer
 	}
 }
@@ -372,6 +384,9 @@ func (e *Env) ActionSpaceShape() []int {
 
 // ObservationSpaceShape is the shape of the observation space.
 func (e *Env) ObservationSpaceShape() []int {
+	if len(e.reshape) != 0 {
+		return e.reshape
+	}
 	return SpaceShape(e.ObservationSpace)
 }
 

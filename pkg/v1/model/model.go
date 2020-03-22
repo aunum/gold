@@ -258,8 +258,7 @@ func (s *Sequential) Fwd(x *Input) {
 // Compile the model.
 func (s *Sequential) Compile(x InputOr, y *Input, opts ...Opt) error {
 	s.x = x.Inputs()
-
-	err := y.Normalize()
+	err := y.Validate()
 	if err != nil {
 		return err
 	}
@@ -286,6 +285,10 @@ func (s *Sequential) Compile(x InputOr, y *Input, opts ...Opt) error {
 	}
 	if s.fwd == nil {
 		s.fwd = x.Inputs()[0]
+		err = s.fwd.Validate()
+		if err != nil {
+			return err
+		}
 		s.logger.Infof("setting forward for layers to input %q", s.fwd.Name())
 	}
 	err = s.buildTrainGraph(s.x, s.y)

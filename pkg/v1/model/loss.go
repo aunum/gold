@@ -17,9 +17,6 @@ type Loss interface {
 	Inputs() Inputs
 }
 
-// Reducer is used to reduce tensors to scalar values.
-type Reducer func(n *g.Node, along ...int) (*g.Node, error)
-
 // MSE is standard mean squared error loss.
 var MSE = &MSELoss{}
 
@@ -93,6 +90,8 @@ func (c *CrossEntropyLoss) Inputs() Inputs {
 // PseudoHuberLoss is a loss that is less sensetive to outliers.
 // Can be thought of as absolute error when large, and quadratic when small.
 // The larger the Delta param the steeper the loss.
+//
+// !blocked on https://github.com/gorgonia/gorgonia/issues/373
 type PseudoHuberLoss struct {
 	// Delta determines where the function switches behavior.
 	Delta float32
@@ -104,7 +103,7 @@ var PseudoHuber = &PseudoHuberLoss{
 }
 
 // NewPseudoHuberLoss return a new huber loss.
-func NewPseudoHuberLoss(delta float32, reducer Reducer) *PseudoHuberLoss {
+func NewPseudoHuberLoss(delta float32) *PseudoHuberLoss {
 	return &PseudoHuberLoss{
 		Delta: delta,
 	}

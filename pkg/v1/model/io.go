@@ -165,7 +165,7 @@ func (i *Input) Set(value g.Value) error {
 func (i *Input) AsBatch(size int) *Input {
 	ret := i.Clone()
 	if len(ret.Shape()) == 1 {
-		err := ret.Normalize()
+		err := ret.OneOfMany()
 		if err != nil {
 			panic(err)
 		}
@@ -183,23 +183,35 @@ func NameAsBatch(name string) string {
 	return fmt.Sprintf("%v_batch", name)
 }
 
-// Normalize the input. If the input is a scalar it will expand it to a matrix.
-func (i *Input) Normalize() (err error) {
-	if len(i.shape) == 1 {
-		i.shape = []int{1, i.shape[0]}
-		log.Debugf("normalizing dimensions of %q to %v", i.name, i.shape)
-		if i.node != nil {
-			i.node, err = g.Reshape(i.node, i.shape)
-			if err != nil {
-				return err
-			}
+// OneOfMany normalizes the input shape to be one of many.
+// Any incoming singular input will also be normalized to this shape.
+func (i *Input) OneOfMany() (err error) {
+	i.shape = append([]int{1}, i.shape...)
+	if i.node != nil {
+		i.node, err = g.Reshape(i.node, i.shape)
+		if err != nil {
+			return err
 		}
 	}
+	return nil
+}
+
+// EnsureBatch checks that the first dimension is 1 or reshapes it to be so.
+func (i *Input) EnsureBatch() *Input {
+	if i.Shape()[0] != 1 || len(i.Shape()) == 1 {
+		i.shape = append([]int{1}, i.shape...)
+		log.Infof("reshaping %v to %v to have a batch of 1", i.Name(), i.Shape())
+	}
+	return i
+}
+
+// Validate the input.
+func (i *Input) Validate() error {
 	if len(i.shape) == 0 {
-		fmt.Println("shape 0")
+		return fmt.Errorf("no input shape provided")
 	}
 	if i.shape[0] != 1 {
-		log.Fatalf("input shape %q %v must be a scalar or have the first dimension 1 e.g. [1, 4]", i.name, i.shape)
+		return fmt.Errorf("input shape %q %v must be a scalar or have the first dimension 1 e.g. [1, 4]", i.name, i.shape)
 	}
 	return nil
 }

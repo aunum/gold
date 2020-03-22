@@ -4,9 +4,7 @@ import (
 	agentv1 "github.com/aunum/gold/pkg/v1/agent"
 	envv1 "github.com/aunum/gold/pkg/v1/env"
 	modelv1 "github.com/aunum/gold/pkg/v1/model"
-	l "github.com/aunum/gold/pkg/v1/model/layers"
-	"github.com/aunum/gold/pkg/v1/model/layers/activation"
-	"github.com/aunum/gold/pkg/v1/model/layers/fc"
+	"github.com/aunum/gold/pkg/v1/model/layer"
 	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
 )
@@ -30,7 +28,7 @@ type ModelConfig struct {
 }
 
 // LayerBuilder builds layers.
-type LayerBuilder func(env *envv1.Env) []l.Layer
+type LayerBuilder func(env *envv1.Env) []layer.Config
 
 // DefaultActorConfig are the default hyperparameters for a policy.
 var DefaultActorConfig = &ModelConfig{
@@ -40,11 +38,11 @@ var DefaultActorConfig = &ModelConfig{
 }
 
 // DefaultActorLayerBuilder is a default fully connected layer builder.
-var DefaultActorLayerBuilder = func(env *envv1.Env) []l.Layer {
-	return []l.Layer{
-		fc.New(env.ObservationSpaceShape()[0], 24, fc.WithName("fc1")),
-		fc.New(24, 24, fc.WithName("fc2")),
-		fc.New(24, envv1.PotentialsShape(env.ActionSpace)[0], fc.WithActivation(activation.Softmax), fc.WithName("predictions")),
+var DefaultActorLayerBuilder = func(env *envv1.Env) []layer.Config {
+	return []layer.Config{
+		layer.FC{Input: env.ObservationSpaceShape()[0], Output: 24},
+		layer.FC{Input: 24, Output: 24},
+		layer.FC{Input: 24, Output: envv1.PotentialsShape(env.ActionSpace)[0], Activation: layer.Softmax},
 	}
 }
 
@@ -91,11 +89,11 @@ func MakeActor(config *ModelConfig, base *agentv1.Base, env *envv1.Env) (modelv1
 }
 
 // DefaultCriticLayerBuilder is a default fully connected layer builder.
-var DefaultCriticLayerBuilder = func(env *envv1.Env) []l.Layer {
-	return []l.Layer{
-		fc.New(env.ObservationSpaceShape()[0], 24, fc.WithName("w0")),
-		fc.New(24, 24, fc.WithName("w1")),
-		fc.New(24, 1, fc.WithActivation(activation.Tanh), fc.WithName("w2")),
+var DefaultCriticLayerBuilder = func(env *envv1.Env) []layer.Config {
+	return []layer.Config{
+		layer.FC{Input: env.ObservationSpaceShape()[0], Output: 24},
+		layer.FC{Input: 24, Output: 24},
+		layer.FC{Input: 24, Output: 1, Activation: layer.Tanh},
 	}
 }
 

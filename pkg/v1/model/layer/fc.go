@@ -120,8 +120,7 @@ func (f *fc) Fwd(x *g.Node) (*g.Node, error) {
 	var xw, xwb *g.Node
 	var err error
 	if x.IsVector() {
-		s := t.Shape{1}
-		s = append(s, x.Shape()...)
+		s := append(t.Shape{1}, x.Shape()...)
 		x, err = g.Reshape(x, s)
 		if err != nil {
 			return nil, err

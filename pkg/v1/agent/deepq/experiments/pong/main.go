@@ -5,8 +5,10 @@ import (
 	"github.com/aunum/gold/pkg/v1/common"
 	"github.com/aunum/gold/pkg/v1/common/require"
 	envv1 "github.com/aunum/gold/pkg/v1/env"
-	"github.com/aunum/gold/pkg/v1/track"
+	modelv1 "github.com/aunum/gold/pkg/v1/model"
 	"github.com/aunum/log"
+
+	g "gorgonia.org/gorgonia"
 )
 
 func main() {
@@ -16,11 +18,20 @@ func main() {
 
 	env, err := s.Make("Pong-v0",
 		envv1.WithWrapper(envv1.DefaultAtariWrapper),
-		envv1.WithNormalizer(envv1.NewReshapeNormalizer([]int{1, 84, 84})),
+		envv1.WithNormalizer(envv1.NewReshapeNormalizer([]int{1, 1, 84, 84})),
 	)
 	require.NoError(err)
 
-	agent, err := deepq.NewAgent(deepq.DefaultAgentConfig, env)
+	agentConfig := deepq.DefaultAgentConfig
+	policyConfig := &deepq.PolicyConfig{
+		Loss:         modelv1.CrossEntropy,
+		Optimizer:    g.NewRMSPropSolver(g.WithBatchSize(20)),
+		LayerBuilder: deepq.DefaultAtariLayerBuilder,
+		BatchSize:    20,
+		Track:        true,
+	}
+	agentConfig.PolicyConfig = policyConfig
+	agent, err := deepq.NewAgent(agentConfig, env)
 	require.NoError(err)
 
 	agent.View()
@@ -30,12 +41,10 @@ func main() {
 	for _, episode := range agent.MakeEpisodes(numEpisodes) {
 		init, err := env.Reset()
 		require.NoError(err)
-		log.Infovb("init", init)
-		log.Infov("init shape", init.Observation.Shape())
 
 		state := init.Observation
 
-		score := episode.TrackScalar("score", 0, track.WithAggregator(track.Max))
+		score := episode.TrackScalar("score", 0)
 
 		for _, timestep := range episode.Steps(env.MaxSteps()) {
 			action, err := agent.Action(state)
@@ -53,7 +62,7 @@ func main() {
 			require.NoError(err)
 
 			if outcome.Done {
-				log.Successf("Episode %d finished after %d timesteps", episode.I, timestep.I+1)
+				log.Successf("Episode %d finished after %d timesteps with a score of %v", episode.I, timestep.I+1, score.Scalar())
 				break
 			}
 			state = outcome.Observation

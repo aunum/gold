@@ -7,7 +7,7 @@ Model is a high-level helper library for Gorgonia, it aims to have a similar fee
 ```go
 import (
     . "github.com/aunum/gold/pkg/v1/model"
-    l "github.com/aunum/gold/pkg/v1/model/layers"
+    "github.com/aunum/gold/pkg/v1/model/layer"
 )
 
 // create the 'x' input
@@ -21,32 +21,32 @@ model, _ := NewSequential("mnist")
 
 // add layers to the model
 model.AddLayers(
-    fc.New(784, 300, fc.WithInit(g.GlorotN(1)), fc.WithName("w0")),
-    fc.New(300, 100, fc.WithInit(g.GlorotN(1)), fc.WithName("w1")),
-    fc.New(100, 10, fc.WithActivation(activation.Softmax), fc.WithInit(g.GlorotN(1)), fc.WithName("w2")),
+    layer.FC{Input: 784, Output: 300},
+    layer.FC{Input: 300, Output: 100},
+    layer.FC{Input: 100, Output: 10, Activation: layer.Softmax},
 )
 
 // pick an optimizer
 optimizer := g.NewRMSPropSolver()
 
 // compile the model with options
-model.Compile(xi, yi,
+model.Compile(x, y,
     WithOptimizer(optimizer),
     WithLoss(CrossEntropy),
     WithBatchSize(100),
 )
 
-// Use the model to predict an 'x'
-prediction, _ := model.Predict(xTest)
-
 // fit the model
 model.Fit(xTrain, yTrain)
 
-// Use the model to predict a batch of 'x'
-prediction, _ = model.PredictBatch(xTestBatch)
+// Use the model to predict an 'x'
+prediction, _ := model.Predict(xTest)
 
 // fit the model with a batch
 model.FitBatch(xTrainBatch, yTrainBatch)
+
+// Use the model to predict a batch of 'x'
+prediction, _ = model.PredictBatch(xTestBatch)
 ```
 
 ## Examples

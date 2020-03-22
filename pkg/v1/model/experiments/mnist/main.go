@@ -44,15 +44,15 @@ func main() {
 	require.NoError(err)
 
 	model.AddLayers(
-		layer.Conv2D{Input: 1, Output: 32, Width: 3, Height: 3, Name: "conv0"},
+		layer.Conv2D{Input: 1, Output: 32, Width: 3, Height: 3},
 		layer.MaxPooling2D{},
-		layer.Conv2D{Input: 32, Output: 64, Width: 3, Height: 3, Name: "conv1"},
+		layer.Conv2D{Input: 32, Output: 64, Width: 3, Height: 3},
 		layer.MaxPooling2D{},
-		layer.Conv2D{Input: 64, Output: 128, Width: 3, Height: 3, Name: "conv2"},
+		layer.Conv2D{Input: 64, Output: 128, Width: 3, Height: 3},
 		layer.MaxPooling2D{},
 		layer.Flatten{},
-		layer.FC{Input: 128 * 3 * 3, Output: 100, Name: "fc0"},
-		layer.FC{Input: 100, Output: 10, Activation: layer.Softmax, Name: "dist"},
+		layer.FC{Input: 128 * 3 * 3, Output: 100},
+		layer.FC{Input: 100, Output: 10, Activation: layer.Softmax},
 	)
 
 	optimizer := g.NewRMSPropSolver(g.WithBatchSize(float64(batchSize)))

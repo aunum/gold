@@ -4,7 +4,7 @@ import (
 	agentv1 "github.com/aunum/gold/pkg/v1/agent"
 	envv1 "github.com/aunum/gold/pkg/v1/env"
 	modelv1 "github.com/aunum/gold/pkg/v1/model"
-	l "github.com/aunum/gold/pkg/v1/model/layers"
+	"github.com/aunum/gold/pkg/v1/model/layer"
 
 	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
@@ -38,14 +38,14 @@ var DefaultPolicyConfig = &PolicyConfig{
 }
 
 // LayerBuilder builds layers.
-type LayerBuilder func(x, y *modelv1.Input) []l.Layer
+type LayerBuilder func(x, y *modelv1.Input) []layer.Config
 
 // DefaultFCLayerBuilder is a default fully connected layer builder.
-var DefaultFCLayerBuilder = func(x, y *modelv1.Input) []l.Layer {
-	return []l.Layer{
-		fc.New(x.Squeeze()[0], 512, fc.WithName("fc1")),
-		fc.New(512, 512, fc.WithName("fc2")),
-		fc.New(512, y.Squeeze()[0], fc.WithActivation(activation.Linear), fc.WithName("qvalues")),
+var DefaultFCLayerBuilder = func(x, y *modelv1.Input) []layer.Config {
+	return []layer.Config{
+		layer.FC{Input: x.Squeeze()[0], Output: 512},
+		layer.FC{Input: 512, Output: 512},
+		layer.FC{Input: 512, Output: y.Squeeze()[0], Activation: layer.Linear},
 	}
 }
 

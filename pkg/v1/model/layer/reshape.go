@@ -26,7 +26,7 @@ func (r Reshape) Compile(graph *g.ExprGraph, opts ...CompileOpt) Layer {
 
 // Clone the config.
 func (r Reshape) Clone() Config {
-	return Reshape{}
+	return Reshape{To: r.To}
 }
 
 // Validate the config.
@@ -48,7 +48,9 @@ func newReshape(config *Reshape) *reshape {
 
 // Fwd is a forward pass through the layer.
 func (r *reshape) Fwd(x *g.Node) (*g.Node, error) {
-	return g.Reshape(x, r.To)
+	batch := []int{x.Shape()[0]}
+	newShape := append(batch, r.To...)
+	return g.Reshape(x, newShape)
 }
 
 // Learnables returns all learnable nodes within this layer.

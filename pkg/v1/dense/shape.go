@@ -6,17 +6,23 @@ import (
 
 // ExpandDims expands the dimensions of a tensor along the given axis.
 func ExpandDims(t *tensor.Dense, axis int) error {
+	shape := ExpandDimsShape(t.Shape(), axis)
+	err := t.Reshape(shape...)
+	return err
+}
+
+// ExpandDimsShape expands the dimensions of a shape along the given axis.
+func ExpandDimsShape(shape tensor.Shape, axis int) tensor.Shape {
 	dims := []int{}
 	if axis == 0 {
 		dims = append(dims, 1)
-		dims = append(dims, t.Shape()...)
+		dims = append(dims, shape...)
 
 	} else {
-		dims = append(dims, t.Shape()...)
+		dims = append(dims, shape...)
 		dims = append(dims, 1)
 	}
-	err := t.Reshape(dims...)
-	return err
+	return dims
 }
 
 // Squeeze the tensor removing any dimensions of size 1.
