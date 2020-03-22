@@ -1,6 +1,7 @@
 package layer
 
 import (
+	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
 )
 
@@ -44,7 +45,11 @@ func (c *Chain) Learnables() g.Nodes {
 // Add to the chain.
 func (c *Chain) Add(l ...Config) {
 	for _, layer := range l {
-		layer.ApplyDefaults()
+		err := layer.Validate()
+		if err != nil {
+			log.Fatalf("layer %#v \nfailed validation: %v", layer, err)
+		}
+		layer = layer.ApplyDefaults()
 		c.Layers = append(c.Layers, layer)
 	}
 }
@@ -82,8 +87,8 @@ func (c *Chain) Compile(graph *g.ExprGraph, opts ...ChainOpt) {
 	}
 	if c.sharedLearnables != nil {
 		for i, layer := range c.Layers {
-			c.compileOpts = append(c.compileOpts, WithSharedLearnables(c.sharedLearnables.layers[i]))
-			l := layer.Compile(graph, c.compileOpts...)
+			compileOpts := append(c.compileOpts, WithSharedLearnables(c.sharedLearnables.layers[i]))
+			l := layer.Compile(graph, compileOpts...)
 			c.layers = append(c.layers, l)
 		}
 		return

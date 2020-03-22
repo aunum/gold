@@ -1,6 +1,8 @@
 package layer
 
 import (
+	"fmt"
+
 	g "gorgonia.org/gorgonia"
 	t "gorgonia.org/tensor"
 )
@@ -52,8 +54,8 @@ type Conv2D struct {
 }
 
 // Compile the config into a layer.
-func (c *Conv2D) Compile(graph *g.ExprGraph, opts ...CompileOpt) Layer {
-	cnv := newConv2D(c)
+func (c Conv2D) Compile(graph *g.ExprGraph, opts ...CompileOpt) Layer {
+	cnv := newConv2D(&c)
 	for _, opt := range opts {
 		opt(cnv)
 	}
@@ -65,14 +67,49 @@ func (c *Conv2D) Compile(graph *g.ExprGraph, opts ...CompileOpt) Layer {
 	return cnv
 }
 
-// ApplyDefaults to the config.
-func (c *Conv2D) ApplyDefaults() {
+// Validate the config.
+func (c Conv2D) Validate() error {
+	if c.Input == 0 {
+		return fmt.Errorf("input must be set")
+	}
+	if c.Output == 0 {
+		return fmt.Errorf("output must be set")
+	}
+	if c.Width == 0 {
+		return fmt.Errorf("width must be set")
+	}
+	if c.Height == 0 {
+		return fmt.Errorf("height must be set")
+	}
+	return nil
+}
 
+// ApplyDefaults to the config.
+func (c Conv2D) ApplyDefaults() Config {
+	if c.Activation == nil {
+		c.Activation = ReLU
+	}
+	if len(c.KernelShape) == 0 {
+		c.KernelShape = []int{3, 3}
+	}
+	if len(c.Pad) == 0 {
+		c.Pad = []int{1, 1}
+	}
+	if len(c.Stride) == 0 {
+		c.Stride = []int{1, 1}
+	}
+	if len(c.Dilation) == 0 {
+		c.Dilation = []int{1, 1}
+	}
+	if c.Init == nil {
+		c.Init = g.GlorotN(1)
+	}
+	return c
 }
 
 // Clone the config.
-func (c *Conv2D) Clone() Config {
-	return &Conv2D{
+func (c Conv2D) Clone() Config {
+	return Conv2D{
 		Input:       c.Input,
 		Output:      c.Output,
 		Height:      c.Height,
@@ -113,7 +150,7 @@ func (c *conv2D) Fwd(x *g.Node) (*g.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	return n, nil
+	return c.Activation.Fwd(n)
 }
 
 // Learnables returns all learnable nodes within this layer.

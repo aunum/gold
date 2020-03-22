@@ -7,7 +7,7 @@ import (
 
 // MaxPooling2D implements the max pooling 2d function.
 type MaxPooling2D struct {
-	// Shape of the kernem.
+	// Shape of the kernel.
 	// Defaults to (2, 2)
 	Kernel t.Shape
 
@@ -23,8 +23,13 @@ type MaxPooling2D struct {
 	Name string
 }
 
+// Validate the config.
+func (m MaxPooling2D) Validate() error {
+	return nil
+}
+
 // ApplyDefaults applys defaults to the layers.
-func (m *MaxPooling2D) ApplyDefaults() {
+func (m MaxPooling2D) ApplyDefaults() Config {
 	if len(m.Kernel) == 0 {
 		m.Kernel = []int{2, 2}
 	}
@@ -34,17 +39,18 @@ func (m *MaxPooling2D) ApplyDefaults() {
 	if len(m.Stride) == 0 {
 		m.Stride = []int{2, 2}
 	}
+	return m
 }
 
 // Compile the config as a layer.
-func (m *MaxPooling2D) Compile(graph *g.ExprGraph, opts ...CompileOpt) Layer {
-	mp := newMaxPooling2d(m)
+func (m MaxPooling2D) Compile(graph *g.ExprGraph, opts ...CompileOpt) Layer {
+	mp := newMaxPooling2d(&m)
 	mp.graph = graph
 	return mp
 }
 
 // Clone the config.
-func (m *MaxPooling2D) Clone() Config {
+func (m MaxPooling2D) Clone() Config {
 	return &MaxPooling2D{
 		Kernel: m.Kernel,
 		Pad:    m.Pad,

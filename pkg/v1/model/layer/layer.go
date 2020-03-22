@@ -12,7 +12,10 @@ type Config interface {
 	Compile(graph *g.ExprGraph, opts ...CompileOpt) Layer
 
 	// ApplyDefaults to the config.
-	ApplyDefaults()
+	ApplyDefaults() Config
+
+	// Validate the config.
+	Validate() error
 
 	// Clone the layer config.
 	Clone() Config
@@ -33,7 +36,7 @@ type Layer interface {
 	Graph() *g.ExprGraph
 }
 
-// CompileOpt is a layer option.
+// CompileOpt is a layer compile option.
 type CompileOpt func(Layer)
 
 // WithSharedLearnables shares the learnables from another layer.
@@ -42,6 +45,8 @@ func WithSharedLearnables(shared Layer) func(Layer) {
 		switch lay := l.(type) {
 		case *fc:
 			lay.shared = shared.(*fc)
+		case *conv2D:
+			lay.shared = shared.(*conv2D)
 		}
 	}
 }
@@ -49,8 +54,12 @@ func WithSharedLearnables(shared Layer) func(Layer) {
 // AsBatch informs the layer compilation that it is a batch.
 func AsBatch() func(Layer) {
 	return func(l Layer) {
-		fc := l.(*fc)
-		fc.isBatched = true
+		switch lay := l.(type) {
+		case *fc:
+			lay.isBatched = true
+		case *conv2D:
+			lay.isBatched = true
+		}
 	}
 }
 
@@ -59,6 +68,8 @@ func AsType(dtype t.Dtype) func(Layer) {
 	return func(l Layer) {
 		switch lay := l.(type) {
 		case *fc:
+			lay.dtype = dtype
+		case *conv2D:
 			lay.dtype = dtype
 		}
 	}

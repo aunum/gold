@@ -5,11 +5,7 @@ import (
 	"github.com/aunum/gold/pkg/v1/common/require"
 	"github.com/aunum/gold/pkg/v1/dense"
 	m "github.com/aunum/gold/pkg/v1/model"
-	"github.com/aunum/gold/pkg/v1/model/layers/activation"
-	"github.com/aunum/gold/pkg/v1/model/layers/conv2d"
-	"github.com/aunum/gold/pkg/v1/model/layers/fc"
-	"github.com/aunum/gold/pkg/v1/model/layers/maxpooling2d"
-	"github.com/aunum/gold/pkg/v1/model/layers/shape"
+	"github.com/aunum/gold/pkg/v1/model/layer"
 	"github.com/aunum/log"
 
 	g "gorgonia.org/gorgonia"
@@ -18,6 +14,7 @@ import (
 )
 
 func main() {
+	// load the train set
 	x, y, err := mnist.Load("train", "./testdata", g.Float32)
 	require.NoError(err)
 
@@ -28,8 +25,8 @@ func main() {
 	testX, testY, err := mnist.Load("test", "./testdata", g.Float32)
 	require.NoError(err)
 
-	log.Infov("x batch shape", x.Shape())
-	log.Infov("y batch shape", y.Shape())
+	log.Infov("x example shape", x.Shape())
+	log.Infov("y example shape", y.Shape())
 
 	batchSize := 100
 	log.Infov("batchsize", batchSize)
@@ -47,21 +44,21 @@ func main() {
 	require.NoError(err)
 
 	model.AddLayers(
-		conv2d.New(1, 32, 3, 3, conv2d.WithName("conv0")),
-		maxpooling2d.New(),
-		conv2d.New(32, 64, 3, 3, conv2d.WithName("conv1")),
-		maxpooling2d.New(),
-		conv2d.New(64, 128, 3, 3, conv2d.WithName("conv3")),
-		maxpooling2d.New(),
-		shape.Flatten(),
-		fc.New(128*3*3, 100, fc.WithName("fc0")),
-		fc.New(100, 10, fc.WithActivation(activation.Softmax), fc.WithName("dist")),
+		layer.Conv2D{Input: 1, Output: 32, Width: 3, Height: 3, Name: "conv0"},
+		layer.MaxPooling2D{},
+		layer.Conv2D{Input: 32, Output: 64, Width: 3, Height: 3, Name: "conv1"},
+		layer.MaxPooling2D{},
+		layer.Conv2D{Input: 64, Output: 128, Width: 3, Height: 3, Name: "conv2"},
+		layer.MaxPooling2D{},
+		layer.Flatten{},
+		layer.FC{Input: 128 * 3 * 3, Output: 100, Name: "fc0"},
+		layer.FC{Input: 100, Output: 10, Activation: layer.Softmax, Name: "dist"},
 	)
 
-	optimizer := g.NewRMSPropSolver()
+	optimizer := g.NewRMSPropSolver(g.WithBatchSize(float64(batchSize)))
 	err = model.Compile(xi, yi,
 		m.WithOptimizer(optimizer),
-		m.WithLoss(m.PseudoCrossEntropy),
+		m.WithLoss(m.CrossEntropy),
 		m.WithBatchSize(batchSize),
 	)
 	require.NoError(err)
@@ -70,9 +67,6 @@ func main() {
 
 	log.Infov("epochs", epochs)
 	for epoch := 0; epoch < epochs; epoch++ {
-
-		var xi tensor.View
-		var yi tensor.View
 		for batch := 0; batch < batches; batch++ {
 			start := batch * batchSize
 			end := start + batchSize
@@ -83,11 +77,11 @@ func main() {
 				end = exampleSize
 			}
 
-			xi, err = x.Slice(dense.MakeRangedSlice(start, end))
+			xi, err := x.Slice(dense.MakeRangedSlice(start, end))
 			require.NoError(err)
 			xi.Reshape(batchSize, 1, 28, 28)
 
-			yi, err = y.Slice(dense.MakeRangedSlice(start, end))
+			yi, err := y.Slice(dense.MakeRangedSlice(start, end))
 			require.NoError(err)
 			yi.Reshape(batchSize, 10)
 

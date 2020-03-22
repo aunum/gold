@@ -52,9 +52,9 @@ func TestSequential(t *testing.T) {
 	model, err := NewSequential("test")
 	require.NoError(t, err)
 	model.AddLayers(
-		&layer.FC{Input: 5, Output: 24, Name: "w0"},
-		&layer.FC{Input: 24, Output: 24, Activation: layer.Sigmoid, Name: "w1"},
-		&layer.FC{Input: 24, Output: 2, Activation: layer.Linear, Name: "w2"},
+		layer.FC{Input: 5, Output: 24, Activation: layer.Sigmoid, Name: "w0"},
+		layer.FC{Input: 24, Output: 24, Activation: layer.Sigmoid, Name: "w1"},
+		layer.FC{Input: 24, Output: 2, Activation: layer.Linear, Name: "w2"},
 	)
 
 	optimizer := g.NewAdamSolver()

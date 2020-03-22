@@ -57,8 +57,19 @@ func newFC(config *FC) *fc {
 	}
 }
 
+// Validate the config.
+func (f FC) Validate() error {
+	if f.Input == 0 {
+		return fmt.Errorf("input must be set")
+	}
+	if f.Output == 0 {
+		return fmt.Errorf("output must be set")
+	}
+	return nil
+}
+
 // ApplyDefaults to the config.
-func (f *FC) ApplyDefaults() {
+func (f FC) ApplyDefaults() Config {
 	if f.Activation == nil {
 		f.Activation = ReLU
 	}
@@ -68,11 +79,12 @@ func (f *FC) ApplyDefaults() {
 	if f.BiasInit == nil {
 		f.BiasInit = g.GlorotN(1)
 	}
+	return f
 }
 
 // Compile the layer into the graph.
-func (f *FC) Compile(graph *g.ExprGraph, opts ...CompileOpt) Layer {
-	fcn := newFC(f)
+func (f FC) Compile(graph *g.ExprGraph, opts ...CompileOpt) Layer {
+	fcn := newFC(&f)
 	for _, opt := range opts {
 		opt(fcn)
 	}
@@ -91,7 +103,7 @@ func (f *FC) Compile(graph *g.ExprGraph, opts ...CompileOpt) Layer {
 }
 
 // Clone the config.
-func (f *FC) Clone() Config {
+func (f FC) Clone() Config {
 	return &FC{
 		Input:      f.Input,
 		Output:     f.Output,
@@ -157,8 +169,9 @@ func (f *fc) Learnables() g.Nodes {
 
 // Clone the layer without any nodes. (nodes cannot be shared)
 func (f *fc) Clone() Layer {
+	configCloned := f.FC.Clone().(FC)
 	return &fc{
-		FC:        f.FC.Clone().(*FC),
+		FC:        &configCloned,
 		dtype:     f.dtype,
 		isBatched: f.isBatched,
 		shared:    f.shared,

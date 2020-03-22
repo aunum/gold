@@ -10,18 +10,23 @@ import (
 type Flatten struct{}
 
 // ApplyDefaults to the flatten layer.
-func (f *Flatten) ApplyDefaults() {}
+func (f Flatten) ApplyDefaults() Config { return f }
 
 // Compile the layer.
-func (f *Flatten) Compile(graph *g.ExprGraph, opts ...CompileOpt) Layer {
-	flat := newFlatten(f)
+func (f Flatten) Compile(graph *g.ExprGraph, opts ...CompileOpt) Layer {
+	flat := newFlatten(&f)
 	flat.graph = graph
 	return flat
 }
 
 // Clone the config.
-func (f *Flatten) Clone() Config {
-	return &Flatten{}
+func (f Flatten) Clone() Config {
+	return Flatten{}
+}
+
+// Validate the config.
+func (f Flatten) Validate() error {
+	return nil
 }
 
 type flatten struct {
@@ -36,7 +41,7 @@ func newFlatten(config *Flatten) *flatten {
 // Fwd is a forward pass through the layer.
 func (f *flatten) Fwd(x *g.Node) (*g.Node, error) {
 	if len(x.Shape()) < 2 {
-		return nil, fmt.Errorf("flatten expects input in the shape (batch, x...), to few params in %v", x.Shape())
+		return nil, fmt.Errorf("flatten expects input in the shape (batch, x...), to few dimensions in %v", x.Shape())
 	}
 	batch := x.Shape()[0]
 	s := x.Shape()[1:]

@@ -502,7 +502,6 @@ func (s *Sequential) Predict(x g.Value) (prediction g.Value, err error) {
 	if err != nil {
 		return prediction, err
 	}
-	// log.Infovb("online pred val", s.onlinePredVal)
 	prediction = s.onlinePredVal
 	s.onlineVM.Reset()
 	return
