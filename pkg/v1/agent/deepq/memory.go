@@ -5,9 +5,9 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/gammazero/deque"
 	envv1 "github.com/aunum/gold/pkg/v1/env"
 	"github.com/aunum/log"
+	"github.com/gammazero/deque"
 	"gorgonia.org/tensor"
 )
 

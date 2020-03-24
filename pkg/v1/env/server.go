@@ -9,11 +9,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/ory/dockertest"
-	dc "github.com/ory/dockertest/docker"
 	"github.com/aunum/gold/pkg/v1/common"
 	"github.com/aunum/log"
 	spherev1alpha "github.com/aunum/sphere/api/gen/go/v1alpha"
+	"github.com/ory/dockertest"
+	dc "github.com/ory/dockertest/docker"
 	"google.golang.org/grpc"
 )
 

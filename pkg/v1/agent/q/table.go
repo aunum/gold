@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"hash/fnv"
 
-	"github.com/k0kubun/pp"
 	"github.com/aunum/gold/pkg/v1/common/num"
 	"github.com/aunum/log"
+	"github.com/k0kubun/pp"
 	"gorgonia.org/tensor"
 )
 

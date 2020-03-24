@@ -1,8 +1,8 @@
 package num
 
 import (
-	"github.com/chewxy/math32"
 	"github.com/aunum/log"
+	"github.com/chewxy/math32"
 )
 
 // MinMaxNorm is min-max normalization.
