@@ -244,7 +244,7 @@ func untranspose(a Matrix) (Matrix, bool) {
 func untransposeExtract(a Matrix) (Matrix, bool) {
 	ut, trans := untranspose(a)
 	switch m := ut.(type) {
-	case *DiagDense, *SymBandDense, *TriBandDense, *BandDense, *TriDense, *SymDense, *Dense:
+	case *DiagDense, *SymBandDense, *TriBandDense, *BandDense, *TriDense, *SymDense, *Dense, *VecDense:
 		return m, trans
 	// TODO(btracey): Add here if we ever have an equivalent of RawDiagDense.
 	case RawSymBander:
@@ -287,6 +287,10 @@ func untransposeExtract(a Matrix) (Matrix, bool) {
 		var d Dense
 		d.SetRawMatrix(m.RawMatrix())
 		return &d, trans
+	case RawVectorer:
+		var v VecDense
+		v.SetRawVector(m.RawVector())
+		return &v, trans
 	default:
 		return ut, trans
 	}
@@ -934,7 +938,8 @@ type Tracer interface {
 }
 
 // Trace returns the trace of the matrix. Trace will panic if the
-// matrix is not square.
+// matrix is not square. If a is a Tracer, its Trace method will be
+// used to calculate the matrix trace.
 func Trace(a Matrix) float64 {
 	m, _ := untransposeExtract(a)
 	if t, ok := m.(Tracer); ok {

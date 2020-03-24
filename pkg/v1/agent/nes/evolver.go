@@ -154,7 +154,7 @@ func (e *Evolver) Evolve() (weights *tensor.Dense, err error) {
 			return nil, err
 		}
 
-		// perform update to wieghts.
+		// perform update to weights.
 		// weights = weights + alpha/(npop*sigma) * dot(noise, rewards)
 		rn, err := noise.TensorMul(rewards, []int{noise.Dims() - 1}, []int{0})
 		if err != nil {

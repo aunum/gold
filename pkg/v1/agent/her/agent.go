@@ -137,8 +137,6 @@ func (a *Agent) Learn() error {
 	batchStates := []*tensor.Dense{}
 	batchQValues := []*tensor.Dense{}
 	for _, event := range batch {
-		// log.Info("learning event")
-		// event.Print()
 		qUpdate := float32(event.Reward)
 		if !event.Done {
 			obvGoal, err := event.Observation.Concat(1, event.Goal)
@@ -161,15 +159,12 @@ func (a *Agent) Learn() error {
 		if err != nil {
 			return err
 		}
-		// log.Infov("predict stategoal", stateGoal.Data())
 		prediction, err := a.Policy.Predict(stateGoal)
 		if err != nil {
 			return err
 		}
 		qValues := prediction.(*tensor.Dense)
-		// log.Infov("qValues", qValues.Data())
 		qValues.Set(event.Action, qUpdate)
-		// log.Infov("qUpdate", qValues.Data())
 		batchStates = append(batchStates, stateGoal)
 		batchQValues = append(batchQValues, qValues)
 	}
@@ -181,8 +176,6 @@ func (a *Agent) Learn() error {
 	if err != nil {
 		return err
 	}
-	// log.Infovb("batch states", states)
-	// log.Infovb("batch qvalues", qValues)
 	err = a.Policy.FitBatch(states, qValues)
 	if err != nil {
 		return err
@@ -198,7 +191,6 @@ func (a *Agent) Learn() error {
 // updateTarget copies the weights from the online network to the target network on the provided interval.
 func (a *Agent) updateTarget() error {
 	if a.episodes%a.UpdateTargetEpisodes == 0 {
-		log.BreakPound()
 		log.Infof("updating target model - current steps %v target update %v", a.steps, a.updateTargetSteps)
 		err := a.Policy.(*model.Sequential).CloneLearnablesTo(a.TargetPolicy.(*model.Sequential))
 		if err != nil {
@@ -236,7 +228,6 @@ func (a *Agent) action(state, goal *tensor.Dense) (action int, err error) {
 		return
 	}
 	qValues := prediction.(*tensor.Dense)
-	log.Infov("action qvalues", qValues.Data())
 	actionIndex, err := qValues.Argmax(1)
 	if err != nil {
 		return action, err
@@ -252,20 +243,15 @@ func (a *Agent) Remember(event ...*Event) {
 
 // Hindsight applies hindsight to the memory.
 func (a *Agent) Hindsight(episodeEvents Events) error {
-	log.BreakHard()
-	log.Info("running hindsight")
+	log.Debug("running hindsight")
 	altBatch := episodeEvents.Copy()
 	finalEvent := altBatch[len(altBatch)-1]
 	for i, event := range altBatch {
-		log.Info("old event: ")
-		event.Print()
 		event.Goal = finalEvent.Outcome.Observation
 		if i == len(altBatch)-1 {
 			event.Reward = a.successfulReward
 			event.Done = true
 		}
-		log.Info("new event: ")
-		event.Print()
 		a.memory.Remember(event)
 		err := a.Learn()
 		if err != nil {

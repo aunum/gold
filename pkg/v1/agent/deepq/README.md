@@ -15,7 +15,7 @@ DeepQ also includes the notion of experience replay, in which the agent stores t
 step in memory and then randomly samples from them during training. 
 
 [Double-Q](https://arxiv.org/abs/1509.06461) is further implemented in which the target, or expected future rewards, is modeled in a separate network 
-having the wieghts intermittently copied over from the 'online' network making the predictions. This helps learning by 
+having the weights intermittently copied over from the 'online' network making the predictions. This helps learning by 
 providing a more stable target to pursue.
 
 ## Examples

@@ -16,7 +16,7 @@ import (
 // BlackBox function we wish to optimize.
 type BlackBox interface {
 	// Run the black box.
-	Run(wieghts *t.Dense) (reward float32, err error)
+	Run(weights *t.Dense) (reward float32, err error)
 
 	// RunAsync the black box.
 	RunAsync(populationID int, weights *tensor.Dense, results chan BlackBoxResult, wg *sync.WaitGroup)
@@ -39,7 +39,7 @@ type BlackBoxResult struct {
 	// Solved tells if the agent solved the problem.
 	Solved bool
 
-	// Wieghts if solved.
+	// Weights if solved.
 	Weights *tensor.Dense
 }
 

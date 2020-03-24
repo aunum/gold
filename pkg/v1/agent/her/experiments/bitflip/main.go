@@ -100,6 +100,7 @@ func runTest(t *test) {
 					success.Set(1)
 				}
 				log.Infov("final state", outcome.Observation.Data())
+				log.Infov("expected goal", init.Goal.Data())
 				log.Successf("Episode %d finished after %d timesteps, with success of %v", episode.I, timestep.I+1, success.Scalar())
 				break
 			}

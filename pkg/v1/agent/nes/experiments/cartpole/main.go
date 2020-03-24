@@ -34,7 +34,6 @@ func main() {
 	evolver := nes.NewEvolver(config)
 	require.NoError(err)
 
-	evolver.View()
 	finalWeights, err := evolver.Evolve()
 	require.NoError(err)
 

@@ -563,6 +563,10 @@ func (s *SymDense) SubsetSym(a Symmetric, set []int) {
 // SliceSym panics with ErrIndexOutOfRange if the slice is outside the
 // capacity of the receiver.
 func (s *SymDense) SliceSym(i, k int) Symmetric {
+	return s.sliceSym(i, k)
+}
+
+func (s *SymDense) sliceSym(i, k int) *SymDense {
 	sz := s.cap
 	if i < 0 || sz < i || k < i || sz < k {
 		panic(ErrIndexOutOfRange)
@@ -630,8 +634,8 @@ func (s *SymDense) GrowSym(n int) Symmetric {
 
 // PowPSD computes a^pow where a is a positive symmetric definite matrix.
 //
-// PowPSD returns an error if the matrix is not  not positive symmetric definite
-// or the Eigendecomposition is not successful.
+// PowPSD returns an error if the matrix is not not positive symmetric definite
+// or the Eigen decomposition is not successful.
 func (s *SymDense) PowPSD(a Symmetric, pow float64) error {
 	dim := a.Symmetric()
 	s.reuseAsNonZeroed(dim)
