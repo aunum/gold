@@ -1,4 +1,5 @@
 ## Future Thoughts
+- Neuroevolution of Self-Interpretable Agents - _paper:_ https://arxiv.org/abs/2003.08165
 - Neural Logic - _paper:_ https://arxiv.org/pdf/1904.10729.pdf
 - Neural Episodic Control - _paper:_ https://arxiv.org/pdf/1703.01988.pdf
 - Imagination-Augmented Agents - _paper:_ https://arxiv.org/pdf/1707.06203.pdf _code:_ https://github.com/clvrai/i2a-tf _release:_ https://deepmind.com/blog/article/agents-imagine-and-plan
