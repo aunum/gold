@@ -207,6 +207,7 @@ func (a *Agent) action(state *tensor.Dense) (action int, err error) {
 		return
 	}
 	qValues := prediction.(*tensor.Dense)
+	log.Infov("qvalues", qValues)
 	actionIndex, err := qValues.Argmax(1)
 	if err != nil {
 		return action, err
