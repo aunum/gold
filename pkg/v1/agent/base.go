@@ -145,7 +145,9 @@ func (b *Base) View() {
 	b.Serve()
 	err := open.Run(b.address)
 	if err != nil {
-		b.Logger.Fatal(err)
+		b.Logger.Fatalf(`could not open browser; err: %v
+			see github.com/skratchdot/open-golang 
+			if running in remote terminal consider removing the View() command from the agent`, err)
 	}
 }
 
