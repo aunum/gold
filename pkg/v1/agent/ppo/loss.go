@@ -2,7 +2,7 @@ package ppo
 
 import (
 	"github.com/aunum/gold/pkg/v1/common/op"
-	modelv1 "github.com/aunum/gold/pkg/v1/model"
+	modelv1 "github.com/aunum/goro/pkg/v1/model"
 	g "gorgonia.org/gorgonia"
 )
 

@@ -8,7 +8,7 @@ import (
 	"golang.org/x/exp/rand"
 
 	"github.com/aunum/gold/pkg/v1/dense"
-	"github.com/aunum/gold/pkg/v1/model"
+	"github.com/aunum/goro/pkg/v1/model"
 	"gonum.org/v1/gonum/stat/distuv"
 
 	agentv1 "github.com/aunum/gold/pkg/v1/agent"

@@ -11,9 +11,13 @@ github.com/Microsoft/go-winio/pkg/guid
 github.com/Nvveen/Gotty
 # github.com/ajstarks/svgo v0.0.0-20180226025133-644b8db467af
 github.com/ajstarks/svgo
+# github.com/aunum/goro v0.0.0-20200330014716-66a98b84c69a
+github.com/aunum/goro/pkg/v1/common/graph
+github.com/aunum/goro/pkg/v1/layer
+github.com/aunum/goro/pkg/v1/model
 # github.com/aunum/log v0.0.0-20200321163253-24c356e939b0
 github.com/aunum/log
-# github.com/aunum/sphere v0.0.0-20200321012043-345d08f7647f
+# github.com/aunum/sphere v0.0.0-20200323032354-adb109813e4c
 github.com/aunum/sphere/api/gen/go/v1alpha
 # github.com/awalterschulze/gographviz v0.0.0-20190522210029-fa59802746ab
 github.com/awalterschulze/gographviz
@@ -121,11 +125,11 @@ github.com/phayes/freeport
 github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
-# github.com/sirupsen/logrus v1.4.2
+# github.com/sirupsen/logrus v1.5.0
 github.com/sirupsen/logrus
 # github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
 github.com/skratchdot/open-golang/open
-# github.com/stretchr/testify v1.4.0
+# github.com/stretchr/testify v1.5.1
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
 # github.com/xtgo/set v1.0.0
@@ -249,10 +253,9 @@ gorgonia.org/cu/blas
 gorgonia.org/cu/dnn
 # gorgonia.org/dawson v1.2.0
 gorgonia.org/dawson
-# gorgonia.org/gorgonia v0.9.8
+# gorgonia.org/gorgonia v0.9.9
 gorgonia.org/gorgonia
 gorgonia.org/gorgonia/cuda
-gorgonia.org/gorgonia/examples/mnist
 gorgonia.org/gorgonia/internal/encoding
 # gorgonia.org/tensor v0.9.4
 gorgonia.org/tensor

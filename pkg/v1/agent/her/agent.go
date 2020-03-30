@@ -6,7 +6,7 @@ import (
 	"math/rand"
 
 	"github.com/aunum/gold/pkg/v1/dense"
-	"github.com/aunum/gold/pkg/v1/model"
+	"github.com/aunum/goro/pkg/v1/model"
 	"github.com/aunum/gold/pkg/v1/track"
 
 	agentv1 "github.com/aunum/gold/pkg/v1/agent"

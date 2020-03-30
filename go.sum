@@ -16,10 +16,15 @@ github.com/ajstarks/svgo v0.0.0-20180226025133-644b8db467af h1:wVe6/Ea46ZMeNkQjj
 github.com/ajstarks/svgo v0.0.0-20180226025133-644b8db467af/go.mod h1:K08gAheRH3/J6wwsYMMT4xOr94bZjxIelGM0+d/wbFw=
 github.com/akavel/rsrc v0.8.0/go.mod h1:uLoCtb9J+EyAqh+26kdrTgmzRBFPGOolLWKpdxkKq+c=
 github.com/antihax/optional v0.0.0-20180407024304-ca021399b1a6/go.mod h1:V8iCPQYkqmusNa815XgQio277wI47sdRh1dUOLdyC6Q=
+github.com/aunum/gold v0.0.0-20200329164505-1b7f92d6b247/go.mod h1:x6nHhYZZC3x7+ciHstSIdOn779OOQKzqI0ERgwcQebY=
+github.com/aunum/goro v0.0.0-20200330014716-66a98b84c69a h1:RwiQbC4iOZ0971A09wJLhYIb49CS/dj5acXRju+kSz8=
+github.com/aunum/goro v0.0.0-20200330014716-66a98b84c69a/go.mod h1:+zkQtcdeh4h89LBxutgM3F46vzQBBC4aQHKbr/ttA2s=
 github.com/aunum/log v0.0.0-20200321163253-24c356e939b0 h1:pLO0OS2sfb+XfZKCPjJeqDYWPngbK786h40oAKDqgpU=
 github.com/aunum/log v0.0.0-20200321163253-24c356e939b0/go.mod h1:ze/JIQHfGKwpM8U2b39e8OH0KHt1ovEcjwPV3yfU+/c=
 github.com/aunum/sphere v0.0.0-20200321012043-345d08f7647f h1:nTw1a/tW/PRtjsKOmftj1yCXualJujdkrljd4NjzhSo=
 github.com/aunum/sphere v0.0.0-20200321012043-345d08f7647f/go.mod h1:J/B7bBwrMlajgFvbe+tkyY0FVTJeEYujMGfhIrcmBB4=
+github.com/aunum/sphere v0.0.0-20200323032354-adb109813e4c h1:rheUX6V37t53dSayBA0Z12EHmKZ206P80D5tyxo8VIQ=
+github.com/aunum/sphere v0.0.0-20200323032354-adb109813e4c/go.mod h1:J/B7bBwrMlajgFvbe+tkyY0FVTJeEYujMGfhIrcmBB4=
 github.com/aunum/sphere v0.0.0-20200324135746-e3d087afe226 h1:oqn6UcvqmpD35Ox9hiK/yS9WpxDQ/XoSVySjet6sJj0=
 github.com/awalterschulze/gographviz v0.0.0-20190221210632-1e9ccb565bca/go.mod h1:GEV5wmg4YquNw7v1kkyoX9etIk8yVmXj+AkDHuuETHs=
 github.com/awalterschulze/gographviz v0.0.0-20190522210029-fa59802746ab h1:+cdNqtOJWjvepyhxy23G7z7vmpYCoC65AP0nqi1f53s=
@@ -79,6 +84,7 @@ github.com/golang/mock v1.1.1/go.mod h1:oTYuIxOrZwtPieC+H1uAHpcLFnEyAGVDL/k47Jfb
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
 github.com/golang/protobuf v1.3.0/go.mod h1:Qd/q+1AKNOZr9uGQzbzCmRO6sUih6GTPZv6a1/R87v0=
 github.com/golang/protobuf v1.3.2/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
+github.com/golang/protobuf v1.3.4/go.mod h1:vzj43D7+SQXF/4pzW/hwtAqwc6iTitCiVSaWz5lYuqw=
 github.com/golang/protobuf v1.3.5 h1:F768QJ1E9tib+q5Sc8MkdJi1RxLTbRcTf8LJV56aRls=
 github.com/golang/protobuf v1.3.5/go.mod h1:6O5/vntMXwX2lRkT1hjjk0nAC1IDOTvTlVgjlRvqsdk=
 github.com/gonum/blas v0.0.0-20181208220705-f22b278b28ac/go.mod h1:P32wAyui1PQ58Oce/KYkOqQv8cVw1zAapXOl+dRFGbc=
@@ -145,6 +151,8 @@ github.com/sirupsen/logrus v1.0.4-0.20170822132746-89742aefa4b2/go.mod h1:pMByvH
 github.com/sirupsen/logrus v1.4.1/go.mod h1:ni0Sbl8bgC9z8RoU9G6nDWqqs/fq4eDPysMBDgk/93Q=
 github.com/sirupsen/logrus v1.4.2 h1:SPIRibHv4MatM3XXNO2BJeFLZwZ2LvZgfQ5+UNI2im4=
 github.com/sirupsen/logrus v1.4.2/go.mod h1:tLMulIdttU9McNUspp0xgXVQah82FyeX6MwdIuYE2rE=
+github.com/sirupsen/logrus v1.5.0 h1:1N5EYkVAPEywqZRJd7cwnRtCb6xJx7NH3T3WUTF980Q=
+github.com/sirupsen/logrus v1.5.0/go.mod h1:+F7Ogzej0PZc/94MaYx/nvG9jOFMD2osvC3s+Squfpo=
 github.com/skratchdot/open-golang v0.0.0-20190402232053-79abb63cd66e/go.mod h1:sUM3LWHvSMaG192sy56D9F7CNvL7jUJVXoqM1QKLnog=
 github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966 h1:JIAuq3EEf9cgbU6AtGPK4CTG3Zf6CKMNqf0MHTggAUA=
 github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966/go.mod h1:sUM3LWHvSMaG192sy56D9F7CNvL7jUJVXoqM1QKLnog=
@@ -157,6 +165,8 @@ github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXf
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.4.0 h1:2E4SXV/wtOkTonXsotYi4li6zVWxYlZuYNCXe9XRJyk=
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
+github.com/stretchr/testify v1.5.1 h1:nOGnQDM7FYENwehXlg/kFVnos3rEvtKTjRvOWSzb6H4=
+github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
 github.com/valyala/bytebufferpool v1.0.0/go.mod h1:6bBcMArwyJ5K/AmCkWv1jt77kVWyCJ6HpOuEn7z0Csc=
 github.com/valyala/fasttemplate v1.0.1/go.mod h1:UQGH1tvbgY+Nz5t2n7tXsz52dQxojPUpymEIMZ47gx8=
 github.com/xtgo/set v1.0.0 h1:6BCNBRv3ORNDQ7fyoJXRv+tstJz3m1JVFQErfeZz2pY=
@@ -274,6 +284,8 @@ gorgonia.org/dawson v1.2.0/go.mod h1:Px1mcziba8YUBIDsbzGwbKJ11uIblv/zkln4jNrZ9Ws
 gorgonia.org/gorgonia v0.9.2/go.mod h1:ZtOb9f/wM2OMta1ISGspQ4roGDgz9d9dKOaPNvGR+ec=
 gorgonia.org/gorgonia v0.9.8 h1:kqW/MYUy2NfAV75hKJzF9O9u/bi206BDb0N+vel5oSg=
 gorgonia.org/gorgonia v0.9.8/go.mod h1:9MCLQcNogyci6yODZcj5i+dH0G5CkNlQ0w/Yr+HKSJc=
+gorgonia.org/gorgonia v0.9.9 h1:nesD26yXf5IYMXWp68knfz1YRchpzqdttfcsH93IGcE=
+gorgonia.org/gorgonia v0.9.9/go.mod h1:9MCLQcNogyci6yODZcj5i+dH0G5CkNlQ0w/Yr+HKSJc=
 gorgonia.org/tensor v0.9.0-beta/go.mod h1:05Y4laKuVlj4qFoZIZW1q/9n1jZkgDBOLmKXZdBLG1w=
 gorgonia.org/tensor v0.9.2/go.mod h1:603c/8huGtNc1APqh1nWqQu0fYgBvkwt55rvg4CWgZs=
 gorgonia.org/tensor v0.9.3/go.mod h1:603c/8huGtNc1APqh1nWqQu0fYgBvkwt55rvg4CWgZs=

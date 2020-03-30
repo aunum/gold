@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/aunum/gold/pkg/v1/dense"
-	"github.com/aunum/gold/pkg/v1/model"
+	"github.com/aunum/goro/pkg/v1/model"
 
 	agentv1 "github.com/aunum/gold/pkg/v1/agent"
 	"github.com/aunum/gold/pkg/v1/common"
@@ -52,6 +52,9 @@ type Hyperparameters struct {
 
 	// UpdateTargetSteps determines how often the target network updates its parameters.
 	UpdateTargetSteps int
+
+	// BuferSize is the buffer size of the memory.
+	BufferSize int
 }
 
 // DefaultHyperparameters are the default hyperparameters.
@@ -59,6 +62,7 @@ var DefaultHyperparameters = &Hyperparameters{
 	Epsilon:           common.DefaultDecaySchedule(),
 	Gamma:             0.95,
 	UpdateTargetSteps: 100,
+	BufferSize:        10e6,
 }
 
 // AgentConfig is the config for a dqn agent.
@@ -207,7 +211,7 @@ func (a *Agent) action(state *tensor.Dense) (action int, err error) {
 		return
 	}
 	qValues := prediction.(*tensor.Dense)
-	log.Infov("qvalues", qValues)
+	log.Debugv("qvalues", qValues)
 	actionIndex, err := qValues.Argmax(1)
 	if err != nil {
 		return action, err
@@ -219,4 +223,7 @@ func (a *Agent) action(state *tensor.Dense) (action int, err error) {
 // Remember an event.
 func (a *Agent) Remember(event *Event) {
 	a.memory.PushFront(event)
+	if a.memory.Len() > a.BufferSize {
+		a.memory.PopBack()
+	}
 }

@@ -10,7 +10,7 @@ import (
 	agentv1 "github.com/aunum/gold/pkg/v1/agent"
 	"github.com/aunum/gold/pkg/v1/common/num"
 	envv1 "github.com/aunum/gold/pkg/v1/env"
-	modelv1 "github.com/aunum/gold/pkg/v1/model"
+	modelv1 "github.com/aunum/goro/pkg/v1/model"
 	"golang.org/x/exp/rand"
 	"gonum.org/v1/gonum/stat/distuv"
 	"gorgonia.org/tensor"

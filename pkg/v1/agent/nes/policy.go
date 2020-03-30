@@ -3,8 +3,8 @@ package nes
 import (
 	agentv1 "github.com/aunum/gold/pkg/v1/agent"
 	envv1 "github.com/aunum/gold/pkg/v1/env"
-	modelv1 "github.com/aunum/gold/pkg/v1/model"
-	"github.com/aunum/gold/pkg/v1/model/layer"
+	modelv1 "github.com/aunum/goro/pkg/v1/model"
+	"github.com/aunum/goro/pkg/v1/layer"
 )
 
 // PolicyConfig are the hyperparameters for a policy.
