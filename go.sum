@@ -19,6 +19,8 @@ github.com/antihax/optional v0.0.0-20180407024304-ca021399b1a6/go.mod h1:V8iCPQY
 github.com/aunum/gold v0.0.0-20200329164505-1b7f92d6b247/go.mod h1:x6nHhYZZC3x7+ciHstSIdOn779OOQKzqI0ERgwcQebY=
 github.com/aunum/goro v0.0.0-20200330014716-66a98b84c69a h1:RwiQbC4iOZ0971A09wJLhYIb49CS/dj5acXRju+kSz8=
 github.com/aunum/goro v0.0.0-20200330014716-66a98b84c69a/go.mod h1:+zkQtcdeh4h89LBxutgM3F46vzQBBC4aQHKbr/ttA2s=
+github.com/aunum/goro v0.0.0-20200331023613-6fd962e92fb9 h1:LZian37DB1UM736JTIo6/wMiRldhSobVEc0uBVi1vD0=
+github.com/aunum/goro v0.0.0-20200331023613-6fd962e92fb9/go.mod h1:+zkQtcdeh4h89LBxutgM3F46vzQBBC4aQHKbr/ttA2s=
 github.com/aunum/log v0.0.0-20200321163253-24c356e939b0 h1:pLO0OS2sfb+XfZKCPjJeqDYWPngbK786h40oAKDqgpU=
 github.com/aunum/log v0.0.0-20200321163253-24c356e939b0/go.mod h1:ze/JIQHfGKwpM8U2b39e8OH0KHt1ovEcjwPV3yfU+/c=
 github.com/aunum/sphere v0.0.0-20200321012043-345d08f7647f h1:nTw1a/tW/PRtjsKOmftj1yCXualJujdkrljd4NjzhSo=

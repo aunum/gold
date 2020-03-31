@@ -3,8 +3,8 @@ package ppo
 import (
 	agentv1 "github.com/aunum/gold/pkg/v1/agent"
 	envv1 "github.com/aunum/gold/pkg/v1/env"
-	modelv1 "github.com/aunum/goro/pkg/v1/model"
 	"github.com/aunum/goro/pkg/v1/layer"
+	modelv1 "github.com/aunum/goro/pkg/v1/model"
 	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
 )
@@ -48,8 +48,11 @@ var DefaultActorLayerBuilder = func(env *envv1.Env) []layer.Config {
 
 // MakeActor makes the actor which chooses actions based on the policy.
 func MakeActor(config *ModelConfig, base *agentv1.Base, env *envv1.Env) (modelv1.Model, error) {
-	x := modelv1.NewInput("x", []int{1, env.ObservationSpaceShape()[0]})
-	y := modelv1.NewInput("y", []int{1, envv1.PotentialsShape(env.ActionSpace)[0]})
+	x := modelv1.NewInput("x", env.ObservationSpaceShape())
+	x.EnsureBatch()
+
+	y := modelv1.NewInput("y", envv1.PotentialsShape(env.ActionSpace))
+	y.EnsureBatch()
 
 	oldPolicyProbs := modelv1.NewInput("oldProbs", []int{1, envv1.PotentialsShape(env.ActionSpace)[0]})
 	advantages := modelv1.NewInput("advantages", []int{1, 1})
@@ -107,7 +110,9 @@ var DefaultCriticConfig = &ModelConfig{
 
 // MakeCritic makes the critic which creats a qValue based on the outcome of the action taken.
 func MakeCritic(config *ModelConfig, base *agentv1.Base, env *envv1.Env) (modelv1.Model, error) {
-	x := modelv1.NewInput("x", []int{1, env.ObservationSpaceShape()[0]})
+	x := modelv1.NewInput("x", env.ObservationSpaceShape())
+	x.EnsureBatch()
+
 	y := modelv1.NewInput("y", []int{1, 1})
 
 	log.Debugv("x shape", x.Shape())

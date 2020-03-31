@@ -34,7 +34,7 @@ Each package contains a README explaining the usage, also see [GoDoc](https://go
 ## Contributing
 Please open an MR for any issues or feature requests.
 
-The project is fairly simple to hack on, environments are provided through [Sphere](http://github.com/aunum/sphere).
+The project is fairly simple to hack on, environments are provided through [Sphere](http://github.com/aunum/sphere), models are provided through [Goro](http://github.com/aunum/goro).
 
 Feel free to ping @pbarker on Gopher slack.
 

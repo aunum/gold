@@ -43,8 +43,11 @@ var DefaultFCLayerBuilder = func(x, y *modelv1.Input) []layer.Config {
 
 // MakePolicy makes a model.
 func MakePolicy(config *PolicyConfig, base *agentv1.Base, env *envv1.Env) (modelv1.Model, error) {
-	x := modelv1.NewInput("state", []int{1, env.ObservationSpaceShape()[0]})
-	y := modelv1.NewInput("advantages", []int{1, envv1.PotentialsShape(env.ActionSpace)[0]})
+	x := modelv1.NewInput("state", env.ObservationSpaceShape())
+	x.EnsureBatch()
+
+	y := modelv1.NewInput("advantages", envv1.PotentialsShape(env.ActionSpace))
+	y.EnsureBatch()
 
 	log.Debugv("x shape", x.Shape())
 	log.Debugv("y shape", y.Shape())

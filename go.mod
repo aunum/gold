@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/GeertJohan/go.rice v1.0.0
-	github.com/aunum/goro v0.0.0-20200330014716-66a98b84c69a
+	github.com/aunum/goro v0.0.0-20200331023613-6fd962e92fb9
 	github.com/aunum/log v0.0.0-20200321163253-24c356e939b0
 	github.com/aunum/sphere v0.0.0-20200323032354-adb109813e4c
 	github.com/chewxy/math32 v1.0.4

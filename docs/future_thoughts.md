@@ -2,7 +2,9 @@
 - Neuroevolution of Self-Interpretable Agents - _paper:_ https://arxiv.org/abs/2003.08165
 - Neural Logic - _paper:_ https://arxiv.org/pdf/1904.10729.pdf
 - Neural Episodic Control - _paper:_ https://arxiv.org/pdf/1703.01988.pdf
+- Distributional RL - _overview:_ https://deepmind.com/blog/article/Dopamine-and-temporal-difference-learning-A-fruitful-relationship-between-neuroscience-and-AI
 - Imagination-Augmented Agents - _paper:_ https://arxiv.org/pdf/1707.06203.pdf _code:_ https://github.com/clvrai/i2a-tf _release:_ https://deepmind.com/blog/article/agents-imagine-and-plan
+- Generative Adversarial Imagination - _paper:_ https://arxiv.org/pdf/1904.13255v2.pdf
 - World Models - _paper:_ https://github.com/clvrai/i2a-tf _code:_ https://github.com/hardmaru/WorldModelsExperiments
 - Neuroevolution - https://towardsdatascience.com/deep-neuroevolution-genetic-algorithms-are-a-competitive-alternative-for-training-deep-neural-822bfe3291f5
     - https://towardsdatascience.com/reinforcement-learning-without-gradients-evolving-agents-using-genetic-algorithms-8685817d84f

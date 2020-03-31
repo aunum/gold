@@ -2,9 +2,10 @@ package her
 
 import (
 	agentv1 "github.com/aunum/gold/pkg/v1/agent"
+	"github.com/aunum/gold/pkg/v1/dense"
 	envv1 "github.com/aunum/gold/pkg/v1/env"
-	modelv1 "github.com/aunum/goro/pkg/v1/model"
 	"github.com/aunum/goro/pkg/v1/layer"
+	modelv1 "github.com/aunum/goro/pkg/v1/model"
 
 	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
@@ -51,9 +52,12 @@ var DefaultFCLayerBuilder = func(x, y *modelv1.Input) []layer.Config {
 
 // MakePolicy makes a model.
 func MakePolicy(name string, config *PolicyConfig, base *agentv1.Base, env *envv1.Env) (modelv1.Model, error) {
-	stateGoalShape := env.ObservationSpaceShape()[0] * 2
-	x := modelv1.NewInput("state_goal", []int{1, stateGoalShape})
-	y := modelv1.NewInput("actionPotentials", []int{1, envv1.PotentialsShape(env.ActionSpace)[0]})
+	stateGoalShape := dense.MulShape(dense.SqueezeShape(env.ObservationSpaceShape()), 2)
+	x := modelv1.NewInput("stateGoal", stateGoalShape)
+	x.EnsureBatch()
+
+	y := modelv1.NewInput("actionPotentials", envv1.PotentialsShape(env.ActionSpace))
+	y.EnsureBatch()
 
 	log.Debugv("x shape", x.Shape())
 	log.Debugv("y shape", y.Shape())

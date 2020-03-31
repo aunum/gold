@@ -3,8 +3,8 @@ package deepq
 import (
 	agentv1 "github.com/aunum/gold/pkg/v1/agent"
 	envv1 "github.com/aunum/gold/pkg/v1/env"
-	modelv1 "github.com/aunum/goro/pkg/v1/model"
 	"github.com/aunum/goro/pkg/v1/layer"
+	modelv1 "github.com/aunum/goro/pkg/v1/model"
 
 	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
@@ -37,6 +37,15 @@ var DefaultPolicyConfig = &PolicyConfig{
 	Track:        true,
 }
 
+// DefaultAtariPolicyConfig is the default policy config for atari environments.
+var DefaultAtariPolicyConfig = &PolicyConfig{
+	Loss:         modelv1.MSE,
+	Optimizer:    g.NewRMSPropSolver(g.WithBatchSize(20)),
+	LayerBuilder: DefaultAtariLayerBuilder,
+	BatchSize:    20,
+	Track:        true,
+}
+
 // LayerBuilder builds layers.
 type LayerBuilder func(x, y *modelv1.Input) []layer.Config
 
@@ -49,15 +58,15 @@ var DefaultFCLayerBuilder = func(x, y *modelv1.Input) []layer.Config {
 	}
 }
 
-// DefaultAtariLayerBuilder is a default fully connected layer builder.
+// DefaultAtariLayerBuilder is the default layer builder for atari environments.
 var DefaultAtariLayerBuilder = func(x, y *modelv1.Input) []layer.Config {
 	return []layer.Config{
-		layer.Conv2D{Input: 1, Output: 32, Width: 3, Height: 3},
-		layer.Conv2D{Input: 32, Output: 64, Width: 3, Height: 3},
-		layer.Conv2D{Input: 64, Output: 64, Width: 3, Height: 3},
+		layer.Conv2D{Input: 1, Output: 32, Width: 8, Height: 8, Stride: []int{4, 4}},
+		layer.Conv2D{Input: 32, Output: 64, Width: 4, Height: 4, Stride: []int{2, 2}},
+		layer.Conv2D{Input: 64, Output: 64, Width: 3, Height: 3, Stride: []int{1, 1}},
 		layer.Flatten{},
-		layer.FC{Input: 12800, Output: 24},
-		layer.FC{Input: 24, Output: y.Squeeze()[0], Activation: layer.Linear},
+		layer.FC{Input: 6400, Output: 512},
+		layer.FC{Input: 512, Output: y.Squeeze()[0], Activation: layer.Linear},
 	}
 }
 

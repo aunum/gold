@@ -41,6 +41,15 @@ func SqueezeShape(shape tensor.Shape) tensor.Shape {
 	return newShape
 }
 
+// MulShape multiplies shape.
+func MulShape(shape tensor.Shape, by int) tensor.Shape {
+	new := []int{}
+	for _, i := range shape {
+		new = append(new, i*by)
+	}
+	return new
+}
+
 // OneOfMany ensures the given tensor starts with a shape of 1.
 func OneOfMany(t *tensor.Dense) error {
 	if t.Shape()[0] != 1 {
