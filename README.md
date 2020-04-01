@@ -26,7 +26,7 @@ All of the agent implementations can be found in [pkg/v1/agent](./pkg/v1/agent) 
 |[pkg/v1/agent/reinforce](./pkg/v1/agent/reinforce)| [REINFORCE](http://www-anw.cs.umass.edu/~barto/courses/cs687/williams92simple.pdf) aka Monte Carlo Policy Gradients |
 |[pkg/v1/agent/nes](./pkg/v1/agent/nes)| [Natural Evolution Strategies](http://www.jmlr.org/papers/volume15/wierstra14a/wierstra14a.pdf)|
 |[pkg/v1/agent/her](./pkg/v1/agent/her)| [Hindsight Experience Replay](https://arxiv.org/pdf/1707.01495.pdf)|
-|[pkg/v1/agent/ppo1](./pkg/v1/agent/ppo1)|[Proximal Policy Optimization](https://arxiv.org/pdf/1707.06347.pdf) ⚠️ in progress |
+|[pkg/v1/agent/ppo](./pkg/v1/agent/ppo)|[Proximal Policy Optimization](https://arxiv.org/pdf/1707.06347.pdf) ⚠️ in progress |
 
 ## Docs
 Each package contains a README explaining the usage, also see [GoDoc](https://godoc.org/github.com/aunum/gold).
@@ -34,7 +34,7 @@ Each package contains a README explaining the usage, also see [GoDoc](https://go
 ## Contributing
 Please open an MR for any issues or feature requests.
 
-The project is fairly simple to hack on, environments are provided through [Sphere](http://github.com/aunum/sphere).
+The project is fairly simple to hack on, environments are provided through [Sphere](http://github.com/aunum/sphere), models are provided through [Goro](http://github.com/aunum/goro).
 
 Feel free to ping @pbarker on Gopher slack.
 

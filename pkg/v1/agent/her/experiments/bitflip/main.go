@@ -5,7 +5,7 @@ import (
 	"github.com/aunum/gold/pkg/v1/common"
 	"github.com/aunum/gold/pkg/v1/common/require"
 	envv1 "github.com/aunum/gold/pkg/v1/env"
-	modelv1 "github.com/aunum/gold/pkg/v1/model"
+	modelv1 "github.com/aunum/goro/pkg/v1/model"
 	"github.com/aunum/gold/pkg/v1/track"
 	"github.com/aunum/log"
 
@@ -57,7 +57,10 @@ func runTest(t *test) {
 	require.NoError(err)
 	defer s.Close()
 
-	env, err := s.Make(t.env, envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)))
+	env, err := s.Make(t.env,
+		envv1.WithNormalizer(envv1.NewExpandDimsNormalizer(0)),
+		envv1.WithGoalNormalizer(envv1.NewExpandDimsNormalizer(0)),
+	)
 	require.NoError(err)
 
 	agentConfig := her.DefaultAgentConfig

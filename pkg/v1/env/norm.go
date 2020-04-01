@@ -84,6 +84,7 @@ func NewReshapeNormalizer(shape tensor.Shape) *ReshapeNormalizer {
 
 // Init the normalizer.
 func (r *ReshapeNormalizer) Init(e *Env) error {
+	e.reshape = r.shape
 	return nil
 }
 
@@ -109,6 +110,7 @@ func NewExpandDimsNormalizer(axis int) *ExpandDimsNormalizer {
 
 // Init the normalizer.
 func (r *ExpandDimsNormalizer) Init(e *Env) error {
+	e.reshape = dense.ExpandDimsShape(e.ObservationSpaceShape(), r.axis)
 	return nil
 }
 

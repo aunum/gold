@@ -2,9 +2,10 @@ package her
 
 import (
 	agentv1 "github.com/aunum/gold/pkg/v1/agent"
+	"github.com/aunum/gold/pkg/v1/dense"
 	envv1 "github.com/aunum/gold/pkg/v1/env"
-	modelv1 "github.com/aunum/gold/pkg/v1/model"
-	l "github.com/aunum/gold/pkg/v1/model/layers"
+	"github.com/aunum/goro/pkg/v1/layer"
+	modelv1 "github.com/aunum/goro/pkg/v1/model"
 
 	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
@@ -38,22 +39,25 @@ var DefaultPolicyConfig = &PolicyConfig{
 }
 
 // LayerBuilder builds layers.
-type LayerBuilder func(x, y *modelv1.Input) []l.Layer
+type LayerBuilder func(x, y *modelv1.Input) []layer.Config
 
 // DefaultFCLayerBuilder is a default fully connected layer builder.
-var DefaultFCLayerBuilder = func(x, y *modelv1.Input) []l.Layer {
-	return []l.Layer{
-		l.NewFC(x.Squeeze()[0], 512, l.WithActivation(l.ReLU), l.WithName("fc1")),
-		l.NewFC(512, 512, l.WithActivation(l.ReLU), l.WithName("fc2")),
-		l.NewFC(512, y.Squeeze()[0], l.WithActivation(l.Linear), l.WithName("qvalues")),
+var DefaultFCLayerBuilder = func(x, y *modelv1.Input) []layer.Config {
+	return []layer.Config{
+		layer.FC{Input: x.Squeeze()[0], Output: 512},
+		layer.FC{Input: 512, Output: 512},
+		layer.FC{Input: 512, Output: y.Squeeze()[0], Activation: layer.Linear},
 	}
 }
 
 // MakePolicy makes a model.
 func MakePolicy(name string, config *PolicyConfig, base *agentv1.Base, env *envv1.Env) (modelv1.Model, error) {
-	stateGoalShape := env.ObservationSpaceShape()[0] * 2
-	x := modelv1.NewInput("state_goal", []int{1, stateGoalShape})
-	y := modelv1.NewInput("actionPotentials", []int{1, envv1.PotentialsShape(env.ActionSpace)[0]})
+	stateGoalShape := dense.MulShape(dense.SqueezeShape(env.ObservationSpaceShape()), 2)
+	x := modelv1.NewInput("stateGoal", stateGoalShape)
+	x.EnsureBatch()
+
+	y := modelv1.NewInput("actionPotentials", envv1.PotentialsShape(env.ActionSpace))
+	y.EnsureBatch()
 
 	log.Debugv("x shape", x.Shape())
 	log.Debugv("y shape", y.Shape())

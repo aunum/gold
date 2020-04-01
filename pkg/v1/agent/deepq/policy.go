@@ -3,8 +3,8 @@ package deepq
 import (
 	agentv1 "github.com/aunum/gold/pkg/v1/agent"
 	envv1 "github.com/aunum/gold/pkg/v1/env"
-	modelv1 "github.com/aunum/gold/pkg/v1/model"
-	l "github.com/aunum/gold/pkg/v1/model/layers"
+	"github.com/aunum/goro/pkg/v1/layer"
+	modelv1 "github.com/aunum/goro/pkg/v1/model"
 
 	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
@@ -37,29 +37,54 @@ var DefaultPolicyConfig = &PolicyConfig{
 	Track:        true,
 }
 
+// DefaultAtariPolicyConfig is the default policy config for atari environments.
+var DefaultAtariPolicyConfig = &PolicyConfig{
+	Loss:         modelv1.MSE,
+	Optimizer:    g.NewRMSPropSolver(g.WithBatchSize(20)),
+	LayerBuilder: DefaultAtariLayerBuilder,
+	BatchSize:    20,
+	Track:        true,
+}
+
 // LayerBuilder builds layers.
-type LayerBuilder func(x, y *modelv1.Input) []l.Layer
+type LayerBuilder func(x, y *modelv1.Input) []layer.Config
 
 // DefaultFCLayerBuilder is a default fully connected layer builder.
-var DefaultFCLayerBuilder = func(x, y *modelv1.Input) []l.Layer {
-	return []l.Layer{
-		l.NewFC(x.Squeeze()[0], 24, l.WithActivation(l.ReLU), l.WithName("fc1")),
-		l.NewFC(24, 24, l.WithActivation(l.ReLU), l.WithName("fc2")),
-		l.NewFC(24, y.Squeeze()[0], l.WithActivation(l.Linear), l.WithName("qvalues")),
+var DefaultFCLayerBuilder = func(x, y *modelv1.Input) []layer.Config {
+	return []layer.Config{
+		layer.FC{Input: x.Squeeze()[0], Output: 24},
+		layer.FC{Input: 24, Output: 24},
+		layer.FC{Input: 24, Output: y.Squeeze()[0], Activation: layer.Linear},
 	}
 }
 
-// MakePolicy makes a model.
-func MakePolicy(name string, config *PolicyConfig, base *agentv1.Base, env *envv1.Env) (modelv1.Model, error) {
-	x := modelv1.NewInput("state", []int{1, env.ObservationSpaceShape()[0]})
-	y := modelv1.NewInput("actionPotentials", []int{1, envv1.PotentialsShape(env.ActionSpace)[0]})
+// DefaultAtariLayerBuilder is the default layer builder for atari environments.
+var DefaultAtariLayerBuilder = func(x, y *modelv1.Input) []layer.Config {
+	return []layer.Config{
+		layer.Conv2D{Input: 1, Output: 32, Width: 8, Height: 8, Stride: []int{4, 4}},
+		layer.Conv2D{Input: 32, Output: 64, Width: 4, Height: 4, Stride: []int{2, 2}},
+		layer.Conv2D{Input: 64, Output: 64, Width: 3, Height: 3, Stride: []int{1, 1}},
+		layer.Flatten{},
+		layer.FC{Input: 6400, Output: 512},
+		layer.FC{Input: 512, Output: y.Squeeze()[0], Activation: layer.Linear},
+	}
+}
 
-	log.Debugv("x shape", x.Shape())
-	log.Debugv("y shape", y.Shape())
+// MakePolicy makes a policy model.
+func MakePolicy(name string, config *PolicyConfig, base *agentv1.Base, env *envv1.Env) (modelv1.Model, error) {
+	x := modelv1.NewInput("state", env.ObservationSpaceShape())
+	x.EnsureBatch()
+
+	y := modelv1.NewInput("actionPotentials", envv1.PotentialsShape(env.ActionSpace))
+	y.EnsureBatch()
+
+	log.Infov("x shape", x.Shape())
+	log.Infov("y shape", y.Shape())
 
 	model, err := modelv1.NewSequential(name)
 	if err != nil {
-		return nil, err
+		panic(err)
+		// return nil, err
 	}
 	model.AddLayers(config.LayerBuilder(x, y)...)
 
@@ -78,7 +103,8 @@ func MakePolicy(name string, config *PolicyConfig, base *agentv1.Base, env *envv
 
 	err = model.Compile(x, y, opts.Values()...)
 	if err != nil {
-		return nil, err
+		panic(err)
+		// return nil, err
 	}
 	return model, nil
 }

@@ -3,8 +3,8 @@ package reinforce
 import (
 	agentv1 "github.com/aunum/gold/pkg/v1/agent"
 	envv1 "github.com/aunum/gold/pkg/v1/env"
-	modelv1 "github.com/aunum/gold/pkg/v1/model"
-	l "github.com/aunum/gold/pkg/v1/model/layers"
+	"github.com/aunum/goro/pkg/v1/layer"
+	modelv1 "github.com/aunum/goro/pkg/v1/model"
 
 	"github.com/aunum/log"
 	g "gorgonia.org/gorgonia"
@@ -30,21 +30,24 @@ var DefaultPolicyConfig = &PolicyConfig{
 }
 
 // LayerBuilder builds layers.
-type LayerBuilder func(x, y *modelv1.Input) []l.Layer
+type LayerBuilder func(x, y *modelv1.Input) []layer.Config
 
 // DefaultFCLayerBuilder is a default fully connected layer builder.
-var DefaultFCLayerBuilder = func(x, y *modelv1.Input) []l.Layer {
-	return []l.Layer{
-		l.NewFC(x.Squeeze()[0], 24, l.WithActivation(l.ReLU), l.WithName("fc1")),
-		l.NewFC(24, 24, l.WithActivation(l.ReLU), l.WithName("fc2")),
-		l.NewFC(24, y.Squeeze()[0], l.WithActivation(l.NewSoftmax()), l.WithName("dist")),
+var DefaultFCLayerBuilder = func(x, y *modelv1.Input) []layer.Config {
+	return []layer.Config{
+		layer.FC{Input: x.Squeeze()[0], Output: 24},
+		layer.FC{Input: 24, Output: 24},
+		layer.FC{Input: 24, Output: y.Squeeze()[0], Activation: layer.Softmax},
 	}
 }
 
 // MakePolicy makes a model.
 func MakePolicy(config *PolicyConfig, base *agentv1.Base, env *envv1.Env) (modelv1.Model, error) {
-	x := modelv1.NewInput("state", []int{1, env.ObservationSpaceShape()[0]})
-	y := modelv1.NewInput("advantages", []int{1, envv1.PotentialsShape(env.ActionSpace)[0]})
+	x := modelv1.NewInput("state", env.ObservationSpaceShape())
+	x.EnsureBatch()
+
+	y := modelv1.NewInput("advantages", envv1.PotentialsShape(env.ActionSpace))
+	y.EnsureBatch()
 
 	log.Debugv("x shape", x.Shape())
 	log.Debugv("y shape", y.Shape())
