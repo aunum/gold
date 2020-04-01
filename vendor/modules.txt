@@ -11,7 +11,7 @@ github.com/Microsoft/go-winio/pkg/guid
 github.com/Nvveen/Gotty
 # github.com/ajstarks/svgo v0.0.0-20180226025133-644b8db467af
 github.com/ajstarks/svgo
-# github.com/aunum/goro v0.0.0-20200330014716-66a98b84c69a
+# github.com/aunum/goro v0.0.0-20200331023613-6fd962e92fb9
 github.com/aunum/goro/pkg/v1/common/graph
 github.com/aunum/goro/pkg/v1/layer
 github.com/aunum/goro/pkg/v1/model
