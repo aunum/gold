@@ -41,7 +41,7 @@ func SqueezeShape(shape tensor.Shape) tensor.Shape {
 	return newShape
 }
 
-// MulShape multiplies shape.
+// MulShape multiplies shape elementwise by the given int.
 func MulShape(shape tensor.Shape, by int) tensor.Shape {
 	new := []int{}
 	for _, i := range shape {
