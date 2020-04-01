@@ -45,6 +45,7 @@
 		}
 	</script>
 	<script>
+		window.localStorage.setItem('values', []);
 		function buildChart(value) {
 			var ctx_live = document.getElementById(value);
 			var chart = new Chart(ctx_live, {
@@ -119,7 +120,6 @@
 					};
 					
 					newValues = response.filter(e => !values.includes(e))
-					
 					if (newValues) {
 						var body = document.getElementById("metrics");
 						for (value of newValues) {
