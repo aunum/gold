@@ -12,7 +12,7 @@ go run ./pkg/v1/agent/deepq/experiments/cartpole/main.go
 ```
 
 ### Requirements
-- Go >= v12.0
+- Go >= v13.0
 - Docker
 - A browser that isn't IE
 
