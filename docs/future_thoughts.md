@@ -34,3 +34,4 @@
 - Improving Evolution Strategies with Generative Neural Networks - https://arxiv.org/pdf/1901.11271.pdf
 - ANML Neuromodulation - https://arxiv.org/abs/2002.09571
 - CMA-ES - https://en.wikipedia.org/wiki/CMA-ES
+- NerveNet - https://openreview.net/pdf?id=S1sqHMZCb
