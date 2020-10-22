@@ -25,7 +25,7 @@ See the [experiments](./experiments) folder for example implementations.
 - [ ] Prioritized replay
 - [ ] Dueling Q
 - [ ] Soft updates
-- [ ] More environment types
+- [ ] More environments
 
 ## References
 - DeepQ paper: https://arxiv.org/abs/1312.5602
